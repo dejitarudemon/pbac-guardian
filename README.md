@@ -95,7 +95,7 @@ import (
 casher := implemented.NewDefaultCasher()
 
 // Create engine
-engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+engine, err := guardian.NewGuardianFromPolices(casher, policies)
 if err != nil {
     panic(err)
 }
@@ -162,7 +162,7 @@ func main() {
     }
 
     // Create engine (nil casher disables caching)
-    engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+    engine, err := guardian.NewGuardianFromPolices(nil, policies)
     if err != nil {
         panic(err)
     }
@@ -221,7 +221,7 @@ import (
 
 func main() {
     // Load policies from file (nil casher disables caching)
-    engine, err := noctisguard.NewNoctisFromFile(nil, "policies.json")
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json")
     if err != nil {
         panic(err)
     }
@@ -346,7 +346,7 @@ func main() {
 
     // Enable caching for better performance with repeated field access
     casher := implemented.NewDefaultCasher()
-    engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+    engine, err := guardian.NewGuardianFromPolices(casher, policies)
     if err != nil {
         panic(err)
     }
@@ -416,15 +416,15 @@ func (u User) Compare(other any) (int, bool) {
 
 ## API Reference
 
-### Noctis Engine
+### Guardian Engine
 
-#### `NewNoctisFromPolices(casher base.Casher, policies []base.Policy) (*Noctis, error)`
+#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy) (*Guardian, error)`
 
-Creates a new Noctis instance from a list of policies. The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
+Creates a new Guardian instance from a list of policies. The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
 
-#### `NewNoctisFromFile(casher base.Casher, path string) (*Noctis, error)`
+#### `NewGuardianFromFile(casher base.Casher, path string) (*Guardian, error)`
 
-Creates a new Noctis instance from a JSON file. The `casher` parameter is optional - pass `nil` to disable caching.
+Creates a new Guardian instance from a JSON file. The `casher` parameter is optional - pass `nil` to disable caching.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 
@@ -556,7 +556,7 @@ import (
 casher := implemented.NewDefaultCasher()
 
 // Создание движка
-engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+engine, err := guardian.NewGuardianFromPolices(casher, policies)
 if err != nil {
     panic(err)
 }
@@ -623,7 +623,7 @@ func main() {
     }
 
     // Создание движка (nil casher отключает кеширование)
-    engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+    engine, err := guardian.NewGuardianFromPolices(nil, policies)
     if err != nil {
         panic(err)
     }
@@ -682,7 +682,7 @@ import (
 
 func main() {
     // Загрузка политик из файла (nil casher отключает кеширование)
-    engine, err := noctisguard.NewNoctisFromFile(nil, "policies.json")
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json")
     if err != nil {
         panic(err)
     }
@@ -807,7 +807,7 @@ func main() {
 
     // Включить кеширование для лучшей производительности при повторном доступе к полям
     casher := implemented.NewDefaultCasher()
-    engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+    engine, err := guardian.NewGuardianFromPolices(casher, policies)
     if err != nil {
         panic(err)
     }
@@ -877,15 +877,15 @@ func (u User) Compare(other any) (int, bool) {
 
 ## Справочник API
 
-### Движок Noctis
+### Движок Guardian
 
-#### `NewNoctisFromPolices(casher base.Casher, policies []base.Policy) (*Noctis, error)`
+#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy) (*Guardian, error)`
 
-Создает новый экземпляр Noctis из списка политик. Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
+Создает новый экземпляр Guardian из списка политик. Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
 
-#### `NewNoctisFromFile(casher base.Casher, path string) (*Noctis, error)`
+#### `NewGuardianFromFile(casher base.Casher, path string) (*Guardian, error)`
 
-Создает новый экземпляр Noctis из JSON файла. Параметр `casher` опционален - передайте `nil` для отключения кеширования.
+Создает новый экземпляр Guardian из JSON файла. Параметр `casher` опционален - передайте `nil` для отключения кеширования.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 

@@ -10,7 +10,7 @@ import (
 	"context"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	guardian "github.com/dejitarudemon/pbac-guardian"
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
@@ -133,7 +133,7 @@ func TestContainsCondition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := noctisguard.NewNoctisFromPolices(nil, []base.Policy{tt.policy})
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
@@ -294,7 +294,7 @@ func TestLtCondition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := noctisguard.NewNoctisFromPolices(nil, []base.Policy{tt.policy})
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
@@ -402,7 +402,7 @@ func TestEqConditionExtended(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := noctisguard.NewNoctisFromPolices(nil, []base.Policy{tt.policy})
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
@@ -514,7 +514,7 @@ func TestMultipleConditionsCombined(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := noctisguard.NewNoctisFromPolices(nil, []base.Policy{tt.policy})
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}

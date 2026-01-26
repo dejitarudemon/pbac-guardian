@@ -5,7 +5,7 @@ Tests check the functionality of creating an engine from policies and files,
 as well as policy evaluation for various access scenarios.
 
 This file is in the tests directory for test organization.
-Tests import the noctisguard package as regular library users.
+Tests import the guardian package as regular library users.
 */
 package tests
 
@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	guardian "github.com/dejitarudemon/pbac-guardian"
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
@@ -52,7 +52,7 @@ type NestedDocument struct {
 }
 
 /*
-TestNewNoctisFromPolices tests engine creation from a list of policies.
+TestNewGuardianFromPolices tests engine creation from a list of policies.
 
 The test checks:
   - Engine creation with valid policies
@@ -61,7 +61,7 @@ The test checks:
   - Path validation in conditions (format "entity:field")
   - Engine creation with empty policy list (should succeed)
 */
-func TestNewNoctisFromPolices(t *testing.T) {
+func TestNewGuardianFromPolices(t *testing.T) {
 	tests := []struct {
 		name     string
 		policies []base.Policy
@@ -152,7 +152,7 @@ func TestNewNoctisFromPolices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := noctisguard.NewNoctisFromPolices(nil, tt.policies)
+			engine, err := guardian.NewGuardianFromPolices(nil, tt.policies)
 			if tt.wantErr {
 				// Expect error
 				if err == nil {
@@ -172,14 +172,14 @@ func TestNewNoctisFromPolices(t *testing.T) {
 }
 
 /*
-TestNewNoctisFromFile tests engine creation from a JSON file.
+TestNewGuardianFromFile tests engine creation from a JSON file.
 
 The test checks:
   - Successful reading and parsing of valid JSON file with policies
   - Error handling when file is missing
-  - Correctness of engine creation from file (similar to NewNoctisFromPolices)
+  - Correctness of engine creation from file (similar to NewGuardianFromPolices)
 */
-func TestNewNoctisFromFile(t *testing.T) {
+func TestNewGuardianFromFile(t *testing.T) {
 	// Create temporary file with valid policies for testing
 	validPolicies := []base.Policy{
 		{
@@ -266,7 +266,7 @@ func TestNewNoctisFromFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := noctisguard.NewNoctisFromFile(nil, tt.path)
+			engine, err := guardian.NewGuardianFromFile(nil, tt.path)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -332,7 +332,7 @@ func TestEvaluate(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -442,7 +442,7 @@ func TestEvaluateWithContextCancellation(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -482,7 +482,7 @@ func TestEvaluateWithTimeout(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -530,7 +530,7 @@ func TestEvaluateNestedStructures(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}

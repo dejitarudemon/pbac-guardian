@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	guardian "github.com/dejitarudemon/pbac-guardian"
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
 	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
@@ -162,7 +162,7 @@ func BenchmarkEvaluateWithRepeatedFields(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -227,7 +227,7 @@ func BenchmarkEvaluateWithoutCacheRepeatedFields(b *testing.B) {
 	}
 
 	// No cache
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}

@@ -13,17 +13,17 @@ import (
 	"context"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	guardian "github.com/dejitarudemon/pbac-guardian"
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
 	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 /*
-BenchmarkNewNoctisFromPolices measures performance of engine creation from policies.
+BenchmarkNewGuardianFromPolices measures performance of engine creation from policies.
 
 The benchmark checks time of engine creation with various number of policies.
 */
-func BenchmarkNewNoctisFromPolices(b *testing.B) {
+func BenchmarkNewGuardianFromPolices(b *testing.B) {
 	// Create set of policies for testing
 	policies := []base.Policy{
 		{
@@ -55,7 +55,7 @@ func BenchmarkNewNoctisFromPolices(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := noctisguard.NewNoctisFromPolices(nil, policies)
+		_, err := guardian.NewGuardianFromPolices(nil, policies)
 		if err != nil {
 			b.Fatalf("failed to create engine: %v", err)
 		}
@@ -79,7 +79,7 @@ func BenchmarkEvaluateSimple(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -124,7 +124,7 @@ func BenchmarkEvaluateMultipleConditions(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -161,7 +161,7 @@ func BenchmarkEvaluateContains(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -198,7 +198,7 @@ func BenchmarkEvaluateLt(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -236,7 +236,7 @@ func BenchmarkEvaluateNestedStructures(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -305,7 +305,7 @@ func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -343,7 +343,7 @@ func BenchmarkEvaluateFieldComparison(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -379,7 +379,7 @@ func BenchmarkEvaluateDenyPolicy(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -424,7 +424,7 @@ func BenchmarkEvaluateLargeSlice(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -460,7 +460,7 @@ func BenchmarkEvaluateNoMatch(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -514,7 +514,7 @@ func BenchmarkEvaluateWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -568,7 +568,7 @@ func BenchmarkEvaluateWithoutCache(b *testing.B) {
 	}
 
 	// Use nil casher to disable caching
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -636,7 +636,7 @@ func BenchmarkEvaluateMultiplePoliciesWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -673,7 +673,7 @@ func BenchmarkEvaluateNestedStructuresWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}

@@ -1,4 +1,4 @@
-package noctisguard
+package guardian
 
 import (
 	"slices"

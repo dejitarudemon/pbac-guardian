@@ -1,4 +1,4 @@
-package noctisguard
+package guardian
 
 import "fmt"
 
@@ -31,7 +31,7 @@ func (e ErrDuplicateName) Error() string {
 }
 
 /*
-ErrExport represents an error that occurs when exporting policies to the Noctis engine.
+ErrExport represents an error that occurs when exporting policies to the Guardian engine.
 
 The error wraps the original error (source), allowing the use of errors.Unwrap()
 to get problem details. Used when creating the engine from policies or a file.
