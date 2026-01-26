@@ -15,19 +15,19 @@ Example usage:
 	import (
 		"context"
 		"fmt"
-		"github.com/dejitarudemon/noctis-guard"
-		"github.com/dejitarudemon/noctis-guard/internal/base"
-		"github.com/dejitarudemon/noctis-guard/internal/implemented"
+		"github.com/dejitarudemon/pbac-guardian"
+		"github.com/dejitarudemon/pbac-guardian/internal/base"
+		"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 	)
 
 	type User struct {
-		Name string `noctis-guard:"name"`
-		Role string `noctis-guard:"role"`
+		Name string `pbac-guardian:"name"`
+		Role string `pbac-guardian:"role"`
 	}
 
 	type Document struct {
-		Owner string `noctis-guard:"owner"`
-		Type  string `noctis-guard:"type"`
+		Owner string `pbac-guardian:"owner"`
+		Type  string `pbac-guardian:"type"`
 	}
 
 	func main() {
@@ -92,7 +92,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -145,7 +145,7 @@ Possible errors:
 
 Example usage:
 
-	import "github.com/dejitarudemon/noctis-guard/internal/implemented"
+	import "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 
 	casher := implemented.NewDefaultCasher()
 	policies := []base.Policy{
@@ -200,7 +200,7 @@ Possible errors:
 
 Example usage:
 
-	import "github.com/dejitarudemon/noctis-guard/internal/implemented"
+	import "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 
 	// File policies.json:
 	// [
@@ -294,12 +294,12 @@ Example usage:
 	)
 
 	type User struct {
-		Name string `noctis-guard:"name"`
-		Role string `noctis-guard:"role"`
+		Name string `pbac-guardian:"name"`
+		Role string `pbac-guardian:"role"`
 	}
 
 	type Document struct {
-		Owner string `noctis-guard:"owner"`
+		Owner string `pbac-guardian:"owner"`
 	}
 
 	user := User{Name: "alice", Role: "admin"}

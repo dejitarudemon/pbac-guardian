@@ -12,9 +12,9 @@ import (
 	"reflect"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
-	"github.com/dejitarudemon/noctis-guard/internal/implemented"
+	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 /*
@@ -32,7 +32,7 @@ func BenchmarkReflectSingleAccess(b *testing.B) {
 		// Simulate field access via reflection (similar to what the library does)
 		for j := 0; j < userType.NumField(); j++ {
 			field := userType.Field(j)
-			tag := field.Tag.Get("noctis-guard")
+			tag := field.Tag.Get("pbac-guardian")
 			if tag == "name" {
 				_ = userValue.Field(j).Interface()
 				break
@@ -78,7 +78,7 @@ func BenchmarkReflectMultipleAccess(b *testing.B) {
 		for k := 0; k < accessCount; k++ {
 			for j := 0; j < userType.NumField(); j++ {
 				field := userType.Field(j)
-				tag := field.Tag.Get("noctis-guard")
+				tag := field.Tag.Get("pbac-guardian")
 				if tag == "name" {
 					_ = userValue.Field(j).Interface()
 					break
@@ -241,4 +241,3 @@ func BenchmarkEvaluateWithoutCacheRepeatedFields(b *testing.B) {
 		_, _ = engine.Evaluate(ctx, source, target, "user:read")
 	}
 }
-

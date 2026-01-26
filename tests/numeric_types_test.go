@@ -11,8 +11,8 @@ import (
 	"context"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -21,62 +21,62 @@ Test structures for checking various numeric types.
 
 // UserWithInt8 represents a user with int8 field
 type UserWithInt8 struct {
-	Name string `noctis-guard:"name"`
-	Age  int8   `noctis-guard:"age"`
+	Name string `pbac-guardian:"name"`
+	Age  int8   `pbac-guardian:"age"`
 }
 
 // UserWithInt16 represents a user with int16 field
 type UserWithInt16 struct {
-	Name string `noctis-guard:"name"`
-	Age  int16  `noctis-guard:"age"`
+	Name string `pbac-guardian:"name"`
+	Age  int16  `pbac-guardian:"age"`
 }
 
 // UserWithInt32 represents a user with int32 field
 type UserWithInt32 struct {
-	Name string `noctis-guard:"name"`
-	Age  int32  `noctis-guard:"age"`
+	Name string `pbac-guardian:"name"`
+	Age  int32  `pbac-guardian:"age"`
 }
 
 // UserWithInt64 represents a user with int64 field
 type UserWithInt64 struct {
-	Name string `noctis-guard:"name"`
-	Age  int64  `noctis-guard:"age"`
+	Name string `pbac-guardian:"name"`
+	Age  int64  `pbac-guardian:"age"`
 }
 
 // UserWithUint8 represents a user with uint8 field
 type UserWithUint8 struct {
-	Name string `noctis-guard:"name"`
-	Age  uint8  `noctis-guard:"age"`
+	Name string `pbac-guardian:"name"`
+	Age  uint8  `pbac-guardian:"age"`
 }
 
 // UserWithUint16 represents a user with uint16 field
 type UserWithUint16 struct {
-	Name string `noctis-guard:"name"`
-	Age  uint16 `noctis-guard:"age"`
+	Name string `pbac-guardian:"name"`
+	Age  uint16 `pbac-guardian:"age"`
 }
 
 // UserWithUint32 represents a user with uint32 field
 type UserWithUint32 struct {
-	Name string `noctis-guard:"name"`
-	Age  uint32 `noctis-guard:"age"`
+	Name string `pbac-guardian:"name"`
+	Age  uint32 `pbac-guardian:"age"`
 }
 
 // UserWithUint64 represents a user with uint64 field
 type UserWithUint64 struct {
-	Name string `noctis-guard:"name"`
-	Age  uint64 `noctis-guard:"age"`
+	Name string `pbac-guardian:"name"`
+	Age  uint64 `pbac-guardian:"age"`
 }
 
 // UserWithFloat32 represents a user with float32 field
 type UserWithFloat32 struct {
-	Name string  `noctis-guard:"name"`
-	Age  float32 `noctis-guard:"age"`
+	Name string  `pbac-guardian:"name"`
+	Age  float32 `pbac-guardian:"age"`
 }
 
 // UserWithFloat64 represents a user with float64 field
 type UserWithFloat64 struct {
-	Name string  `noctis-guard:"name"`
-	Age  float64 `noctis-guard:"age"`
+	Name string  `pbac-guardian:"name"`
+	Age  float64 `pbac-guardian:"age"`
 }
 
 /*
@@ -327,4 +327,3 @@ func TestLtNumericTypes(t *testing.T) {
 		})
 	}
 }
-

@@ -10,8 +10,8 @@ import (
 	"context"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -124,4 +124,3 @@ func TestEvaluateInvalidTargetPath(t *testing.T) {
 		t.Errorf("expected error for invalid target field path, got nil")
 	}
 }
-

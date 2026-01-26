@@ -1,5 +1,5 @@
 /*
-Package tests contains tests for error types of the noctis-guard library.
+Package tests contains tests for error types of the pbac-guardian library.
 
 Tests check creation, wrapping and unwrapping of errors,
 as well as correctness of error messages.
@@ -13,7 +13,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dejitarudemon/noctis-guard"
+	"github.com/dejitarudemon/pbac-guardian"
 )
 
 /*
@@ -53,7 +53,7 @@ The test checks:
 func TestErrExport(t *testing.T) {
 	// Create original error that will be wrapped
 	originalErr := errors.New("original error")
-	
+
 	// Wrap it in ErrExport
 	err := noctisguard.NewErrExport(originalErr)
 	if err == nil {
@@ -96,7 +96,7 @@ e.g., invalid field paths or comparison errors.
 func TestErrEvaluate(t *testing.T) {
 	// Create original error that will be wrapped
 	originalErr := errors.New("original error")
-	
+
 	// Wrap it in ErrEvaluate
 	err := noctisguard.NewErrEvaluate(originalErr)
 	if err == nil {

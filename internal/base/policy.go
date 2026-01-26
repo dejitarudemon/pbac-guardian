@@ -15,7 +15,7 @@ import (
 )
 
 // tag key used for struct field tagging
-const TAG_KEY = "noctis-guard"
+const TAG_KEY = "pbac-guardian"
 
 const (
 	// separator for path to exported field
@@ -45,7 +45,7 @@ var (
 Policy represents a single access policy with a set of conditions.
 
 A policy defines rules for checking source and target structures for a specific
-action. Conditions are checked through structure fields tagged with "noctis-guard".
+action. Conditions are checked through structure fields tagged with "pbac-guardian".
 
 Fields:
   - Name - unique policy name (used for identification)
@@ -57,14 +57,14 @@ Fields:
 Example usage:
 
 	type User struct {
-		Name string `noctis-guard:"name"`
-		Role string `noctis-guard:"role"`
-		Age  int    `noctis-guard:"age"`
+		Name string `pbac-guardian:"name"`
+		Role string `pbac-guardian:"role"`
+		Age  int    `pbac-guardian:"age"`
 	}
 
 	type Document struct {
-		Owner string   `noctis-guard:"owner"`
-		Tags  []string `noctis-guard:"tags"`
+		Owner string   `pbac-guardian:"owner"`
+		Tags  []string `pbac-guardian:"tags"`
 	}
 
 	// Policy: allow admins to read documents
@@ -176,7 +176,7 @@ func (p *Policy) parsePath(path string) (*Entity, []string, error) {
 /*
 getValue finds a field in a structure by path and returns its value.
 
-The function recursively traverses the path using "noctis-guard" tags to find
+The function recursively traverses the path using "pbac-guardian" tags to find
 fields. The field must be exported (capitalized) and have a tag with the
 corresponding name.
 

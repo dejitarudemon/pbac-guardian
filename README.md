@@ -1,4 +1,4 @@
-# noctis-guard
+# pbac-guardian
 
 Current version: 0.3.7
 
@@ -11,7 +11,7 @@ Current version: 0.3.7
 
 ## Overview
 
-`noctis-guard` is a lightweight, policy-based access control (PBAC) library for Go. It allows you to define access policies declaratively and check structures against these policies using a flexible system of conditions and effects.
+`pbac-guardian` is a lightweight, policy-based access control (PBAC) library for Go. It allows you to define access policies declaratively and check structures against these policies using a flexible system of conditions and effects.
 
 ## Features
 
@@ -27,26 +27,26 @@ Current version: 0.3.7
 ## Installation
 
 ```bash
-go get github.com/dejitarudemon/noctis-guard
+go get github.com/dejitarudemon/pbac-guardian
 ```
 
 ## Quick Start
 
 ### 1. Define Your Structures
 
-Tag your struct fields with `noctis-guard` tags:
+Tag your struct fields with `pbac-guardian` tags:
 
 ```go
 type User struct {
-    Name string `noctis-guard:"name"`
-    Role string `noctis-guard:"role"`
-    Age  int    `noctis-guard:"age"`
+    Name string `pbac-guardian:"name"`
+    Role string `pbac-guardian:"role"`
+    Age  int    `pbac-guardian:"age"`
 }
 
 type Document struct {
-    Owner string   `noctis-guard:"owner"`
-    Type  string   `noctis-guard:"type"`
-    Tags  []string `noctis-guard:"tags"`
+    Owner string   `pbac-guardian:"owner"`
+    Type  string   `pbac-guardian:"type"`
+    Tags  []string `pbac-guardian:"tags"`
 }
 ```
 
@@ -54,8 +54,8 @@ type Document struct {
 
 ```go
 import (
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 policies := []base.Policy{
@@ -87,8 +87,8 @@ policies := []base.Policy{
 ```go
 import (
     "context"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 // Create cache instance (optional - pass nil to disable caching)
@@ -133,17 +133,17 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 type User struct {
-    Name string `noctis-guard:"name"`
-    Role string `noctis-guard:"role"`
+    Name string `pbac-guardian:"name"`
+    Role string `pbac-guardian:"role"`
 }
 
 type Document struct {
-    Owner string `noctis-guard:"owner"`
+    Owner string `pbac-guardian:"owner"`
 }
 
 func main() {
@@ -216,7 +216,7 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/pbac-guardian"
 )
 
 func main() {
@@ -327,9 +327,9 @@ This tutorial shows how to enable the optional L1 cache for improved performance
 ```go
 import (
     "context"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
-    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 func main() {
@@ -472,7 +472,7 @@ The library provides typed errors:
 
 ## Обзор
 
-`noctis-guard` — это легковесная библиотека для контроля доступа на основе политик (PBAC) для Go. Она позволяет декларативно определять политики доступа и проверять структуры на соответствие этим политикам с использованием гибкой системы условий и эффектов.
+`pbac-guardian` — это легковесная библиотека для контроля доступа на основе политик (PBAC) для Go. Она позволяет декларативно определять политики доступа и проверять структуры на соответствие этим политикам с использованием гибкой системы условий и эффектов.
 
 ## Возможности
 
@@ -488,26 +488,26 @@ The library provides typed errors:
 ## Установка
 
 ```bash
-go get github.com/dejitarudemon/noctis-guard
+go get github.com/dejitarudemon/pbac-guardian
 ```
 
 ## Быстрый старт
 
 ### 1. Определите свои структуры
 
-Помечайте поля структур тегами `noctis-guard`:
+Помечайте поля структур тегами `pbac-guardian`:
 
 ```go
 type User struct {
-    Name string `noctis-guard:"name"`
-    Role string `noctis-guard:"role"`
-    Age  int    `noctis-guard:"age"`
+    Name string `pbac-guardian:"name"`
+    Role string `pbac-guardian:"role"`
+    Age  int    `pbac-guardian:"age"`
 }
 
 type Document struct {
-    Owner string   `noctis-guard:"owner"`
-    Type  string   `noctis-guard:"type"`
-    Tags  []string `noctis-guard:"tags"`
+    Owner string   `pbac-guardian:"owner"`
+    Type  string   `pbac-guardian:"type"`
+    Tags  []string `pbac-guardian:"tags"`
 }
 ```
 
@@ -515,8 +515,8 @@ type Document struct {
 
 ```go
 import (
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 policies := []base.Policy{
@@ -548,8 +548,8 @@ policies := []base.Policy{
 ```go
 import (
     "context"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 // Создание экземпляра кеша (опционально - передайте nil для отключения кеширования)
@@ -594,17 +594,17 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 type User struct {
-    Name string `noctis-guard:"name"`
-    Role string `noctis-guard:"role"`
+    Name string `pbac-guardian:"name"`
+    Role string `pbac-guardian:"role"`
 }
 
 type Document struct {
-    Owner string `noctis-guard:"owner"`
+    Owner string `pbac-guardian:"owner"`
 }
 
 func main() {
@@ -677,7 +677,7 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/pbac-guardian"
 )
 
 func main() {
@@ -788,9 +788,9 @@ func main() {
 ```go
 import (
     "context"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
-    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 func main() {

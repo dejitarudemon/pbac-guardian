@@ -12,9 +12,9 @@ import (
 	"context"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
-	"github.com/dejitarudemon/noctis-guard/internal/implemented"
+	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 // Helper to create policies with repeated field access
@@ -26,7 +26,7 @@ func createPoliciesWithFieldAccess(action string, field string, count int, acces
 	// To simulate 'accessCount' accesses, we need to create more policies
 	totalPolicies := count * accessCount
 	policies := make([]base.Policy, totalPolicies)
-	
+
 	for i := 0; i < totalPolicies; i++ {
 		conditions := make(map[string]base.Condition)
 		// Each policy accesses the field once, but we create multiple policies
@@ -339,4 +339,3 @@ func BenchmarkProductionScenario_MixedFields_NoCache(b *testing.B) {
 		_, _ = engine.Evaluate(ctx, source, target, action)
 	}
 }
-

@@ -10,9 +10,9 @@ import (
 	"context"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
-	"github.com/dejitarudemon/noctis-guard/internal/implemented"
+	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 // Helper function to create policies that access the same field N times
@@ -165,4 +165,3 @@ func BenchmarkEvaluate5PoliciesWithoutCache(b *testing.B) {
 		_, _ = engine.Evaluate(ctx, source, target, "user:read")
 	}
 }
-

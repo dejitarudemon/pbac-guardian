@@ -1,5 +1,5 @@
 /*
-Package tests contains tests for the noctis-guard library.
+Package tests contains tests for the pbac-guardian library.
 
 Tests check the functionality of creating an engine from policies and files,
 as well as policy evaluation for various access scenarios.
@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -29,26 +29,26 @@ objects that are checked against access policies.
 
 // User represents a system user with fields tagged for access
 type User struct {
-	Name string `noctis-guard:"name"` // User name
-	Role string `noctis-guard:"role"` // User role (admin, user, guest, etc.)
-	Age  int    `noctis-guard:"age"`  // User age
+	Name string `pbac-guardian:"name"` // User name
+	Role string `pbac-guardian:"role"` // User role (admin, user, guest, etc.)
+	Age  int    `pbac-guardian:"age"`  // User age
 }
 
 // Document represents a document with owner and type information
 type Document struct {
-	Owner string   `noctis-guard:"owner"` // Document owner
-	Type  string   `noctis-guard:"type"`  // Document type (public, private, etc.)
-	Tags  []string `noctis-guard:"tags"`  // Document tags
+	Owner string   `pbac-guardian:"owner"` // Document owner
+	Type  string   `pbac-guardian:"type"`  // Document type (public, private, etc.)
+	Tags  []string `pbac-guardian:"tags"`  // Document tags
 }
 
 // NestedUser represents a nested user structure for testing nested paths
 type NestedUser struct {
-	User User `noctis-guard:"user"` // Nested user
+	User User `pbac-guardian:"user"` // Nested user
 }
 
 // NestedDocument represents a nested document structure for testing nested paths
 type NestedDocument struct {
-	Doc Document `noctis-guard:"doc"` // Nested document
+	Doc Document `pbac-guardian:"doc"` // Nested document
 }
 
 /*

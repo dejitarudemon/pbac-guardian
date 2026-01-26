@@ -11,7 +11,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -23,16 +23,16 @@ with various data types and nested structures.
 
 // PolicyTestUser represents a user for testing policies
 type PolicyTestUser struct {
-	Name string `noctis-guard:"name"` // User name
-	Role string `noctis-guard:"role"` // User role
-	Age  int    `noctis-guard:"age"`  // User age
+	Name string `pbac-guardian:"name"` // User name
+	Role string `pbac-guardian:"role"` // User role
+	Age  int    `pbac-guardian:"age"`  // User age
 }
 
 // PolicyTestDocument represents a document for testing policies
 type PolicyTestDocument struct {
-	Owner string   `noctis-guard:"owner"` // Document owner
-	Type  string   `noctis-guard:"type"`  // Document type
-	Tags  []string `noctis-guard:"tags"`  // Document tags
+	Owner string   `pbac-guardian:"owner"` // Document owner
+	Type  string   `pbac-guardian:"type"`  // Document type
+	Tags  []string `pbac-guardian:"tags"`  // Document tags
 }
 
 /*

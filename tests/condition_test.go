@@ -10,8 +10,8 @@ import (
 	"context"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	noctisguard "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -319,7 +319,7 @@ func TestLtCondition(t *testing.T) {
 // DocumentWithPriority extends Document for testing numeric comparisons
 type DocumentWithPriority struct {
 	Document
-	Priority int `noctis-guard:"priority"`
+	Priority int `pbac-guardian:"priority"`
 }
 
 /*
@@ -535,4 +535,3 @@ func TestMultipleConditionsCombined(t *testing.T) {
 		})
 	}
 }
-
