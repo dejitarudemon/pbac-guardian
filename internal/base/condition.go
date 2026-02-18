@@ -1,9 +1,9 @@
 /*
-Package base предоставляет базовые типы и функции для работы с политиками,
-условиями, эффектами и сущностями в системе проверки доступа.
+Package base provides basic types and functions for working with policies,
+conditions, effects, and entities in the access control system.
 
-Пакет содержит определения политик, условий сравнения, эффектов (allow/deny),
-сущностей (source/target) и интерфейсов для кастомного сравнения.
+The package contains definitions of policies, comparison conditions, effects (allow/deny),
+entities (source/target) and interfaces for custom comparison.
 */
 package base
 
@@ -14,25 +14,25 @@ import (
 )
 
 /*
-В этом файле представлены различные условия для политик
+This file contains various conditions for policies
 */
 
 const SUPPORTED_LT_PRIMITIVES = "int|uint|float|string"
 
 /*
-Структура Condition представляет набор правил для сравнения значений в политиках.
+Condition represents a set of rules for comparing values in policies.
 
-Условие может содержать одно или несколько полей. Если указано несколько полей,
-они проверяются независимо друг от друга. Значения могут быть как литералами,
-так и путями до полей структур (например, "source:name" или "target:role").
+A condition can contain one or more fields. If multiple fields are specified,
+they are checked independently of each other. Values can be either literals
+or paths to structure fields (e.g., "source:name" or "target:role").
 
-Поля:
-  - Contains - проверяет, находится ли левое значение в правом списке (right должен быть slice)
-  - Eq - проверяет равенство значений (left == right)
-  - Neq - проверяет неравенство значений (left != right)
-  - Lt - проверяет, меньше ли левое значение правого (left < right)
+Fields:
+  - Contains - checks if left value is in right list (right must be a slice)
+  - Eq - checks equality of values (left == right)
+  - Neq - checks inequality of values (left != right)
+  - Lt - checks if left value is less than right (left < right)
 
-Пример использования:
+Example usage:
 
 	type User struct {
 		Name string   `noctis-guard:"name"`
@@ -41,35 +41,35 @@ const SUPPORTED_LT_PRIMITIVES = "int|uint|float|string"
 		Tags []string `noctis-guard:"tags"`
 	}
 
-	// Проверка равенства с литералом
+	// Equality check with literal
 	condition1 := Condition{
 		Eq: "admin", // source:role == "admin"
 	}
 
-	// Проверка равенства полей двух структур
+	// Equality check of fields from two structures
 	condition2 := Condition{
 		Eq: "target:owner", // source:name == target:owner
 	}
 
-	// Проверка неравенства
+	// Inequality check
 	condition3 := Condition{
 		Neq: "guest", // source:role != "guest"
 	}
 
-	// Проверка, что значение меньше
+	// Check if value is less
 	condition4 := Condition{
 		Lt: 18, // source:age < 18
 	}
 
-	// Проверка, что значение находится в списке
+	// Check if value is in list
 	condition5 := Condition{
-		Contains: []any{"admin", "moderator"}, // source:role в ["admin", "moderator"]
+		Contains: []any{"admin", "moderator"}, // source:role in ["admin", "moderator"]
 	}
 
-	// Комбинирование условий (все должны быть выполнены)
+	// Combining conditions (all must be met)
 	condition6 := Condition{
 		Eq:       "user",           // source:role == "user"
-		Contains: []any{"read"},    // "read" в source:tags
+		Contains: []any{"read"},    // "read" in source:tags
 		Lt:       100,             // source:age < 100
 	}
 */
@@ -81,43 +81,43 @@ type Condition struct {
 }
 
 /*
-Тип conditionFunc представляет функцию для проверки условия между двумя значениями.
+conditionFunc represents a function for checking a condition between two values.
 
-Функции этого типа используются для проверки условий в политиках. Порядок аргументов
-имеет значение для операций Contains и Lt (left и right не взаимозаменяемы).
+Functions of this type are used to check conditions in policies. Argument order
+matters for Contains and Lt operations (left and right are not interchangeable).
 
-Функции должны поддерживать отмену через context.Context и возвращать ErrCancelled
-при отмене контекста.
+Functions must support cancellation through context.Context and return ErrCancelled
+when context is cancelled.
 
-Входные параметры:
-  - ctx - контекст для отмены операции и контроля таймаутов
-  - left - левое сравниваемое значение (то, что проверяется)
-  - right - правое сравниваемое значение (то, с чем сравнивается)
+Parameters:
+  - ctx - context for operation cancellation and timeout control
+  - left - left value to compare (what is being checked)
+  - right - right value to compare (what is being compared against)
 
-Выходные параметры:
-  - bool - результат сравнения (true если условие выполнено, false иначе)
-  - err - ошибка выполнения сравнения (nil если сравнение успешно, ErrCancelled при отмене контекста)
+Returns:
+  - bool - comparison result (true if condition is met, false otherwise)
+  - err - comparison execution error (nil if comparison successful, ErrCancelled on context cancellation)
 */
 type conditionFunc func(ctx context.Context, left, right any) (bool, error)
 
 /*
-Функция containsConditionFunc проверяет, находится ли значение left в списке right.
+containsConditionFunc checks if value left is in list right.
 
-Функция использует reflect.DeepEqual для сравнения элементов, что позволяет
-работать с любыми типами данных. Поддерживает отмену через context.Context.
+The function uses reflect.DeepEqual to compare elements, allowing it to
+work with any data types. Supports cancellation through context.Context.
 
-Входные параметры:
-  - ctx - контекст для отмены операции и контроля таймаутов
-  - left - значение, которое ищется в списке
-  - right - список (slice) или указатель на список, в котором выполняется поиск
+Parameters:
+  - ctx - context for operation cancellation and timeout control
+  - left - value to search for in the list
+  - right - list (slice) or pointer to list in which to search
 
-Выходные параметры:
-  - bool - true, если left найден в right, false иначе
-  - err - ошибка выполнения, если right не является списком или операция отменена
+Returns:
+  - bool - true if left is found in right, false otherwise
+  - err - execution error if right is not a list or operation is cancelled
 
-Возможные ошибки:
-  - ErrCancelled - операция была отменена через context.Context
-  - ErrInvalidType - right не является slice или указателем на slice (может быть nil)
+Possible errors:
+  - ErrCancelled - operation was cancelled through context.Context
+  - ErrInvalidType - right is not a slice or pointer to slice (may be nil)
 */
 func containsConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	if ctx == nil {
@@ -156,20 +156,20 @@ func containsConditionFunc(ctx context.Context, left, right any) (bool, error) {
 }
 
 /*
-Функция eqConditionFunc проверяет равенство двух значений.
+eqConditionFunc checks equality of two values.
 
-Если одно из значений реализует интерфейс Comparable, используется метод Compare()
-для сравнения. Если Compare() возвращает false (сравнение невозможно), или
-ни одно значение не реализует Comparable, используется reflect.DeepEqual.
+If one of the values implements the Comparable interface, the Compare() method
+is used for comparison. If Compare() returns false (comparison impossible), or
+neither value implements Comparable, reflect.DeepEqual is used.
 
-Входные параметры:
-  - ctx - контекст для отмены операции и контроля таймаутов (не используется, но требуется для совместимости)
-  - left - левое сравниваемое значение
-  - right - правое сравниваемое значение
+Parameters:
+  - ctx - context for operation cancellation and timeout control (not used, but required for compatibility)
+  - left - left value to compare
+  - right - right value to compare
 
-Выходные параметры:
-  - bool - true, если значения равны, false иначе
-  - err - ошибка выполнения (всегда nil, функция не возвращает ошибок)
+Returns:
+  - bool - true if values are equal, false otherwise
+  - err - execution error (always nil, function does not return errors)
 */
 func eqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	if ctx == nil {
@@ -192,19 +192,19 @@ func eqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 }
 
 /*
-Функция neqConditionFunc проверяет неравенство двух значений.
+neqConditionFunc checks inequality of two values.
 
-Функция является инверсией eqConditionFunc: возвращает !eqConditionFunc(ctx, left, right).
-Использует ту же логику сравнения через Comparable или DeepEqual.
+The function is the inverse of eqConditionFunc: returns !eqConditionFunc(ctx, left, right).
+Uses the same comparison logic through Comparable or DeepEqual.
 
-Входные параметры:
-  - ctx - контекст для отмены операции и контроля таймаутов (передается в eqConditionFunc)
-  - left - левое сравниваемое значение
-  - right - правое сравниваемое значение
+Parameters:
+  - ctx - context for operation cancellation and timeout control (passed to eqConditionFunc)
+  - left - left value to compare
+  - right - right value to compare
 
-Выходные параметры:
-  - bool - true, если значения не равны, false если равны
-  - err - ошибка выполнения (всегда nil, функция не возвращает ошибок)
+Returns:
+  - bool - true if values are not equal, false if equal
+  - err - execution error (always nil, function does not return errors)
 */
 func neqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	ok, err := eqConditionFunc(ctx, left, right)
@@ -212,26 +212,26 @@ func neqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 }
 
 /*
-Функция ltConditionFunc проверяет, меньше ли left значения right.
+ltConditionFunc checks if left is less than right.
 
-Если left является структурой, она должна реализовывать интерфейс Comparable.
-Для примитивных типов (int, uint, float, string) используется сравнение через reflect.
-Типы должны совпадать для корректного сравнения.
+If left is a structure, it must implement the Comparable interface.
+For primitive types (int, uint, float, string), comparison is done through reflect.
+Types must match for correct comparison.
 
-Входные параметры:
-  - ctx - контекст для отмены операции и контроля таймаутов (передается в ltPrimitives)
-  - left - левое сравниваемое значение
-  - right - правое сравниваемое значение
+Parameters:
+  - ctx - context for operation cancellation and timeout control (passed to ltPrimitives)
+  - left - left value to compare
+  - right - right value to compare
 
-Выходные параметры:
-  - bool - true, если left < right, false иначе
-  - err - ошибка выполнения, если сравнение невозможно
+Returns:
+  - bool - true if left < right, false otherwise
+  - err - execution error if comparison is impossible
 
-Возможные ошибки:
-  - ErrNotComparableStruct - left является структурой, но не реализует интерфейс Comparable
-  - ErrUncomparable - невозможно сравнить left и right (несовместимые типы или Compare вернул false)
-  - ErrInvalidType - left или right не является ни структурой, ни поддерживаемым примитивом
-    (int, uint, float, string и их варианты)
+Possible errors:
+  - ErrNotComparableStruct - left is a structure but does not implement Comparable interface
+  - ErrUncomparable - cannot compare left and right (incompatible types or Compare returned false)
+  - ErrInvalidType - left or right is neither a structure nor a supported primitive
+    (int, uint, float, string and their variants)
 */
 func ltConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	if ctx == nil {
@@ -267,28 +267,28 @@ func ltConditionFunc(ctx context.Context, left, right any) (bool, error) {
 }
 
 /*
-Функция ltPrimitives сравнивает примитивные типы left и right на основе рефлексии.
+ltPrimitives compares primitive types left and right based on reflection.
 
-Функция поддерживает сравнение следующих типов:
+The function supports comparison of the following types:
   - int, int8, int16, int32, int64
   - uint, uint8, uint16, uint32, uint64
   - float32, float64
   - string
 
-Типы left и right должны совпадать. Если передан указатель, он разыменовывается.
+Types left and right must match. If a pointer is passed, it is dereferenced.
 
-Входные параметры:
-  - left - левое сравниваемое значение (примитивный тип)
-  - right - правое сравниваемое значение (примитивный тип)
+Parameters:
+  - left - left value to compare (primitive type)
+  - right - right value to compare (primitive type)
 
-Выходные параметры:
-  - bool - true, если left < right, false иначе
-  - err - ошибка выполнения, если сравнение невозможно
+Returns:
+  - bool - true if left < right, false otherwise
+  - err - execution error if comparison is impossible
 
-Возможные ошибки:
-  - ErrUncomparable - типы left и right не совпадают или один из них nil
-  - ErrInvalidType - left или right не является поддерживаемым примитивом
-    (int, uint, float, string и их варианты)
+Possible errors:
+  - ErrUncomparable - types left and right do not match or one of them is nil
+  - ErrInvalidType - left or right is not a supported primitive
+    (int, uint, float, string and their variants)
 */
 func ltPrimitives(left, right any) (bool, error) {
 	v1 := reflect.ValueOf(left)

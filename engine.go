@@ -1,10 +1,10 @@
 /*
-Package noctisguard предоставляет движок для проверки структур на соответствие политикам.
+Package noctisguard provides an engine for checking structures against policies.
 
-Библиотека позволяет определять политики доступа и проверять соответствие структур
-этим политикам с использованием гибкой системы условий и эффектов.
+The library allows you to define access policies and check structures against
+these policies using a flexible system of conditions and effects.
 
-Пример использования:
+Example usage:
 
 	package main
 
@@ -26,7 +26,7 @@ Package noctisguard предоставляет движок для провер�
 	}
 
 	func main() {
-		// Создание политик
+		// Create policies
 		policies := []base.Policy{
 			{
 				Name:   "admin-read",
@@ -50,16 +50,16 @@ Package noctisguard предоставляет движок для провер�
 			},
 		}
 
-		// Создание движка
+		// Create engine
 		engine, err := noctisguard.NewNoctisFromPolices(policies)
 		if err != nil {
 			panic(err)
 		}
 
-		// Создание контекста
+		// Create context
 		ctx := context.Background()
 
-		// Проверка доступа
+		// Check access
 		user := User{Name: "alice", Role: "user"}
 		doc := Document{Owner: "alice", Type: "private"}
 
@@ -72,7 +72,7 @@ Package noctisguard предоставляет движок для провер�
 			}
 		}
 
-		fmt.Printf("Access allowed: %v\n", allowed) // true (политика owner-read прошла)
+		fmt.Printf("Access allowed: %v\n", allowed) // true (owner-read policy passed)
 	}
 */
 package noctisguard
@@ -88,15 +88,14 @@ import (
 )
 
 /*
-Структура Noctis представляет собой основной движок библиотеки для проверки
-структур на соответствие политикам доступа.
+Noctis is the main engine of the library for checking structures against access policies.
 
-Noctis хранит политики, организованные по действиям (action), и предоставляет
-метод Evaluate для проверки соответствия структур этим политикам.
+Noctis stores policies organized by actions and provides the Evaluate method
+to check structures against these policies.
 
-Для создания экземпляра Noctis используйте:
-  - NewNoctisFromPolices - создание из списка политик, переданных вручную из кода
-  - NewNoctisFromFile - создание из JSON-файла с политиками
+To create a Noctis instance, use:
+  - NewNoctisFromPolices - create from a list of policies passed programmatically
+  - NewNoctisFromFile - create from a JSON file with policies
 */
 type Noctis struct {
 	// хранит политики, разделенные по действиям (action)
@@ -104,25 +103,24 @@ type Noctis struct {
 }
 
 /*
-Функция NewNoctisFromPolices создает новый экземпляр Noctis из списка политик,
-переданных программно.
+NewNoctisFromPolices creates a new Noctis instance from a list of policies passed programmatically.
 
-Функция выполняет валидацию политик и проверку на дубликаты имен. Политики
-группируются по действиям (action) для последующей быстрой проверки.
+The function performs policy validation and checks for duplicate names. Policies
+are grouped by actions for subsequent fast checking.
 
-Входные параметры:
-  - polices - список политик для инициализации движка
+Parameters:
+  - polices - list of policies to initialize the engine
 
-Выходные параметры:
-  - *Noctis - созданный экземпляр движка, готовый к использованию
-  - error - ошибка создания, если политики содержат дубликаты имен или невалидны
+Returns:
+  - *Noctis - created engine instance, ready to use
+  - error - creation error if policies contain duplicate names or are invalid
 
-Возможные ошибки:
-  - ErrExport - ошибка экспорта политик. Может содержать:
-  - ErrDuplicateName - если найдены политики с одинаковыми именами
-  - ошибки валидации из base (ErrInvalidPath) - если политики невалидны
+Possible errors:
+  - ErrExport - policy export error. May contain:
+  - ErrDuplicateName - if policies with the same names are found
+  - validation errors from base (ErrInvalidPath) - if policies are invalid
 
-Пример использования:
+Example usage:
 
 	policies := []base.Policy{
 		{
@@ -137,7 +135,7 @@ type Noctis struct {
 
 	engine, err := noctisguard.NewNoctisFromPolices(policies)
 	if err != nil {
-		// обработка ошибки
+		// handle error
 	}
 */
 func NewNoctisFromPolices(polices []base.Policy) (*Noctis, error) {
@@ -150,29 +148,28 @@ func NewNoctisFromPolices(polices []base.Policy) (*Noctis, error) {
 }
 
 /*
-Функция NewNoctisFromFile создает новый экземпляр Noctis из JSON-файла,
-содержащего массив политик.
+NewNoctisFromFile creates a new Noctis instance from a JSON file containing an array of policies.
 
-Функция читает файл, парсит JSON и создает движок аналогично NewNoctisFromPolices.
-Файл должен содержать валидный JSON-массив объектов Policy.
+The function reads the file, parses JSON and creates the engine similar to NewNoctisFromPolices.
+The file must contain a valid JSON array of Policy objects.
 
-Входные параметры:
-  - path - путь до файла с политиками в формате JSON
+Parameters:
+  - path - path to the file with policies in JSON format
 
-Выходные параметры:
-  - *Noctis - созданный экземпляр движка, готовый к использованию
-  - error - ошибка создания, если файл недоступен или содержит невалидные данные
+Returns:
+  - *Noctis - created engine instance, ready to use
+  - error - creation error if the file is unavailable or contains invalid data
 
-Возможные ошибки:
-  - ErrExport - ошибка экспорта политик. Может содержать:
-  - ошибки открытия/чтения файла (os.PathError и т.д.)
-  - ошибки JSON-парсинга (json.SyntaxError и т.д.)
-  - ErrDuplicateName - если найдены политики с одинаковыми именами
-  - ошибки валидации из base (ErrInvalidPath) - если политики невалидны
+Possible errors:
+  - ErrExport - policy export error. May contain:
+  - file open/read errors (os.PathError, etc.)
+  - JSON parsing errors (json.SyntaxError, etc.)
+  - ErrDuplicateName - if policies with the same names are found
+  - validation errors from base (ErrInvalidPath) - if policies are invalid
 
-Пример использования:
+Example usage:
 
-	// Файл policies.json:
+	// File policies.json:
 	// [
 	//   {
 	//     "name": "allow-admin",
@@ -186,7 +183,7 @@ func NewNoctisFromPolices(polices []base.Policy) (*Noctis, error) {
 
 	engine, err := noctisguard.NewNoctisFromFile("policies.json")
 	if err != nil {
-		// обработка ошибки
+		// handle error
 	}
 */
 func NewNoctisFromFile(path string) (*Noctis, error) {
@@ -210,46 +207,45 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 }
 
 /*
-Функция Evaluate проверяет соответствие структур source и target политикам
-для указанного действия.
+Evaluate checks whether source and target structures match policies for the specified action.
 
-Функция ищет все политики, связанные с указанным действием, и проверяет их
-условия. Результат определяется логикой эффектов: политики с эффектом DENY
-имеют приоритет и запрещают действие, если их условия не выполнены. Политики
-с эффектом ALLOW разрешают действие, если хотя бы одна из них проходит проверку.
+The function finds all policies related to the specified action and checks their
+conditions. The result is determined by the effect logic: policies with DENY effect
+have priority and deny the action if their conditions are not met. Policies with
+ALLOW effect allow the action if at least one of them passes the check.
 
-Функция поддерживает отмену через context.Context, что позволяет прервать
-длительные операции проверки условий.
+The function supports cancellation through context.Context, allowing to interrupt
+long-running condition checking operations.
 
-Входные параметры:
-  - ctx - контекст для отмены операции и контроля таймаутов
-  - source - первая проверяемая структура (обычно источник действия)
-  - target - вторая проверяемая структура (обычно цель действия)
-  - action - действие в формате "entity:action:extra..." для которого проверяются политики
+Parameters:
+  - ctx - context for operation cancellation and timeout control
+  - source - first structure to check (usually the action source)
+  - target - second structure to check (usually the action target)
+  - action - action in format "entity:action:extra..." for which policies are checked
 
-Выходные параметры:
-  - bool - результат проверки:
-  - true - действие разрешено (хотя бы одна политика ALLOW прошла проверку)
-  - false - действие запрещено (нет политик для действия, или политика DENY не прошла проверку)
-  - error - ошибка выполнения проверки, если возникла проблема при оценке условий
+Returns:
+  - bool - check result:
+  - true - action is allowed (at least one ALLOW policy passed the check)
+  - false - action is denied (no policies for the action, or DENY policy did not pass the check)
+  - error - execution error if a problem occurred during condition evaluation
 
-Возможные ошибки:
-  - ErrEvaluate - ошибка оценки политик. Может содержать ошибки из base:
-  - ErrCancelled - операция была отменена через context.Context
-  - ErrInvalidPath - ошибка парсинга пути до поля или поле не найдено
-  - ErrInvalidType - неверный тип структуры или поля
-  - ErrUncomparable - невозможно сравнить значения в условии
-  - ErrInexpectedBehavior - внутренняя ошибка (функция условия не найдена)
+Possible errors:
+  - ErrEvaluate - policy evaluation error. May contain errors from base:
+  - ErrCancelled - operation was cancelled through context.Context
+  - ErrInvalidPath - path parsing error or field not found
+  - ErrInvalidType - invalid structure or field type
+  - ErrUncomparable - cannot compare values in condition
+  - ErrInexpectedBehavior - internal error (condition function not found)
 
-Логика работы:
- 1. Если для указанного action нет политик, возвращается (false, nil)
- 2. Для каждой политики проверяются условия:
-    - Если контекст отменен, возвращается (false, ErrCancelled)
-    - Если политика имеет эффект DENY и условия не выполнены, возвращается (false, nil)
-    - Если политика имеет эффект ALLOW и условия выполнены, устанавливается флаг allowed = true
- 3. Возвращается результат: (allowed, nil) или (false, error) при ошибке
+Logic:
+ 1. If there are no policies for the specified action, returns (false, nil)
+ 2. For each policy, conditions are checked:
+    - If context is cancelled, returns (false, ErrCancelled)
+    - If policy has DENY effect and conditions are not met, returns (false, nil)
+    - If policy has ALLOW effect and conditions are met, sets allowed = true flag
+ 3. Returns result: (allowed, nil) or (false, error) on error
 
-Пример использования:
+Example usage:
 
 	import (
 		"context"
@@ -268,24 +264,24 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 	user := User{Name: "alice", Role: "admin"}
 	doc := Document{Owner: "alice"}
 
-	// Создание контекста с таймаутом
+	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Проверка доступа на чтение документа
+	// Check access to read document
 	allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
 	if err != nil {
 		if err == base.ErrCancelled {
-			// операция была отменена
+			// operation was cancelled
 		} else {
-			// другая ошибка
+			// other error
 		}
 	}
 
 	if allowed {
-		// доступ разрешен
+		// access granted
 	} else {
-		// доступ запрещен
+		// access denied
 	}
 */
 func (n *Noctis) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {

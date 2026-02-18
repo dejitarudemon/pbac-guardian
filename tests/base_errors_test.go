@@ -1,8 +1,8 @@
 /*
-Пакет tests содержит тесты для публичных конструкторов ошибок пакета base.
+Package tests contains tests for public error constructors of base package.
 
-Тесты проверяют создание ошибок, их сообщения
-и корректность работы с errors.As() и errors.Is().
+Tests check error creation, their messages
+and correctness of working with errors.As() and errors.Is().
 */
 package tests
 
@@ -14,146 +14,146 @@ import (
 )
 
 /*
-TestErrInvalidType тестирует публичный конструктор NewErrInvalidType.
+TestErrInvalidType tests the public constructor NewErrInvalidType.
 
-Тест проверяет:
-  - Создание ошибки с ожидаемым и полученным типами
-  - Корректность типа ошибки через errors.As()
-  - Наличие сообщения об ошибке
+The test checks:
+  - Error creation with expected and received types
+  - Error type correctness via errors.As()
+  - Presence of error message
 */
 func TestErrInvalidType(t *testing.T) {
-	// Создаем ошибку с ожидаемым типом "struct" и полученным "string"
+	// Create error with expected type "struct" and received "string"
 	err := base.NewErrInvalidType("struct", "string")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 
-	// Проверяем тип ошибки
+	// Check error type
 	var invalidTypeErr base.ErrInvalidType
 	if !errors.As(err, &invalidTypeErr) {
 		t.Errorf("expected ErrInvalidType, got %T", err)
 	}
 
-	// Проверяем, что сообщение об ошибке не пустое
+	// Check that error message is not empty
 	if err.Error() == "" {
 		t.Error("expected non-empty error message")
 	}
 }
 
 /*
-TestErrUncomparable тестирует публичный конструктор NewErrUncomparable.
+TestErrUncomparable tests the public constructor NewErrUncomparable.
 
-Тест проверяет:
-  - Создание ошибки с левым и правым значениями
-  - Корректность типа ошибки через errors.As()
-  - Наличие сообщения об ошибке
+The test checks:
+  - Error creation with left and right values
+  - Error type correctness via errors.As()
+  - Presence of error message
 */
 func TestErrUncomparable(t *testing.T) {
-	// Создаем ошибку для несовместимых типов (int и string)
+	// Create error for incompatible types (int and string)
 	err := base.NewErrUncomparable(5, "string")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 
-	// Проверяем тип ошибки
+	// Check error type
 	var uncomparableErr base.ErrUncomparable
 	if !errors.As(err, &uncomparableErr) {
 		t.Errorf("expected ErrUncomparable, got %T", err)
 	}
 
-	// Проверяем, что сообщение об ошибке не пустое
+	// Check that error message is not empty
 	if err.Error() == "" {
 		t.Error("expected non-empty error message")
 	}
 }
 
 /*
-TestErrInvalidPath тестирует публичный конструктор NewErrInvalidPath.
+TestErrInvalidPath tests the public constructor NewErrInvalidPath.
 
-Тест проверяет:
-  - Создание ошибки с путем и деталями
-  - Корректность типа ошибки через errors.As()
-  - Наличие сообщения об ошибке
+The test checks:
+  - Error creation with path and details
+  - Error type correctness via errors.As()
+  - Presence of error message
 */
 func TestErrInvalidPath(t *testing.T) {
-	// Создаем ошибку с невалидным путем и описанием проблемы
+	// Create error with invalid path and problem description
 	err := base.NewErrInvalidPath("source:invalid", "field not found")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 
-	// Проверяем тип ошибки
+	// Check error type
 	var invalidPathErr base.ErrInvalidPath
 	if !errors.As(err, &invalidPathErr) {
 		t.Errorf("expected ErrInvalidPath, got %T", err)
 	}
 
-	// Проверяем, что сообщение об ошибке не пустое
+	// Check that error message is not empty
 	if err.Error() == "" {
 		t.Error("expected non-empty error message")
 	}
 }
 
 /*
-TestErrInexpectedBehavior тестирует публичный конструктор NewErrInexpectedBehavior.
+TestErrInexpectedBehavior tests the public constructor NewErrInexpectedBehavior.
 
-Тест проверяет:
-  - Создание ошибки с источником и деталями
-  - Корректность типа ошибки через errors.As()
-  - Наличие сообщения об ошибке
+The test checks:
+  - Error creation with source and details
+  - Error type correctness via errors.As()
+  - Presence of error message
 */
 func TestErrInexpectedBehavior(t *testing.T) {
-	// Создаем ошибку с указанием источника и деталей проблемы
+	// Create error with source and problem details
 	err := base.NewErrInexpectedBehavior("TestFunction", "unexpected condition")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 
-	// Проверяем тип ошибки
+	// Check error type
 	var unexpectedErr base.ErrInexpectedBehavior
 	if !errors.As(err, &unexpectedErr) {
 		t.Errorf("expected ErrInexpectedBehavior, got %T", err)
 	}
 
-	// Проверяем, что сообщение об ошибке не пустое
+	// Check that error message is not empty
 	if err.Error() == "" {
 		t.Error("expected non-empty error message")
 	}
 }
 
 /*
-TestErrCancelled тестирует глобальную публичную переменную ErrCancelled.
+TestErrCancelled tests the global public variable ErrCancelled.
 
-Тест проверяет:
-  - Что ErrCancelled не является nil
-  - Корректность сообщения об ошибке
+The test checks:
+  - That ErrCancelled is not nil
+  - Correctness of error message
 */
 func TestErrCancelled(t *testing.T) {
-	// Проверяем, что ошибка определена
+	// Check that error is defined
 	if base.ErrCancelled == nil {
 		t.Fatal("ErrCancelled should not be nil")
 	}
 
-	// Проверяем сообщение об ошибке
+	// Check error message
 	if base.ErrCancelled.Error() != "cancelled by context" {
 		t.Errorf("expected error message 'cancelled by context', got %q", base.ErrCancelled.Error())
 	}
 }
 
 /*
-TestErrNotComparableStruct тестирует глобальную публичную переменную ErrNotComparableStruct.
+TestErrNotComparableStruct tests the global public variable ErrNotComparableStruct.
 
-Тест проверяет:
-  - Что ErrNotComparableStruct не является nil
-  - Корректность сообщения об ошибке
+The test checks:
+  - That ErrNotComparableStruct is not nil
+  - Correctness of error message
 */
 func TestErrNotComparableStruct(t *testing.T) {
-	// Проверяем, что ошибка определена
+	// Check that error is defined
 	if base.ErrNotComparableStruct == nil {
 		t.Fatal("ErrNotComparableStruct should not be nil")
 	}
 
-	// Проверяем сообщение об ошибке
+	// Check error message
 	expectedMsg := "left argument is a struct, but it doesn't implement Comapre() method"
 	if base.ErrNotComparableStruct.Error() != expectedMsg {
 		t.Errorf("expected error message %q, got %q", expectedMsg, base.ErrNotComparableStruct.Error())

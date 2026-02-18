@@ -1,11 +1,11 @@
 /*
-Пакет tests содержит тесты для типов ошибок библиотеки noctis-guard.
+Package tests contains tests for error types of the noctis-guard library.
 
-Тесты проверяют создание, обертку и разворачивание ошибок,
-а также корректность сообщений об ошибках.
+Tests check creation, wrapping and unwrapping of errors,
+as well as correctness of error messages.
 
-Этот файл находится в директории tests для организации тестов.
-Тесты импортируют пакет noctisguard как обычные пользователи библиотеки.
+This file is in the tests directory for test organization.
+Tests import the noctisguard package as regular library users.
 */
 package tests
 
@@ -17,23 +17,23 @@ import (
 )
 
 /*
-TestErrDuplicateName тестирует ошибку дубликата имени политики.
+TestErrDuplicateName tests the duplicate policy name error.
 
-Тест проверяет:
-  - Создание ошибки с указанным именем политики
-  - Корректность типа ошибки через errors.As()
-  - Сохранение имени в структуре ошибки
-  - Формат сообщения об ошибке (должно содержать имя политики)
+The test checks:
+  - Error creation with specified policy name
+  - Error type correctness via errors.As()
+  - Name storage in error structure
+  - Error message format (should contain policy name)
 */
 func TestErrDuplicateName(t *testing.T) {
-	// Создаем ошибку с тестовым именем политики
+	// Create error with test policy name
 	err := noctisguard.NewErrDuplicateName("test-policy")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 
-	// Проверяем сообщение об ошибке (проверка типа через errors.As недоступна для неэкспортируемых типов)
-	// Проверяем, что сообщение содержит имя политики и указание на дубликат
+	// Check error message (type check via errors.As not available for unexported types)
+	// Check that message contains policy name and duplicate indication
 	expectedMsg := "test-policy is already used by another policy"
 	if err.Error() != expectedMsg {
 		t.Errorf("expected error message %q, got %q", expectedMsg, err.Error())
@@ -41,39 +41,39 @@ func TestErrDuplicateName(t *testing.T) {
 }
 
 /*
-TestErrExport тестирует ошибку экспорта политик.
+TestErrExport tests the policy export error.
 
-Тест проверяет:
-  - Создание ошибки с оберткой исходной ошибки
-  - Корректность типа ошибки через errors.As()
-  - Возможность разворачивания ошибки через errors.Unwrap()
-  - Проверку через errors.Is() для исходной ошибки
-  - Сохранение исходной ошибки в поле source структуры
+The test checks:
+  - Error creation wrapping original error
+  - Error type correctness via errors.As()
+  - Ability to unwrap error via errors.Unwrap()
+  - Check via errors.Is() for original error
+  - Storage of original error in source field of structure
 */
 func TestErrExport(t *testing.T) {
-	// Создаем исходную ошибку, которая будет обернута
+	// Create original error that will be wrapped
 	originalErr := errors.New("original error")
 	
-	// Оборачиваем её в ErrExport
+	// Wrap it in ErrExport
 	err := noctisguard.NewErrExport(originalErr)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 
-	// Проверяем, что ошибка оборачивает исходную через errors.Is()
-	// Это позволяет проверять наличие исходной ошибки в цепочке
+	// Check that error wraps original via errors.Is()
+	// This allows checking for original error in the chain
 	if !errors.Is(err, originalErr) {
 		t.Error("expected error to wrap original error")
 	}
 
-	// Проверяем разворачивание ошибки через errors.Unwrap()
-	// Это позволяет получить доступ к исходной ошибке
+	// Check error unwrapping via errors.Unwrap()
+	// This allows access to original error
 	unwrapped := errors.Unwrap(err)
 	if unwrapped != originalErr {
 		t.Errorf("expected unwrapped error to be original error")
 	}
 
-	// Проверяем, что сообщение об ошибке содержит информацию об экспорте
+	// Check that error message contains export information
 	errorMsg := err.Error()
 	if errorMsg == "" {
 		t.Error("expected non-empty error message")
@@ -81,40 +81,40 @@ func TestErrExport(t *testing.T) {
 }
 
 /*
-TestErrEvaluate тестирует ошибку оценки политик.
+TestErrEvaluate tests the policy evaluation error.
 
-Тест проверяет:
-  - Создание ошибки с оберткой исходной ошибки
-  - Корректность типа ошибки через errors.As()
-  - Возможность разворачивания ошибки через errors.Unwrap()
-  - Проверку через errors.Is() для исходной ошибки
-  - Сохранение исходной ошибки в поле source структуры
+The test checks:
+  - Error creation wrapping original error
+  - Error type correctness via errors.As()
+  - Ability to unwrap error via errors.Unwrap()
+  - Check via errors.Is() for original error
+  - Storage of original error in source field of structure
 
-Эта ошибка используется при ошибках во время выполнения Evaluate,
-например, при невалидных путях к полям или ошибках сравнения.
+This error is used for errors during Evaluate execution,
+e.g., invalid field paths or comparison errors.
 */
 func TestErrEvaluate(t *testing.T) {
-	// Создаем исходную ошибку, которая будет обернута
+	// Create original error that will be wrapped
 	originalErr := errors.New("original error")
 	
-	// Оборачиваем её в ErrEvaluate
+	// Wrap it in ErrEvaluate
 	err := noctisguard.NewErrEvaluate(originalErr)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
 
-	// Проверяем, что ошибка оборачивает исходную через errors.Is()
+	// Check that error wraps original via errors.Is()
 	if !errors.Is(err, originalErr) {
 		t.Error("expected error to wrap original error")
 	}
 
-	// Проверяем разворачивание ошибки через errors.Unwrap()
+	// Check error unwrapping via errors.Unwrap()
 	unwrapped := errors.Unwrap(err)
 	if unwrapped != originalErr {
 		t.Errorf("expected unwrapped error to be original error")
 	}
 
-	// Проверяем, что сообщение об ошибке содержит информацию об оценке
+	// Check that error message contains evaluation information
 	errorMsg := err.Error()
 	if errorMsg == "" {
 		t.Error("expected non-empty error message")

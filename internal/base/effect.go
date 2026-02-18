@@ -1,35 +1,35 @@
 /*
-Package base предоставляет базовые типы и функции для работы с политиками,
-условиями, эффектами и сущностями в системе проверки доступа.
+Package base provides basic types and functions for working with policies,
+conditions, effects, and entities in the access control system.
 
-Пакет содержит определения политик, условий сравнения, эффектов (allow/deny),
-сущностей (source/target) и интерфейсов для кастомного сравнения.
+The package contains definitions of policies, comparison conditions, effects (allow/deny),
+entities (source/target) and interfaces for custom comparison.
 */
 package base
 
 import "slices"
 
 var (
-	// Список доступных эффектов от политик
+	// List of available policy effects
 	AVALIABLE_EFFECTS = []Effect{
-		Effect_ALLOW, // разрешить
-		Effect_DENY,  // запретить
+		Effect_ALLOW, // allow
+		Effect_DENY,  // deny
 	}
 )
 
 /*
-Тип Effect представляет эффект от применения политики.
+Effect represents the effect of applying a policy.
 
-Effect определяет, что происходит, если все условия политики выполнены:
-  - Effect_ALLOW разрешает действие
-  - Effect_DENY запрещает действие
+Effect determines what happens if all policy conditions are met:
+  - Effect_ALLOW allows the action
+  - Effect_DENY denies the action
 
-Политики с эффектом DENY имеют приоритет: если хотя бы одна политика DENY
-не прошла проверку, действие запрещается, даже если есть политики ALLOW.
+Policies with DENY effect have priority: if at least one DENY policy
+does not pass the check, the action is denied, even if there are ALLOW policies.
 
-Валидные значения:
-  - Effect_ALLOW ("allow") - разрешить действие при выполнении условий
-  - Effect_DENY ("deny") - запретить действие при невыполнении условий
+Valid values:
+  - Effect_ALLOW ("allow") - allow action when conditions are met
+  - Effect_DENY ("deny") - deny action when conditions are not met
 */
 type Effect string
 
@@ -39,12 +39,12 @@ const (
 )
 
 /*
-Метод IsValid проверяет, является ли значение Effect валидным.
+IsValid checks if the Effect value is valid.
 
-Валидными считаются только Effect_ALLOW и Effect_DENY.
+Only Effect_ALLOW and Effect_DENY are considered valid.
 
-Выходные параметры:
-  - bool - true, если значение валидно, false иначе
+Returns:
+  - bool - true if value is valid, false otherwise
 */
 func (e Effect) IsValid() bool {
 	return slices.Contains(AVALIABLE_EFFECTS, e)

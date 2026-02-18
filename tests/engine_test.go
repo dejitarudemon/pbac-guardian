@@ -1,11 +1,11 @@
 /*
-Пакет tests содержит тесты для библиотеки noctis-guard.
+Package tests contains tests for the noctis-guard library.
 
-Тесты проверяют функциональность создания движка из политик и файлов,
-а также оценку политик для различных сценариев доступа.
+Tests check the functionality of creating an engine from policies and files,
+as well as policy evaluation for various access scenarios.
 
-Этот файл находится в директории tests для организации тестов.
-Тесты импортируют пакет noctisguard как обычные пользователи библиотеки.
+This file is in the tests directory for test organization.
+Tests import the noctisguard package as regular library users.
 */
 package tests
 
@@ -21,45 +21,45 @@ import (
 )
 
 /*
-Тестовые структуры для проверки работы библиотеки.
+Test structures for checking library functionality.
 
-Эти структуры используются во всех тестах для симуляции реальных
-объектов, которые проверяются на соответствие политикам доступа.
+These structures are used in all tests to simulate real
+objects that are checked against access policies.
 */
 
-// User представляет пользователя системы с полями, помеченными тегами для доступа
+// User represents a system user with fields tagged for access
 type User struct {
-	Name string `noctis-guard:"name"` // Имя пользователя
-	Role string `noctis-guard:"role"` // Роль пользователя (admin, user, guest и т.д.)
-	Age  int    `noctis-guard:"age"`  // Возраст пользователя
+	Name string `noctis-guard:"name"` // User name
+	Role string `noctis-guard:"role"` // User role (admin, user, guest, etc.)
+	Age  int    `noctis-guard:"age"`  // User age
 }
 
-// Document представляет документ с информацией о владельце и типе
+// Document represents a document with owner and type information
 type Document struct {
-	Owner string   `noctis-guard:"owner"` // Владелец документа
-	Type  string   `noctis-guard:"type"`  // Тип документа (public, private и т.д.)
-	Tags  []string `noctis-guard:"tags"`  // Теги документа
+	Owner string   `noctis-guard:"owner"` // Document owner
+	Type  string   `noctis-guard:"type"`  // Document type (public, private, etc.)
+	Tags  []string `noctis-guard:"tags"`  // Document tags
 }
 
-// NestedUser представляет вложенную структуру пользователя для тестирования вложенных путей
+// NestedUser represents a nested user structure for testing nested paths
 type NestedUser struct {
-	User User `noctis-guard:"user"` // Вложенный пользователь
+	User User `noctis-guard:"user"` // Nested user
 }
 
-// NestedDocument представляет вложенную структуру документа для тестирования вложенных путей
+// NestedDocument represents a nested document structure for testing nested paths
 type NestedDocument struct {
-	Doc Document `noctis-guard:"doc"` // Вложенный документ
+	Doc Document `noctis-guard:"doc"` // Nested document
 }
 
 /*
-TestNewNoctisFromPolices тестирует создание движка из списка политик.
+TestNewNoctisFromPolices tests engine creation from a list of policies.
 
-Тест проверяет:
-  - Создание движка с валидными политиками
-  - Обработку дубликатов имен политик (должна возвращаться ошибка)
-  - Валидацию формата действий (минимум 2 части через ":")
-  - Валидацию путей в условиях (формат "entity:field")
-  - Создание движка с пустым списком политик (должно быть успешно)
+The test checks:
+  - Engine creation with valid policies
+  - Handling of duplicate policy names (should return error)
+  - Action format validation (minimum 2 parts separated by ":")
+  - Path validation in conditions (format "entity:field")
+  - Engine creation with empty policy list (should succeed)
 */
 func TestNewNoctisFromPolices(t *testing.T) {
 	tests := []struct {
@@ -70,15 +70,15 @@ func TestNewNoctisFromPolices(t *testing.T) {
 	}{
 		{
 			name: "valid policies",
-			// Тест проверяет успешное создание движка с валидными политиками
-			// Политика имеет корректный формат действия и валидные пути в условиях
+			// Test checks successful engine creation with valid policies
+			// Policy has correct action format and valid paths in conditions
 			policies: []base.Policy{
 				{
 					Name:   "test-policy",
-					Action: "user:read", // Валидный формат: минимум 2 части
+					Action: "user:read", // Valid format: minimum 2 parts
 					Effect: base.Effect_ALLOW,
 					Conditions: map[string]base.Condition{
-						"source:role": {Eq: "admin"}, // Валидный путь: entity:field
+						"source:role": {Eq: "admin"}, // Valid path: entity:field
 					},
 				},
 			},
@@ -86,8 +86,8 @@ func TestNewNoctisFromPolices(t *testing.T) {
 		},
 		{
 			name: "duplicate names",
-			// Тест проверяет, что движок не создается при наличии политик с одинаковыми именами
-			// Должна возвращаться ошибка ErrExport, оборачивающая ErrDuplicateName
+			// Test checks that engine is not created when policies have duplicate names
+			// Should return ErrExport error wrapping ErrDuplicateName
 			policies: []base.Policy{
 				{
 					Name:   "test-policy",
@@ -98,7 +98,7 @@ func TestNewNoctisFromPolices(t *testing.T) {
 					},
 				},
 				{
-					Name:   "test-policy", // Дубликат имени - должно вызвать ошибку
+					Name:   "test-policy", // Duplicate name - should cause error
 					Action: "user:write",
 					Effect: base.Effect_ALLOW,
 					Conditions: map[string]base.Condition{
@@ -110,12 +110,12 @@ func TestNewNoctisFromPolices(t *testing.T) {
 		},
 		{
 			name: "invalid action format",
-			// Тест проверяет валидацию формата действия
-			// Действие должно содержать минимум 2 части, разделенные ":"
+			// Test checks action format validation
+			// Action must contain minimum 2 parts separated by ":"
 			policies: []base.Policy{
 				{
 					Name:   "test-policy",
-					Action: "invalid", // Невалидный формат - только одна часть
+					Action: "invalid", // Invalid format - only one part
 					Effect: base.Effect_ALLOW,
 					Conditions: map[string]base.Condition{
 						"source:role": {Eq: "admin"},
@@ -126,15 +126,15 @@ func TestNewNoctisFromPolices(t *testing.T) {
 		},
 		{
 			name: "invalid path in conditions",
-			// Тест проверяет валидацию путей в условиях
-			// Путь должен иметь формат "entity:field", где entity - "source" или "target"
+			// Test checks path validation in conditions
+			// Path must have format "entity:field", where entity is "source" or "target"
 			policies: []base.Policy{
 				{
 					Name:   "test-policy",
 					Action: "user:read",
 					Effect: base.Effect_ALLOW,
 					Conditions: map[string]base.Condition{
-						"invalid": {Eq: "admin"}, // Невалидный путь - нет разделителя ":"
+						"invalid": {Eq: "admin"}, // Invalid path - no separator ":"
 					},
 				},
 			},
@@ -142,8 +142,8 @@ func TestNewNoctisFromPolices(t *testing.T) {
 		},
 		{
 			name: "empty policies",
-			// Тест проверяет создание движка с пустым списком политик
-			// Это должно быть успешно - движок создается, но без политик
+			// Test checks engine creation with empty policy list
+			// This should succeed - engine is created but without policies
 			policies: []base.Policy{},
 			wantErr:  false,
 		},
@@ -153,12 +153,12 @@ func TestNewNoctisFromPolices(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			engine, err := noctisguard.NewNoctisFromPolices(tt.policies)
 			if tt.wantErr {
-				// Ожидаем ошибку
+				// Expect error
 				if err == nil {
 					t.Errorf("expected error, got nil")
 				}
 			} else {
-				// Ожидаем успех
+				// Expect success
 				if err != nil {
 					t.Errorf("unexpected error: %v", err)
 				}
@@ -171,15 +171,15 @@ func TestNewNoctisFromPolices(t *testing.T) {
 }
 
 /*
-TestNewNoctisFromFile тестирует создание движка из JSON-файла.
+TestNewNoctisFromFile tests engine creation from a JSON file.
 
-Тест проверяет:
-  - Успешное чтение и парсинг валидного JSON-файла с политиками
-  - Обработку ошибок при отсутствии файла
-  - Корректность создания движка из файла (аналогично NewNoctisFromPolices)
+The test checks:
+  - Successful reading and parsing of valid JSON file with policies
+  - Error handling when file is missing
+  - Correctness of engine creation from file (similar to NewNoctisFromPolices)
 */
 func TestNewNoctisFromFile(t *testing.T) {
-	// Создаем временный файл с валидными политиками для тестирования
+	// Create temporary file with valid policies for testing
 	validPolicies := []base.Policy{
 		{
 			Name:   "file-policy",
@@ -191,23 +191,23 @@ func TestNewNoctisFromFile(t *testing.T) {
 		},
 	}
 
-	// Сериализуем политики в JSON для записи в файл
+	// Serialize policies to JSON for writing to file
 	validJSON, _ := json.Marshal(validPolicies)
 
-	// Создаем временный файл с уникальным именем
+	// Create temporary file with unique name
 	tmpFile, err := os.CreateTemp("", "test_policies_*.json")
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name()) // Удаляем временный файл после теста
+	defer os.Remove(tmpFile.Name()) // Remove temporary file after test
 
-	// Записываем JSON в файл
+	// Write JSON to file
 	if _, err := tmpFile.Write(validJSON); err != nil {
 		t.Fatalf("failed to write to temp file: %v", err)
 	}
 	tmpFile.Close()
 
-	// Создаем временный файл с невалидным JSON
+	// Create temporary file with invalid JSON
 	invalidJSON := []byte(`{"invalid": "json"`)
 	tmpFileInvalid, err := os.CreateTemp("", "test_invalid_*.json")
 	if err != nil {
@@ -219,7 +219,7 @@ func TestNewNoctisFromFile(t *testing.T) {
 	}
 	tmpFileInvalid.Close()
 
-	// Создаем временный файл с пустым содержимым
+	// Create temporary file with empty content
 	tmpFileEmpty, err := os.CreateTemp("", "test_empty_*.json")
 	if err != nil {
 		t.Fatalf("failed to create temp file: %v", err)
@@ -234,29 +234,29 @@ func TestNewNoctisFromFile(t *testing.T) {
 	}{
 		{
 			name: "valid file",
-			// Тест проверяет успешное чтение и парсинг валидного JSON-файла
-			// Файл должен содержать массив объектов Policy в формате JSON
+			// Test checks successful reading and parsing of valid JSON file
+			// File must contain array of Policy objects in JSON format
 			path:    tmpFile.Name(),
 			wantErr: false,
 		},
 		{
 			name: "non-existent file",
-			// Тест проверяет обработку ошибки при попытке открыть несуществующий файл
-			// Должна возвращаться ошибка ErrExport, оборачивающая os.PathError
+			// Test checks error handling when trying to open non-existent file
+			// Should return ErrExport error wrapping os.PathError
 			path:    "/nonexistent/file.json",
 			wantErr: true,
 		},
 		{
 			name: "invalid JSON",
-			// Тест проверяет обработку ошибки при невалидном JSON в файле
-			// Должна возвращаться ошибка ErrExport, оборачивающая json.SyntaxError
+			// Test checks error handling for invalid JSON in file
+			// Should return ErrExport error wrapping json.SyntaxError
 			path:    tmpFileInvalid.Name(),
 			wantErr: true,
 		},
 		{
 			name: "empty file",
-			// Тест проверяет обработку ошибки при пустом файле
-			// Должна возвращаться ошибка ErrExport, оборачивающая json.SyntaxError
+			// Test checks error handling for empty file
+			// Should return ErrExport error wrapping json.SyntaxError
 			path:    tmpFileEmpty.Name(),
 			wantErr: true,
 		},
@@ -282,23 +282,23 @@ func TestNewNoctisFromFile(t *testing.T) {
 }
 
 /*
-TestEvaluate тестирует основную функциональность оценки политик.
+TestEvaluate tests the main policy evaluation functionality.
 
-Тест проверяет различные сценарии доступа:
-  - Разрешение доступа для админов (политика allow-admin)
-  - Разрешение доступа для владельцев (политика allow-owner с сравнением полей)
-  - Запрет доступа для не-админов к приватным документам (политика deny-private)
-  - Разрешение доступа админам к приватным документам (политика deny-private не применяется)
-  - Обработку отсутствия политик для действия (возврат false)
-  - Обработку невалидных путей к полям (возврат ошибки)
+The test checks various access scenarios:
+  - Access granted for admins (allow-admin policy)
+  - Access granted for owners (allow-owner policy with field comparison)
+  - Access denied for non-admins to private documents (deny-private policy)
+  - Access granted for admins to private documents (deny-private policy does not apply)
+  - Handling of missing policies for action (returns false)
+  - Handling of invalid field paths (returns error)
 */
 func TestEvaluate(t *testing.T) {
-	// Создаем набор политик для тестирования различных сценариев доступа
+	// Create set of policies for testing various access scenarios
 	policies := []base.Policy{
 		{
 			Name: "allow-admin",
-			// Политика разрешает чтение документа админам
-			// Условие: source:role == "admin"
+			// Policy allows admins to read documents
+			// Condition: source:role == "admin"
 			Action: "user:read:document",
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
@@ -307,8 +307,8 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			Name: "allow-owner",
-			// Политика разрешает чтение документа владельцу
-			// Условие: source:name == target:owner (сравнение полей разных структур)
+			// Policy allows document owner to read
+			// Condition: source:name == target:owner (comparing fields from different structures)
 			Action: "user:read:document",
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
@@ -317,9 +317,9 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			Name: "deny-private",
-			// Политика запрещает чтение приватных документов не-админам
-			// Условия: target:type == "private" И source:role != "admin"
-			// Если оба условия выполнены, доступ запрещается
+			// Policy denies non-admins access to private documents
+			// Conditions: target:type == "private" AND source:role != "admin"
+			// If both conditions are met, access is denied
 			Action: "user:read:document",
 			Effect: base.Effect_DENY,
 			Conditions: map[string]base.Condition{
@@ -346,8 +346,8 @@ func TestEvaluate(t *testing.T) {
 	}{
 		{
 			name: "admin can read",
-			// Тест проверяет, что админ может читать документы согласно политике allow-admin
-			// source.role == "admin", поэтому политика должна пройти
+			// Test checks that admin can read documents according to allow-admin policy
+			// source.role == "admin", so policy should pass
 			source:  User{Name: "admin", Role: "admin"},
 			target:  Document{Owner: "user", Type: "public"},
 			action:  "user:read:document",
@@ -356,8 +356,8 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "owner can read",
-			// Тест проверяет, что владелец документа может его читать
-			// source.name == target.owner == "alice", поэтому политика allow-owner должна пройти
+			// Test checks that document owner can read it
+			// source.name == target.owner == "alice", so allow-owner policy should pass
 			source:  User{Name: "alice", Role: "user"},
 			target:  Document{Owner: "alice", Type: "public"},
 			action:  "user:read:document",
@@ -366,8 +366,8 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "deny private for non-admin",
-			// Тест проверяет, что не-админ не может читать приватные документы
-			// target.type == "private" И source.role != "admin", поэтому политика deny-private применяется
+			// Test checks that non-admin cannot read private documents
+			// target.type == "private" AND source.role != "admin", so deny-private policy applies
 			source:  User{Name: "user", Role: "user"},
 			target:  Document{Owner: "other", Type: "private"},
 			action:  "user:read:document",
@@ -376,9 +376,9 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "admin can read private",
-			// Тест проверяет, что админ может читать приватные документы
-			// source.role == "admin", поэтому условие source.role != "admin" не выполнено
-			// Политика deny-private не применяется, и админ получает доступ через allow-admin
+			// Test checks that admin can read private documents
+			// source.role == "admin", so condition source.role != "admin" is not met
+			// deny-private policy does not apply, and admin gets access through allow-admin
 			source:  User{Name: "admin", Role: "admin"},
 			target:  Document{Owner: "other", Type: "private"},
 			action:  "user:read:document",
@@ -387,11 +387,11 @@ func TestEvaluate(t *testing.T) {
 		},
 		{
 			name: "no policies for action",
-			// Тест проверяет, что при отсутствии политик для действия возвращается false
-			// Это означает, что действие запрещено по умолчанию
+			// Test checks that when there are no policies for action, false is returned
+			// This means the action is denied by default
 			source:  User{Name: "user", Role: "user"},
 			target:  Document{Owner: "user", Type: "public"},
-			action:  "user:write:document", // Нет политик для этого действия
+			action:  "user:write:document", // No policies for this action
 			want:    false,
 			wantErr: false,
 		},
@@ -417,14 +417,14 @@ func TestEvaluate(t *testing.T) {
 }
 
 /*
-TestEvaluateWithContextCancellation тестирует отмену операции через context.Context.
+TestEvaluateWithContextCancellation tests operation cancellation through context.Context.
 
-Тест проверяет, что длительные операции проверки условий могут быть прерваны
-через отмену контекста, и функция возвращает соответствующую ошибку ErrCancelled.
-Это особенно важно для операций Contains с большими списками.
+The test checks that long-running condition checking operations can be interrupted
+through context cancellation, and the function returns the corresponding ErrCancelled error.
+This is especially important for Contains operations with large lists.
 */
 func TestEvaluateWithContextCancellation(t *testing.T) {
-	// Создаем политику с условием Contains, которое может выполняться долго для больших списков
+	// Create policy with Contains condition that may take long for large lists
 	policies := []base.Policy{
 		{
 			Name:   "test-policy",
@@ -443,15 +443,15 @@ func TestEvaluateWithContextCancellation(t *testing.T) {
 		t.Fatalf("failed to create engine: %v", err)
 	}
 
-	// Создаем контекст с отменой и сразу отменяем его
-	// Это симулирует ситуацию, когда операция должна быть прервана
+	// Create context with cancellation and cancel it immediately
+	// This simulates a situation where operation should be interrupted
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // Отменяем контекст до начала выполнения
+	cancel() // Cancel context before execution starts
 
 	source := User{Name: "user", Role: "admin"}
 	target := Document{Owner: "user", Type: "public"}
 
-	// Ожидаем, что операция вернет ошибку отмены
+	// Expect operation to return cancellation error
 	_, err = engine.Evaluate(ctx, source, target, "user:read")
 	if err == nil {
 		t.Errorf("expected cancellation error, got nil")
@@ -459,11 +459,11 @@ func TestEvaluateWithContextCancellation(t *testing.T) {
 }
 
 /*
-TestEvaluateWithTimeout тестирует работу с таймаутом через context.Context.
+TestEvaluateWithTimeout tests working with timeout through context.Context.
 
-Тест проверяет, что операция успешно выполняется в пределах таймаута
-и не прерывается преждевременно. Это важно для проверки корректности
-обработки контекста в нормальных условиях.
+The test checks that operation successfully completes within timeout
+and is not interrupted prematurely. This is important for checking correctness
+of context handling under normal conditions.
 */
 func TestEvaluateWithTimeout(t *testing.T) {
 	policies := []base.Policy{
@@ -482,15 +482,15 @@ func TestEvaluateWithTimeout(t *testing.T) {
 		t.Fatalf("failed to create engine: %v", err)
 	}
 
-	// Создаем контекст с таймаутом в 1 секунду
-	// Операция должна выполниться быстрее, чем истечет таймаут
+	// Create context with 1 second timeout
+	// Operation should complete faster than timeout expires
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "user", Type: "public"}
 
-	// Операция должна выполниться успешно в пределах таймаута
+	// Operation should complete successfully within timeout
 	allowed, err := engine.Evaluate(ctx, source, target, "user:read")
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
@@ -501,14 +501,14 @@ func TestEvaluateWithTimeout(t *testing.T) {
 }
 
 /*
-TestEvaluateNestedStructures тестирует работу с вложенными структурами.
+TestEvaluateNestedStructures tests working with nested structures.
 
-Тест проверяет, что библиотека корректно обрабатывает пути к полям
-во вложенных структурах, например "source:user:role" для доступа
-к полю role внутри вложенной структуры user.
+The test checks that the library correctly handles paths to fields
+in nested structures, e.g., "source:user:role" to access
+the role field inside nested user structure.
 
-Это важно для работы с реальными структурами данных, которые часто
-имеют вложенную структуру.
+This is important for working with real data structures that often
+have nested structure.
 */
 func TestEvaluateNestedStructures(t *testing.T) {
 	policies := []base.Policy{
@@ -517,8 +517,8 @@ func TestEvaluateNestedStructures(t *testing.T) {
 			Action: "user:read:nested",
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
-				// Проверяем доступ к полю во вложенной структуре
-				// Путь "source:user:role" означает: в source найти поле user, затем в нем найти поле role
+				// Check access to field in nested structure
+				// Path "source:user:role" means: in source find field user, then in it find field role
 				"source:user:role": {Eq: "admin"},
 			},
 		},
@@ -530,11 +530,11 @@ func TestEvaluateNestedStructures(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	// Создаем вложенные структуры для тестирования
+	// Create nested structures for testing
 	source := NestedUser{User: User{Name: "admin", Role: "admin"}}
 	target := NestedDocument{Doc: Document{Owner: "user", Type: "public"}}
 
-	// Проверяем, что путь к вложенному полю работает корректно
+	// Check that path to nested field works correctly
 	allowed, err := engine.Evaluate(ctx, source, target, "user:read:nested")
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)

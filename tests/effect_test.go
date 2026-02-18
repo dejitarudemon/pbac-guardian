@@ -1,8 +1,8 @@
 /*
-Пакет tests содержит тесты для публичного API пакета base.
+Package tests contains tests for public API of base package.
 
-Тесты проверяют валидацию значений Effect и корректность работы
-с эффектами ALLOW и DENY через публичный метод IsValid.
+Tests check Effect value validation and correctness of working
+with ALLOW and DENY effects through public IsValid method.
 */
 package tests
 
@@ -13,13 +13,13 @@ import (
 )
 
 /*
-TestEffectIsValid тестирует публичный метод IsValid для проверки валидности значения Effect.
+TestEffectIsValid tests the public IsValid method for checking Effect value validity.
 
-Тест проверяет:
-  - Валидность Effect_ALLOW ("allow")
-  - Валидность Effect_DENY ("deny")
-  - Невалидность произвольных строк
-  - Невалидность пустой строки
+The test checks:
+  - Validity of Effect_ALLOW ("allow")
+  - Validity of Effect_DENY ("deny")
+  - Invalidity of arbitrary strings
+  - Invalidity of empty string
 */
 func TestEffectIsValid(t *testing.T) {
 	tests := []struct {
@@ -27,10 +27,10 @@ func TestEffectIsValid(t *testing.T) {
 		effect base.Effect
 		want   bool
 	}{
-		{"valid allow", base.Effect_ALLOW, true},        // Валидный эффект allow
-		{"valid deny", base.Effect_DENY, true},          // Валидный эффект deny
-		{"invalid effect", base.Effect("invalid"), false}, // Невалидный эффект
-		{"empty effect", base.Effect(""), false},        // Пустая строка
+		{"valid allow", base.Effect_ALLOW, true},        // Valid allow effect
+		{"valid deny", base.Effect_DENY, true},          // Valid deny effect
+		{"invalid effect", base.Effect("invalid"), false}, // Invalid effect
+		{"empty effect", base.Effect(""), false},        // Empty string
 	}
 
 	for _, tt := range tests {

@@ -1,24 +1,24 @@
 /*
-Package base предоставляет базовые типы и функции для работы с политиками,
-условиями, эффектами и сущностями в системе проверки доступа.
+Package base provides basic types and functions for working with policies,
+conditions, effects, and entities in the access control system.
 
-Пакет содержит определения политик, условий сравнения, эффектов (allow/deny),
-сущностей (source/target) и интерфейсов для кастомного сравнения.
+The package contains definitions of policies, comparison conditions, effects (allow/deny),
+entities (source/target) and interfaces for custom comparison.
 */
 package base
 
 import "slices"
 
 /*
-Тип Entity представляет сущность, к которой относится поле в политике.
+Entity represents the entity to which a field in a policy belongs.
 
-Entity используется в путях до полей для указания, из какой структуры (source или target)
-нужно извлекать значение. Например, в пути "source:name" Entity_SOURCE указывает,
-что поле name нужно брать из структуры source.
+Entity is used in field paths to indicate which structure (source or target)
+to extract the value from. For example, in path "source:name", Entity_SOURCE indicates
+that the name field should be taken from the source structure.
 
-Валидные значения:
-  - Entity_SOURCE ("source") - поле относится к структуре source
-  - Entity_TARGET ("target") - поле относится к структуре target
+Valid values:
+  - Entity_SOURCE ("source") - field belongs to source structure
+  - Entity_TARGET ("target") - field belongs to target structure
 */
 type Entity string
 
@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	// Список валидных целей
+	// List of valid entities
 	AVALIABLE_ENTITIES = []Entity{
 		Entity_SOURCE,
 		Entity_TARGET,
@@ -36,12 +36,12 @@ var (
 )
 
 /*
-Метод IsValid проверяет, является ли значение Entity валидным.
+IsValid checks if the Entity value is valid.
 
-Валидными считаются только Entity_SOURCE и Entity_TARGET.
+Only Entity_SOURCE and Entity_TARGET are considered valid.
 
-Выходные параметры:
-  - bool - true, если значение валидно, false иначе
+Returns:
+  - bool - true if value is valid, false otherwise
 */
 func (e Entity) IsValid() bool {
 	return slices.Contains(AVALIABLE_ENTITIES, e)

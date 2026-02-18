@@ -1,9 +1,9 @@
 /*
-Пакет tests содержит тесты для различных числовых типов в условиях сравнения.
+Package tests contains tests for various numeric types in comparison conditions.
 
-Тесты проверяют работу ltPrimitives и ltConditionFunc для всех поддерживаемых
-числовых типов (int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64),
-что улучшает покрытие функции ltPrimitives с 38.9% до более высокого уровня.
+Tests check the work of ltPrimitives and ltConditionFunc for all supported
+numeric types (int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64),
+which improves coverage of ltPrimitives function from 38.9% to a higher level.
 */
 package tests
 
@@ -16,74 +16,74 @@ import (
 )
 
 /*
-Тестовые структуры для проверки различных числовых типов.
+Test structures for checking various numeric types.
 */
 
-// UserWithInt8 представляет пользователя с полем типа int8
+// UserWithInt8 represents a user with int8 field
 type UserWithInt8 struct {
 	Name string `noctis-guard:"name"`
 	Age  int8   `noctis-guard:"age"`
 }
 
-// UserWithInt16 представляет пользователя с полем типа int16
+// UserWithInt16 represents a user with int16 field
 type UserWithInt16 struct {
 	Name string `noctis-guard:"name"`
 	Age  int16  `noctis-guard:"age"`
 }
 
-// UserWithInt32 представляет пользователя с полем типа int32
+// UserWithInt32 represents a user with int32 field
 type UserWithInt32 struct {
 	Name string `noctis-guard:"name"`
 	Age  int32  `noctis-guard:"age"`
 }
 
-// UserWithInt64 представляет пользователя с полем типа int64
+// UserWithInt64 represents a user with int64 field
 type UserWithInt64 struct {
 	Name string `noctis-guard:"name"`
 	Age  int64  `noctis-guard:"age"`
 }
 
-// UserWithUint8 представляет пользователя с полем типа uint8
+// UserWithUint8 represents a user with uint8 field
 type UserWithUint8 struct {
 	Name string `noctis-guard:"name"`
 	Age  uint8  `noctis-guard:"age"`
 }
 
-// UserWithUint16 представляет пользователя с полем типа uint16
+// UserWithUint16 represents a user with uint16 field
 type UserWithUint16 struct {
 	Name string `noctis-guard:"name"`
 	Age  uint16 `noctis-guard:"age"`
 }
 
-// UserWithUint32 представляет пользователя с полем типа uint32
+// UserWithUint32 represents a user with uint32 field
 type UserWithUint32 struct {
 	Name string `noctis-guard:"name"`
 	Age  uint32 `noctis-guard:"age"`
 }
 
-// UserWithUint64 представляет пользователя с полем типа uint64
+// UserWithUint64 represents a user with uint64 field
 type UserWithUint64 struct {
 	Name string `noctis-guard:"name"`
 	Age  uint64 `noctis-guard:"age"`
 }
 
-// UserWithFloat32 представляет пользователя с полем типа float32
+// UserWithFloat32 represents a user with float32 field
 type UserWithFloat32 struct {
 	Name string  `noctis-guard:"name"`
 	Age  float32 `noctis-guard:"age"`
 }
 
-// UserWithFloat64 представляет пользователя с полем типа float64
+// UserWithFloat64 represents a user with float64 field
 type UserWithFloat64 struct {
 	Name string  `noctis-guard:"name"`
 	Age  float64 `noctis-guard:"age"`
 }
 
 /*
-TestLtNumericTypes тестирует условие Lt для различных числовых типов.
+TestLtNumericTypes tests the Lt condition for various numeric types.
 
-Тест проверяет работу ltPrimitives для всех поддерживаемых числовых типов,
-что значительно улучшает покрытие функции ltPrimitives.
+The test checks the work of ltPrimitives for all supported numeric types,
+which significantly improves coverage of ltPrimitives function.
 */
 func TestLtNumericTypes(t *testing.T) {
 	ctx := context.Background()
@@ -99,7 +99,7 @@ func TestLtNumericTypes(t *testing.T) {
 	}{
 		{
 			name: "lt - int8",
-			// Тест проверяет условие Lt для типа int8
+			// Test checks Lt condition for int8 type
 			policy: base.Policy{
 				Name:   "lt-int8-test",
 				Action: "user:read",
@@ -116,7 +116,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - int16",
-			// Тест проверяет условие Lt для типа int16
+			// Test checks Lt condition for int16 type
 			policy: base.Policy{
 				Name:   "lt-int16-test",
 				Action: "user:read",
@@ -133,7 +133,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - int32",
-			// Тест проверяет условие Lt для типа int32
+			// Test checks Lt condition for int32 type
 			policy: base.Policy{
 				Name:   "lt-int32-test",
 				Action: "user:read",
@@ -150,7 +150,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - int64",
-			// Тест проверяет условие Lt для типа int64
+			// Test checks Lt condition for int64 type
 			policy: base.Policy{
 				Name:   "lt-int64-test",
 				Action: "user:read",
@@ -167,7 +167,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - uint8",
-			// Тест проверяет условие Lt для типа uint8
+			// Test checks Lt condition for uint8 type
 			policy: base.Policy{
 				Name:   "lt-uint8-test",
 				Action: "user:read",
@@ -184,7 +184,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - uint16",
-			// Тест проверяет условие Lt для типа uint16
+			// Test checks Lt condition for uint16 type
 			policy: base.Policy{
 				Name:   "lt-uint16-test",
 				Action: "user:read",
@@ -201,7 +201,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - uint32",
-			// Тест проверяет условие Lt для типа uint32
+			// Test checks Lt condition for uint32 type
 			policy: base.Policy{
 				Name:   "lt-uint32-test",
 				Action: "user:read",
@@ -218,7 +218,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - uint64",
-			// Тест проверяет условие Lt для типа uint64
+			// Test checks Lt condition for uint64 type
 			policy: base.Policy{
 				Name:   "lt-uint64-test",
 				Action: "user:read",
@@ -235,7 +235,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - float32",
-			// Тест проверяет условие Lt для типа float32
+			// Test checks Lt condition for float32 type
 			policy: base.Policy{
 				Name:   "lt-float32-test",
 				Action: "user:read",
@@ -252,7 +252,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - float64",
-			// Тест проверяет условие Lt для типа float64
+			// Test checks Lt condition for float64 type
 			policy: base.Policy{
 				Name:   "lt-float64-test",
 				Action: "user:read",
@@ -269,7 +269,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - float64 equal",
-			// Тест проверяет, что условие Lt возвращает false при равенстве для float64
+			// Test checks that Lt condition returns false on equality for float64
 			policy: base.Policy{
 				Name:   "lt-float64-test",
 				Action: "user:read",
@@ -286,7 +286,7 @@ func TestLtNumericTypes(t *testing.T) {
 		},
 		{
 			name: "lt - uint64 greater",
-			// Тест проверяет, что условие Lt возвращает false при большем значении для uint64
+			// Test checks that Lt condition returns false for greater value for uint64
 			policy: base.Policy{
 				Name:   "lt-uint64-test",
 				Action: "user:read",

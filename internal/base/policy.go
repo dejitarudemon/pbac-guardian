@@ -1,9 +1,9 @@
 /*
-Package base предоставляет базовые типы и функции для работы с политиками,
-условиями, эффектами и сущностями в системе проверки доступа.
+Package base provides basic types and functions for working with policies,
+conditions, effects, and entities in the access control system.
 
-Пакет содержит определения политик, условий сравнения, эффектов (allow/deny),
-сущностей (source/target) и интерфейсов для кастомного сравнения.
+The package contains definitions of policies, comparison conditions, effects (allow/deny),
+entities (source/target) and interfaces for custom comparison.
 */
 package base
 
@@ -14,25 +14,25 @@ import (
 	"strings"
 )
 
-// испольуемый ключ тегизации
+// tag key used for struct field tagging
 const TAG_KEY = "noctis-guard"
 
 const (
-	// разделитель пути до экспортируемого поля
+	// separator for path to exported field
 	PATH_SEP = ":"
 
-	// разделитель внутри тега
+	// separator inside tag
 	TAG_SEP = ","
 
-	// минимальный размер пути
+	// minimum path size
 	MIN_PATH_LEN = 2
 
-	// минимальное кол-во элементов в действии (entity и action)
+	// minimum number of elements in action (entity and action)
 	MIN_ACTION_PARTS = 2
 )
 
 var (
-	// карта функций для условий
+	// map of functions for conditions
 	CONDITION_TO_FUNC = map[string]conditionFunc{
 		"Contains": containsConditionFunc,
 		"Eq":       eqConditionFunc,
@@ -42,19 +42,19 @@ var (
 )
 
 /*
-Структура Policy представляет одну политику доступа с набором условий.
+Policy represents a single access policy with a set of conditions.
 
-Политика определяет правила проверки структур source и target для конкретного
-действия. Условия проверяются через поля структуры, помеченные тегом "noctis-guard".
+A policy defines rules for checking source and target structures for a specific
+action. Conditions are checked through structure fields tagged with "noctis-guard".
 
-Параметры:
-  - Name - уникальное название политики (используется для идентификации)
-  - Action - действие в формате "entity:action:extra1:extra2..." (например, "user:read:profile")
-  - Effect - эффект от политики: Effect_ALLOW (разрешить) или Effect_DENY (запретить)
-  - Conditions - словарь условий. Ключ - путь до поля в формате "source:field" или "target:field",
-    значение - условие для проверки (Contains, Eq, Neq, Lt)
+Fields:
+  - Name - unique policy name (used for identification)
+  - Action - action in format "entity:action:extra1:extra2..." (e.g., "user:read:profile")
+  - Effect - policy effect: Effect_ALLOW (allow) or Effect_DENY (deny)
+  - Conditions - map of conditions. Key - path to field in format "source:field" or "target:field",
+    value - condition to check (Contains, Eq, Neq, Lt)
 
-Пример использования:
+Example usage:
 
 	type User struct {
 		Name string `noctis-guard:"name"`
@@ -67,7 +67,7 @@ var (
 		Tags  []string `noctis-guard:"tags"`
 	}
 
-	// Политика: разрешить чтение документа админам
+	// Policy: allow admins to read documents
 	policy1 := Policy{
 		Name:   "admin-read",
 		Action: "user:read:document",
@@ -79,19 +79,19 @@ var (
 		},
 	}
 
-	// Политика: разрешить чтение документа владельцу
+	// Policy: allow document owner to read
 	policy2 := Policy{
 		Name:   "owner-read",
 		Action: "user:read:document",
 		Effect: Effect_ALLOW,
 		Conditions: map[string]Condition{
 			"source:name": {
-				Eq: "target:owner", // сравнение полей двух структур
+				Eq: "target:owner", // compare fields of two structures
 			},
 		},
 	}
 
-	// Политика: запретить чтение документов с тегом "private" для пользователей младше 18
+	// Policy: deny reading documents with "private" tag for users under 18
 	policy3 := Policy{
 		Name:   "age-restriction",
 		Action: "user:read:document",
@@ -114,44 +114,44 @@ type Policy struct {
 }
 
 /*
-Функция isPath проверяет, является ли path путем до поля структуры.
+isPath checks if path is a path to a structure field.
 
-Путь до поля должен содержать разделитель PATH_SEP (":"), что указывает на то,
-что это не литеральное значение, а ссылка на поле в структуре source или target.
+The path to a field must contain the PATH_SEP separator (":"), indicating that
+this is not a literal value, but a reference to a field in the source or target structure.
 
-Входные параметры:
-  - path - строка для проверки
+Parameters:
+  - path - string to check
 
-Выходные параметры:
-  - bool - true, если path содержит разделитель ":" и является путем, иначе false
+Returns:
+  - bool - true if path contains separator ":" and is a path, false otherwise
 */
 func (p *Policy) isPath(path string) bool {
 	return strings.Contains(path, PATH_SEP)
 }
 
 /*
-Функция parsePath парсит путь из Conditions в сущность и путь до поля.
+parsePath parses a path from Conditions into an entity and a path to a field.
 
-Путь должен иметь формат "entity:field1:field2...", где entity - это "source"
-или "target", а field1, field2... - иерархический путь до поля в структуре.
+The path must have the format "entity:field1:field2...", where entity is "source"
+or "target", and field1, field2... is a hierarchical path to a field in the structure.
 
-Примеры валидных путей:
-  - "source:name" - поле name в структуре source
-  - "target:user:email" - поле email во вложенной структуре user в target
+Valid path examples:
+  - "source:name" - field name in source structure
+  - "target:user:email" - field email in nested user structure in target
 
-Входные параметры:
-  - path - путь для парсинга в формате "entity:field1:field2..."
+Parameters:
+  - path - path to parse in format "entity:field1:field2..."
 
-Выходные параметры:
-  - *Entity - указатель на сущность (Entity_SOURCE или Entity_TARGET)
-  - []string - путь до поля в виде массива строк ["field1", "field2", ...]
-  - error - ошибка парсинга пути
+Returns:
+  - *Entity - pointer to entity (Entity_SOURCE or Entity_TARGET)
+  - []string - path to field as array of strings ["field1", "field2", ...]
+  - error - path parsing error
 
-Возможные ошибки:
-  - ErrInvalidPath - возникает если:
-  - path не содержит разделитель ":" (не является путем)
-  - путь содержит менее 2 частей (минимум entity и одно поле)
-  - первая часть пути не является валидной сущностью (не "source" и не "target")
+Possible errors:
+  - ErrInvalidPath - occurs if:
+  - path does not contain separator ":" (is not a path)
+  - path contains less than 2 parts (minimum entity and one field)
+  - first part of path is not a valid entity (not "source" and not "target")
 */
 func (p *Policy) parsePath(path string) (*Entity, []string, error) {
 	if !p.isPath(path) {
@@ -174,25 +174,25 @@ func (p *Policy) parsePath(path string) (*Entity, []string, error) {
 }
 
 /*
-Функция getValue находит поле в структуре по пути и возвращает его значение.
+getValue finds a field in a structure by path and returns its value.
 
-Функция рекурсивно проходит по пути, используя теги "noctis-guard" для поиска
-полей. Поле должно быть экспортируемым (с заглавной буквы) и иметь тег с
-соответствующим именем.
+The function recursively traverses the path using "noctis-guard" tags to find
+fields. The field must be exported (capitalized) and have a tag with the
+corresponding name.
 
-Входные параметры:
-  - entity - сущность (структура или указатель на структуру) для поиска поля
-  - path - путь до поля в виде массива строк ["field1", "field2", ...]
+Parameters:
+  - entity - entity (structure or pointer to structure) to search for field
+  - path - path to field as array of strings ["field1", "field2", ...]
 
-Выходные параметры:
-  - any - найденное значение поля
-  - error - ошибка поиска поля
+Returns:
+  - any - found field value
+  - error - field search error
 
-Возможные ошибки:
-  - ErrInvalidType - сущность не является структурой или указателем на структуру
-  - ErrInvalidPath - возникает если:
-  - поле не найдено (нет тега с соответствующим именем)
-  - поле является неэкспортируемым (недоступно через CanInterface())
+Possible errors:
+  - ErrInvalidType - entity is not a structure or pointer to structure
+  - ErrInvalidPath - occurs if:
+  - field not found (no tag with corresponding name)
+  - field is unexported (not accessible via CanInterface())
 */
 func (p *Policy) getValue(entity any, path []string) (any, error) {
 	v := reflect.ValueOf(entity)
@@ -241,28 +241,28 @@ func (p *Policy) getValue(entity any, path []string) (any, error) {
 }
 
 /*
-Функция get получает значение из пути или возвращает литеральное значение.
+get gets a value from a path or returns a literal value.
 
-Если path является путем (содержит ":"), функция парсит его и извлекает значение
-из соответствующей структуры (source или target). Если path не является путем,
-возвращается само значение path как литеральное значение.
+If path is a path (contains ":"), the function parses it and extracts the value
+from the corresponding structure (source or target). If path is not a path,
+returns the path value itself as a literal value.
 
-Входные параметры:
-  - source - первая структура для поиска полей (используется для путей "source:...")
-  - target - вторая структура для поиска полей (используется для путей "target:...")
-  - path - путь до поля (например, "source:name") или литеральное значение (например, "admin")
-  - mustBePath - флаг, указывающий, должен ли path обязательно быть путем (true) или может быть литералом (false)
+Parameters:
+  - source - first structure to search for fields (used for paths "source:...")
+  - target - second structure to search for fields (used for paths "target:...")
+  - path - path to field (e.g., "source:name") or literal value (e.g., "admin")
+  - mustBePath - flag indicating whether path must be a path (true) or can be a literal (false)
 
-Выходные параметры:
-  - any - найденное значение поля из структуры или литеральное значение path
-  - error - ошибка получения значения
+Returns:
+  - any - found field value from structure or literal path value
+  - error - value retrieval error
 
-Возможные ошибки:
-  - ErrInvalidPath - возникает если:
-  - mustBePath=true, но path не содержит ":" (не является путем)
-  - ошибка парсинга пути (см. parsePath)
-  - ошибка поиска поля (см. getValue)
-  - ErrInvalidType - сущность не является структурой или указателем на структуру (см. getValue)
+Possible errors:
+  - ErrInvalidPath - occurs if:
+  - mustBePath=true, but path does not contain ":" (is not a path)
+  - path parsing error (see parsePath)
+  - field search error (see getValue)
+  - ErrInvalidType - entity is not a structure or pointer to structure (see getValue)
 */
 func (p *Policy) get(source, target any, path string, mustBePath bool) (any, error) {
 	if !p.isPath(path) {
@@ -292,33 +292,33 @@ func (p *Policy) get(source, target any, path string, mustBePath bool) (any, err
 }
 
 /*
-Функция Evaluate применяет политику к структурам source и target для указанного действия.
+Evaluate applies the policy to source and target structures for the specified action.
 
-Функция проверяет, соответствует ли действие политики переданному action. Если да,
-проверяются все условия политики. Политика считается выполненной, если все условия
-выполнены (логическое И).
+The function checks if the policy action matches the passed action. If yes,
+all policy conditions are checked. The policy is considered fulfilled if all
+conditions are met (logical AND).
 
-Функция поддерживает отмену через context.Context, что позволяет прервать проверку
-условий при отмене контекста.
+The function supports cancellation through context.Context, allowing to interrupt
+condition checking when context is cancelled.
 
-Входные параметры:
-  - ctx - контекст для отмены операции и контроля таймаутов
-  - source - первая проверяемая структура (обычно источник действия)
-  - target - вторая проверяемая структура (обычно цель действия)
-  - action - действие в формате "entity:action:extra..." для проверки
+Parameters:
+  - ctx - context for operation cancellation and timeout control
+  - source - first structure to check (usually the action source)
+  - target - second structure to check (usually the action target)
+  - action - action in format "entity:action:extra..." to check
 
-Выходные параметры:
-  - bool - результат применения политики:
-  - true - политика соответствует action и все условия выполнены
-  - false - политика не соответствует action или хотя бы одно условие не выполнено
-  - error - ошибка выполнения, если возникла проблема при проверке условий
+Returns:
+  - bool - policy application result:
+  - true - policy matches action and all conditions are met
+  - false - policy does not match action or at least one condition is not met
+  - error - execution error if a problem occurred during condition checking
 
-Возможные ошибки:
-  - ErrCancelled - операция была отменена через context.Context
-  - ErrInvalidPath - ошибка парсинга пути или поиска поля в структуре
-  - ErrInvalidType - ошибка типа при получении значения поля (структура не того типа)
-  - ErrUncomparable - невозможно сравнить значения в условии (несовместимые типы)
-  - ErrInexpectedBehavior - внутренняя ошибка: функция условия не найдена в CONDITION_TO_FUNC
+Possible errors:
+  - ErrCancelled - operation was cancelled through context.Context
+  - ErrInvalidPath - path parsing error or field search error in structure
+  - ErrInvalidType - type error when getting field value (structure is not of that type)
+  - ErrUncomparable - cannot compare values in condition (incompatible types)
+  - ErrInexpectedBehavior - internal error: condition function not found in CONDITION_TO_FUNC
 */
 func (p *Policy) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
 	if p == nil {
@@ -378,21 +378,21 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 }
 
 /*
-Функция IsValid проверяет валидность политики.
+IsValid checks the validity of the policy.
 
-Функция проверяет:
-  1. Формат действия (action) - должно быть минимум 2 части, разделенные ":"
-  2. Отсутствие пустых частей в действии
-  3. Валидность всех путей в условиях (через parsePath)
+The function checks:
+  1. Action format - must be at least 2 parts separated by ":"
+  2. Absence of empty parts in action
+  3. Validity of all paths in conditions (via parsePath)
 
-Выходные параметры:
-  - error - ошибка валидности, если политика невалидна, nil если политика валидна
+Returns:
+  - error - validity error if policy is invalid, nil if policy is valid
 
-Возможные ошибки:
-  - ErrInvalidPath - возникает если:
-    * действие содержит менее 2 частей (минимум entity и action)
-    * действие содержит пустые части
-    * пути в условиях невалидны (см. parsePath)
+Possible errors:
+  - ErrInvalidPath - occurs if:
+    * action contains less than 2 parts (minimum entity and action)
+    * action contains empty parts
+    * paths in conditions are invalid (see parsePath)
 */
 
 func (p *Policy) IsValid() error {

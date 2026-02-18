@@ -1,9 +1,9 @@
 /*
-Пакет tests содержит тесты для публичных методов структуры Policy пакета base.
+Package tests contains tests for public methods of Policy structure in base package.
 
-Тесты проверяют только экспортируемые методы:
-  - Evaluate - оценка политики для заданных source, target и action
-  - IsValid - валидация политики
+Tests check only exported methods:
+  - Evaluate - policy evaluation for given source, target and action
+  - IsValid - policy validation
 */
 package tests
 
@@ -15,35 +15,35 @@ import (
 )
 
 /*
-Тестовые структуры для проверки работы с политиками.
+Test structures for checking policy functionality.
 
-Эти структуры используются для тестирования методов Policy
-с различными типами данных и вложенными структурами.
+These structures are used for testing Policy methods
+with various data types and nested structures.
 */
 
-// PolicyTestUser представляет пользователя для тестирования политик
+// PolicyTestUser represents a user for testing policies
 type PolicyTestUser struct {
-	Name string `noctis-guard:"name"` // Имя пользователя
-	Role string `noctis-guard:"role"` // Роль пользователя
-	Age  int    `noctis-guard:"age"`  // Возраст пользователя
+	Name string `noctis-guard:"name"` // User name
+	Role string `noctis-guard:"role"` // User role
+	Age  int    `noctis-guard:"age"`  // User age
 }
 
-// PolicyTestDocument представляет документ для тестирования политик
+// PolicyTestDocument represents a document for testing policies
 type PolicyTestDocument struct {
-	Owner string   `noctis-guard:"owner"` // Владелец документа
-	Type  string   `noctis-guard:"type"`  // Тип документа
-	Tags  []string `noctis-guard:"tags"`  // Теги документа
+	Owner string   `noctis-guard:"owner"` // Document owner
+	Type  string   `noctis-guard:"type"`  // Document type
+	Tags  []string `noctis-guard:"tags"`  // Document tags
 }
 
 /*
-TestPolicyEvaluate тестирует публичный метод Evaluate для оценки политики.
+TestPolicyEvaluate tests the public Evaluate method for policy evaluation.
 
-Тест проверяет:
-  - Соответствие действия политики переданному action
-  - Проверку условий политики
-  - Обработку нескольких условий (логическое И)
-  - Сравнение полей из разных структур (source и target)
-  - Возврат корректного результата при различных сценариях
+The test checks:
+  - Policy action matching passed action
+  - Policy condition checking
+  - Handling of multiple conditions (logical AND)
+  - Field comparison from different structures (source and target)
+  - Return of correct result in various scenarios
 */
 func TestPolicyEvaluate(t *testing.T) {
 	ctx := context.Background()
@@ -59,7 +59,7 @@ func TestPolicyEvaluate(t *testing.T) {
 	}{
 		{
 			name: "matching action and condition",
-			// Тест проверяет успешную оценку политики при совпадении действия и выполнении условия
+			// Test checks successful policy evaluation when action matches and condition is met
 			policy: base.Policy{
 				Name:   "test",
 				Action: "user:read",
@@ -76,7 +76,7 @@ func TestPolicyEvaluate(t *testing.T) {
 		},
 		{
 			name: "non-matching action",
-			// Тест проверяет, что политика не применяется при несовпадении действия
+			// Test checks that policy is not applied when action does not match
 			policy: base.Policy{
 				Name:   "test",
 				Action: "user:read",
@@ -87,13 +87,13 @@ func TestPolicyEvaluate(t *testing.T) {
 			},
 			source:  PolicyTestUser{Name: "admin", Role: "admin"},
 			target:  PolicyTestDocument{Owner: "user", Type: "public"},
-			action:  "user:write", // Другое действие
+			action:  "user:write", // Different action
 			want:    false,
 			wantErr: false,
 		},
 		{
 			name: "non-matching condition",
-			// Тест проверяет, что политика не проходит при невыполнении условия
+			// Test checks that policy does not pass when condition is not met
 			policy: base.Policy{
 				Name:   "test",
 				Action: "user:read",
@@ -102,7 +102,7 @@ func TestPolicyEvaluate(t *testing.T) {
 					"source:role": {Eq: "admin"},
 				},
 			},
-			source:  PolicyTestUser{Name: "user", Role: "user"}, // Роль не "admin"
+			source:  PolicyTestUser{Name: "user", Role: "user"}, // Role is not "admin"
 			target:  PolicyTestDocument{Owner: "user", Type: "public"},
 			action:  "user:read",
 			want:    false,
@@ -110,17 +110,17 @@ func TestPolicyEvaluate(t *testing.T) {
 		},
 		{
 			name: "multiple conditions - all match",
-			// Тест проверяет, что все условия должны быть выполнены (логическое И)
+			// Test checks that all conditions must be met (logical AND)
 			policy: base.Policy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {Eq: "admin"},
-					"source:age":  {Lt: 100}, // Возраст меньше 100
+					"source:age":  {Lt: 100}, // Age less than 100
 				},
 			},
-			source:  PolicyTestUser{Name: "admin", Role: "admin", Age: 25}, // Оба условия выполнены
+			source:  PolicyTestUser{Name: "admin", Role: "admin", Age: 25}, // Both conditions met
 			target:  PolicyTestDocument{Owner: "user", Type: "public"},
 			action:  "user:read",
 			want:    true,
@@ -128,17 +128,17 @@ func TestPolicyEvaluate(t *testing.T) {
 		},
 		{
 			name: "multiple conditions - one fails",
-			// Тест проверяет, что при невыполнении хотя бы одного условия политика не проходит
+			// Test checks that if at least one condition is not met, policy does not pass
 			policy: base.Policy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {Eq: "admin"},
-					"source:age":  {Lt: 10}, // Возраст должен быть меньше 10
+					"source:age":  {Lt: 10}, // Age must be less than 10
 				},
 			},
-			source:  PolicyTestUser{Name: "admin", Role: "admin", Age: 25}, // Возраст 25, условие не выполнено
+			source:  PolicyTestUser{Name: "admin", Role: "admin", Age: 25}, // Age 25, condition not met
 			target:  PolicyTestDocument{Owner: "user", Type: "public"},
 			action:  "user:read",
 			want:    false,
@@ -146,17 +146,17 @@ func TestPolicyEvaluate(t *testing.T) {
 		},
 		{
 			name: "compare fields from different structures",
-			// Тест проверяет сравнение полей из разных структур (source и target)
+			// Test checks field comparison from different structures (source and target)
 			policy: base.Policy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
-					"source:name": {Eq: "target:owner"}, // Сравнение name из source с owner из target
+					"source:name": {Eq: "target:owner"}, // Compare name from source with owner from target
 				},
 			},
 			source:  PolicyTestUser{Name: "alice", Role: "user"},
-			target:  PolicyTestDocument{Owner: "alice", Type: "public"}, // Имена совпадают
+			target:  PolicyTestDocument{Owner: "alice", Type: "public"}, // Names match
 			action:  "user:read",
 			want:    true,
 			wantErr: false,
@@ -183,13 +183,13 @@ func TestPolicyEvaluate(t *testing.T) {
 }
 
 /*
-TestPolicyIsValid тестирует публичный метод IsValid для валидации политики.
+TestPolicyIsValid tests the public IsValid method for policy validation.
 
-Тест проверяет:
-  - Валидацию формата действия (минимум 2 части через ":")
-  - Проверку отсутствия пустых частей в действии
-  - Валидацию всех путей в условиях
-  - Корректность обработки валидных и невалидных политик
+The test checks:
+  - Action format validation (minimum 2 parts separated by ":")
+  - Check for absence of empty parts in action
+  - Validation of all paths in conditions
+  - Correctness of handling valid and invalid policies
 */
 func TestPolicyIsValid(t *testing.T) {
 	tests := []struct {
@@ -199,7 +199,7 @@ func TestPolicyIsValid(t *testing.T) {
 	}{
 		{
 			name: "valid policy",
-			// Тест проверяет валидную политику со всеми корректными параметрами
+			// Test checks valid policy with all correct parameters
 			policy: base.Policy{
 				Name:   "test",
 				Action: "user:read",
@@ -212,10 +212,10 @@ func TestPolicyIsValid(t *testing.T) {
 		},
 		{
 			name: "invalid action - too short",
-			// Тест проверяет валидацию действия с недостаточным количеством частей
+			// Test checks action validation with insufficient number of parts
 			policy: base.Policy{
 				Name:   "test",
-				Action: "read", // Только одна часть, нужно минимум 2
+				Action: "read", // Only one part, need minimum 2
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {Eq: "admin"},
@@ -225,10 +225,10 @@ func TestPolicyIsValid(t *testing.T) {
 		},
 		{
 			name: "invalid action - empty part",
-			// Тест проверяет валидацию действия с пустой частью
+			// Test checks action validation with empty part
 			policy: base.Policy{
 				Name:   "test",
-				Action: "user::read", // Пустая часть между разделителями
+				Action: "user::read", // Empty part between separators
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {Eq: "admin"},
@@ -238,13 +238,13 @@ func TestPolicyIsValid(t *testing.T) {
 		},
 		{
 			name: "invalid path in conditions",
-			// Тест проверяет валидацию путей в условиях политики
+			// Test checks path validation in policy conditions
 			policy: base.Policy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
-					"invalid": {Eq: "admin"}, // Невалидный путь без разделителя ":"
+					"invalid": {Eq: "admin"}, // Invalid path without separator ":"
 				},
 			},
 			wantErr: true,
