@@ -36,6 +36,8 @@ func export(polices []base.Policy) (map[string][]base.Policy, error) {
 			return nil, NewErrDuplicateName(policy.Name)
 		}
 
+		usedNames = append(usedNames, policy.Name)
+
 		if err := policy.IsValid(); err != nil {
 			return nil, err
 		}

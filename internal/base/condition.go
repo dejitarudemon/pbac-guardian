@@ -9,6 +9,7 @@ package base
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 )
 
@@ -119,6 +120,13 @@ type conditionFunc func(ctx context.Context, left, right any) (bool, error)
   - ErrInvalidType - right не является slice или указателем на slice (может быть nil)
 */
 func containsConditionFunc(ctx context.Context, left, right any) (bool, error) {
+	if ctx == nil {
+		return false, fmt.Errorf("context is nil")
+	}
+	if right == nil {
+		return false, NewErrInvalidType(reflect.Slice.String(), nil)
+	}
+
 	slice := reflect.ValueOf(right)
 
 	if slice.Kind() == reflect.Pointer {
@@ -164,6 +172,12 @@ func containsConditionFunc(ctx context.Context, left, right any) (bool, error) {
   - err - ошибка выполнения (всегда nil, функция не возвращает ошибок)
 */
 func eqConditionFunc(ctx context.Context, left, right any) (bool, error) {
+	if ctx == nil {
+		return false, fmt.Errorf("context is nil")
+	}
+	// nil значения обрабатываются через reflect.DeepEqual
+	// reflect.DeepEqual(nil, nil) == true, reflect.DeepEqual(nil, non-nil) == false
+
 	if l, ok := left.(Comparable); ok {
 		if result, acceptable := l.Compare(right); acceptable {
 			return result == 0, nil
@@ -220,6 +234,16 @@ func neqConditionFunc(ctx context.Context, left, right any) (bool, error) {
     (int, uint, float, string и их варианты)
 */
 func ltConditionFunc(ctx context.Context, left, right any) (bool, error) {
+	if ctx == nil {
+		return false, fmt.Errorf("context is nil")
+	}
+	if left == nil {
+		return false, NewErrInvalidType(SUPPORTED_LT_PRIMITIVES, nil)
+	}
+	if right == nil {
+		return false, NewErrInvalidType(SUPPORTED_LT_PRIMITIVES, nil)
+	}
+
 	if reflect.TypeOf(left).Kind() != reflect.Struct {
 		return ltPrimitives(left, right)
 	}

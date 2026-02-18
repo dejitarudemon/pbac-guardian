@@ -80,6 +80,7 @@ package noctisguard
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 
@@ -288,6 +289,13 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 	}
 */
 func (n *Noctis) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
+	if n == nil {
+		return false, NewErrEvaluate(fmt.Errorf("noctis engine is nil"))
+	}
+	if ctx == nil {
+		return false, NewErrEvaluate(fmt.Errorf("context is nil"))
+	}
+
 	polices, ok := n.polices[action]
 	if !ok {
 		return false, nil
@@ -302,7 +310,7 @@ func (n *Noctis) Evaluate(ctx context.Context, source, target any, action string
 		}
 
 		if policy.Effect == base.Effect_DENY {
-			if !ok {
+			if ok {
 				return false, err
 			}
 		} else {
