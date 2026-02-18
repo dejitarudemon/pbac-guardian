@@ -70,6 +70,7 @@ Package noctisguard предоставляет движок для провер�
 package noctisguard
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"os"
@@ -259,7 +260,7 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 		// доступ запрещен
 	}
 */
-func (n *Noctis) Evaluate(source, target any, action string) (bool, error) {
+func (n *Noctis) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
 	polices, ok := n.polices[action]
 	if !ok {
 		return false, nil
@@ -268,7 +269,7 @@ func (n *Noctis) Evaluate(source, target any, action string) (bool, error) {
 	allowed := false
 
 	for _, policy := range polices {
-		ok, err := policy.Evaluate(source, target, action)
+		ok, err := policy.Evaluate(ctx, source, target, action)
 		if err != nil {
 			return false, NewErrEvaluate(err)
 		}

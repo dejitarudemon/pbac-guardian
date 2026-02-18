@@ -20,6 +20,8 @@ var (
 	// ErrNotComparableStruct представляет ошибку, возникающую когда левый аргумент
 	// является структурой, но не реализует метод Compare()
 	ErrNotComparableStruct = errors.New("left argument is a struct, but it doesn't implement Comapre() method")
+
+	ErrCancelled = errors.New("cancelled by context")
 )
 
 /*

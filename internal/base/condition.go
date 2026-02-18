@@ -8,6 +8,7 @@ Package base предоставляет базовые типы и функци�
 package base
 
 import (
+	"context"
 	"reflect"
 )
 
@@ -92,7 +93,7 @@ type Condition struct {
   - bool - результат сравнения (true если условие выполнено, false иначе)
   - err - ошибка выполнения сравнения (nil если сравнение успешно)
 */
-type conditionFunc func(left, right any) (bool, error)
+type conditionFunc func(ctx context.Context, left, right any) (bool, error)
 
 /*
 Функция containsConditionFunc проверяет, находится ли значение left в списке right.
@@ -111,7 +112,7 @@ type conditionFunc func(left, right any) (bool, error)
 Возможные ошибки:
   - ErrInvalidType - right не является slice или указателем на slice (может быть nil)
 */
-func containsConditionFunc(left, right any) (bool, error) {
+func containsConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	slice := reflect.ValueOf(right)
 
 	if slice.Kind() == reflect.Pointer {
@@ -127,8 +128,13 @@ func containsConditionFunc(left, right any) (bool, error) {
 	}
 
 	for i := range slice.Len() {
-		if reflect.DeepEqual(left, slice.Index(i).Interface()) {
-			return true, nil
+		select {
+		case <-ctx.Done():
+			return false, ErrCancelled
+		default:
+			if reflect.DeepEqual(left, slice.Index(i).Interface()) {
+				return true, nil
+			}
 		}
 	}
 
@@ -150,7 +156,7 @@ func containsConditionFunc(left, right any) (bool, error) {
   - bool - true, если значения равны, false иначе
   - err - ошибка выполнения (всегда nil, функция не возвращает ошибок)
 */
-func eqConditionFunc(left, right any) (bool, error) {
+func eqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	if l, ok := left.(Comparable); ok {
 		if result, acceptable := l.Compare(right); acceptable {
 			return result == 0, nil
@@ -178,8 +184,8 @@ func eqConditionFunc(left, right any) (bool, error) {
   - bool - true, если значения не равны, false если равны
   - err - ошибка выполнения (всегда nil, функция не возвращает ошибок)
 */
-func neqConditionFunc(left, right any) (bool, error) {
-	ok, err := eqConditionFunc(left, right)
+func neqConditionFunc(ctx context.Context, left, right any) (bool, error) {
+	ok, err := eqConditionFunc(ctx, left, right)
 	return !ok, err
 }
 
@@ -204,7 +210,7 @@ func neqConditionFunc(left, right any) (bool, error) {
   - ErrInvalidType - left или right не является ни структурой, ни поддерживаемым примитивом
     (int, uint, float, string и их варианты)
 */
-func ltConditionFunc(left, right any) (bool, error) {
+func ltConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	if reflect.TypeOf(left).Kind() != reflect.Struct {
 		return ltPrimitives(left, right)
 	}
