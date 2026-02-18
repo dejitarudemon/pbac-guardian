@@ -3,30 +3,30 @@ package noctisguard
 import "fmt"
 
 /*
-Структура ErrDublicateName представляет ошибку, возникающую при попытке
+Структура ErrDuplicateName представляет ошибку, возникающую при попытке
 создать политику с именем, которое уже используется другой политикой.
 
 Каждая политика должна иметь уникальное имя. При попытке добавить политику
 с уже существующим именем возвращается эта ошибка.
 */
-type ErrDublicateName struct {
+type ErrDuplicateName struct {
 	name string
 }
 
 /*
-Функция NewErrDuplicateName создает новую ошибку ErrDublicateName.
+Функция NewErrDuplicateName создает новую ошибку ErrDuplicateName.
 
 Входные параметры:
   - name - имя политики, которое уже используется другой политикой
 
 Выходные параметры:
-  - error - созданная ошибка типа ErrDublicateName
+  - error - созданная ошибка типа ErrDuplicateName
 */
 func NewErrDuplicateName(name string) error {
-	return ErrDublicateName{name: name}
+	return ErrDuplicateName{name: name}
 }
 
-func (e ErrDublicateName) Error() string {
+func (e ErrDuplicateName) Error() string {
 	return fmt.Sprintf("%v is already used by another policy", e.name)
 }
 
