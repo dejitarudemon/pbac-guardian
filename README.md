@@ -1,2 +1,766 @@
 # noctis-guard
-Контроллер политик на основе языка Go \\ A Go-based policy controller
+
+[English](#english) | [Русский](#русский)
+
+---
+
+<a name="english"></a>
+# English
+
+## Overview
+
+`noctis-guard` is a lightweight, policy-based access control (PBAC) library for Go. It allows you to define access policies declaratively and check structures against these policies using a flexible system of conditions and effects.
+
+## Features
+
+- **Simple API**: Minimalistic and easy to use
+- **Declarative Policies**: Define policies in JSON or programmatically
+- **Flexible Conditions**: Support for equality, inequality, less-than, and contains operations
+- **Context Support**: Built-in support for cancellation and timeouts via `context.Context`
+- **No Dependencies**: Uses only the standard Go library
+- **Type Safety**: Typed constants and validation
+
+## Installation
+
+```bash
+go get github.com/dejitarudemon/noctis-guard
+```
+
+## Quick Start
+
+### 1. Define Your Structures
+
+Tag your struct fields with `noctis-guard` tags:
+
+```go
+type User struct {
+    Name string `noctis-guard:"name"`
+    Role string `noctis-guard:"role"`
+    Age  int    `noctis-guard:"age"`
+}
+
+type Document struct {
+    Owner string   `noctis-guard:"owner"`
+    Type  string   `noctis-guard:"type"`
+    Tags  []string `noctis-guard:"tags"`
+}
+```
+
+### 2. Create Policies
+
+```go
+import (
+    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/noctis-guard/internal/base"
+)
+
+policies := []base.Policy{
+    {
+        Name:   "admin-read",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:role": {
+                Eq: "admin",
+            },
+        },
+    },
+    {
+        Name:   "owner-read",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:name": {
+                Eq: "target:owner",
+            },
+        },
+    },
+}
+```
+
+### 3. Create Engine and Evaluate
+
+```go
+import "context"
+
+// Create engine
+engine, err := noctisguard.NewNoctisFromPolices(policies)
+if err != nil {
+    panic(err)
+}
+
+// Create context
+ctx := context.Background()
+
+// Check access
+user := User{Name: "alice", Role: "user"}
+doc := Document{Owner: "alice", Type: "private"}
+
+allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+if err != nil {
+    // handle error
+}
+
+if allowed {
+    // access granted
+} else {
+    // access denied
+}
+```
+
+## Tutorials
+
+### Tutorial 1: Basic Policy Evaluation
+
+This tutorial shows how to create a simple policy and evaluate access.
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/noctis-guard/internal/base"
+)
+
+type User struct {
+    Name string `noctis-guard:"name"`
+    Role string `noctis-guard:"role"`
+}
+
+type Document struct {
+    Owner string `noctis-guard:"owner"`
+}
+
+func main() {
+    // Define policies
+    policies := []base.Policy{
+        {
+            Name:   "admin-access",
+            Action: "user:read:document",
+            Effect: base.Effect_ALLOW,
+            Conditions: map[string]base.Condition{
+                "source:role": {
+                    Eq: "admin",
+                },
+            },
+        },
+    }
+
+    // Create engine
+    engine, err := noctisguard.NewNoctisFromPolices(policies)
+    if err != nil {
+        panic(err)
+    }
+
+    // Test cases
+    ctx := context.Background()
+
+    // Admin user - should be allowed
+    admin := User{Name: "admin", Role: "admin"}
+    doc := Document{Owner: "alice"}
+    allowed, _ := engine.Evaluate(ctx, admin, doc, "user:read:document")
+    fmt.Printf("Admin access: %v\n", allowed) // true
+
+    // Regular user - should be denied
+    user := User{Name: "bob", Role: "user"}
+    allowed, _ = engine.Evaluate(ctx, user, doc, "user:read:document")
+    fmt.Printf("User access: %v\n", allowed) // false
+}
+```
+
+### Tutorial 2: Loading Policies from JSON
+
+This tutorial shows how to load policies from a JSON file.
+
+**policies.json:**
+```json
+[
+  {
+    "name": "admin-read",
+    "action": "user:read:document",
+    "effect": "allow",
+    "conditions": {
+      "source:role": {"eq": "admin"}
+    }
+  },
+  {
+    "name": "owner-read",
+    "action": "user:read:document",
+    "effect": "allow",
+    "conditions": {
+      "source:name": {"eq": "target:owner"}
+    }
+  }
+]
+```
+
+**main.go:**
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "github.com/dejitarudemon/noctis-guard"
+)
+
+func main() {
+    // Load policies from file
+    engine, err := noctisguard.NewNoctisFromFile("policies.json")
+    if err != nil {
+        panic(err)
+    }
+
+    ctx := context.Background()
+    user := User{Name: "alice", Role: "user"}
+    doc := Document{Owner: "alice", Type: "private"}
+
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("Access allowed: %v\n", allowed) // true (owner-read policy passed)
+}
+```
+
+### Tutorial 3: Using Multiple Conditions
+
+This tutorial shows how to combine multiple conditions in a single policy.
+
+```go
+policies := []base.Policy{
+    {
+        Name:   "age-restricted-read",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:age": {
+                Lt: 18, // age < 18
+            },
+            "target:tags": {
+                Contains: []any{"public"}, // "public" in tags
+            },
+        },
+    },
+}
+```
+
+### Tutorial 4: DENY Policies
+
+DENY policies have priority. If a DENY policy's conditions are met, access is denied even if ALLOW policies pass.
+
+```go
+policies := []base.Policy{
+    {
+        Name:   "block-minors",
+        Action: "user:read:document",
+        Effect: base.Effect_DENY,
+        Conditions: map[string]base.Condition{
+            "source:age": {
+                Lt: 18, // age < 18
+            },
+            "target:tags": {
+                Contains: []any{"adult-only"},
+            },
+        },
+    },
+    {
+        Name:   "allow-all",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:role": {
+                Eq: "user",
+            },
+        },
+    },
+}
+```
+
+### Tutorial 5: Context Cancellation
+
+This tutorial shows how to use context for cancellation and timeouts.
+
+```go
+import (
+    "context"
+    "time"
+)
+
+func main() {
+    // Create context with timeout
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    // Evaluate with timeout
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        if err == base.ErrCancelled {
+            fmt.Println("Operation cancelled")
+        } else {
+            panic(err)
+        }
+    }
+}
+```
+
+### Tutorial 6: Custom Types with Comparable Interface
+
+For custom types that need special comparison logic, implement the `Comparable` interface.
+
+```go
+type User struct {
+    Name string
+    Age  int
+}
+
+func (u User) Compare(other any) (int, bool) {
+    o, ok := other.(User)
+    if !ok {
+        return 0, false
+    }
+    if u.Age < o.Age {
+        return -1, true
+    }
+    if u.Age > o.Age {
+        return 1, true
+    }
+    return 0, true
+}
+```
+
+## API Reference
+
+### Noctis Engine
+
+#### `NewNoctisFromPolices(policies []base.Policy) (*Noctis, error)`
+
+Creates a new Noctis instance from a list of policies.
+
+#### `NewNoctisFromFile(path string) (*Noctis, error)`
+
+Creates a new Noctis instance from a JSON file.
+
+#### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
+
+Evaluates access for the given action. Returns `true` if access is allowed, `false` otherwise.
+
+### Policy Structure
+
+```go
+type Policy struct {
+    Name       string               `json:"name"`
+    Action     string               `json:"action"`
+    Effect     Effect               `json:"effect"`
+    Conditions map[string]Condition `json:"conditions"`
+}
+```
+
+### Condition Types
+
+- **Eq**: Equality check (`left == right`)
+- **Neq**: Inequality check (`left != right`)
+- **Lt**: Less than check (`left < right`)
+- **Contains**: Checks if `left` is in `right` (slice)
+
+### Effects
+
+- **Effect_ALLOW**: Allow action if conditions are met
+- **Effect_DENY**: Deny action if conditions are met (has priority)
+
+## Error Handling
+
+The library provides typed errors:
+
+- `ErrDuplicateName`: Policy name already exists
+- `ErrExport`: Error exporting policies
+- `ErrEvaluate`: Error evaluating policies
+- `ErrCancelled`: Operation cancelled via context
+- `ErrInvalidPath`: Invalid field path
+- `ErrInvalidType`: Invalid type
+- `ErrUncomparable`: Cannot compare values
+
+---
+
+<a name="русский"></a>
+# Русский
+
+## Обзор
+
+`noctis-guard` — это легковесная библиотека для контроля доступа на основе политик (PBAC) для Go. Она позволяет декларативно определять политики доступа и проверять структуры на соответствие этим политикам с использованием гибкой системы условий и эффектов.
+
+## Возможности
+
+- **Простой API**: Минималистичный и простой в использовании
+- **Декларативные политики**: Определение политик в JSON или программно
+- **Гибкие условия**: Поддержка операций равенства, неравенства, меньше и содержит
+- **Поддержка контекста**: Встроенная поддержка отмены и таймаутов через `context.Context`
+- **Без зависимостей**: Использует только стандартную библиотеку Go
+- **Безопасность типов**: Типизированные константы и валидация
+
+## Установка
+
+```bash
+go get github.com/dejitarudemon/noctis-guard
+```
+
+## Быстрый старт
+
+### 1. Определите свои структуры
+
+Помечайте поля структур тегами `noctis-guard`:
+
+```go
+type User struct {
+    Name string `noctis-guard:"name"`
+    Role string `noctis-guard:"role"`
+    Age  int    `noctis-guard:"age"`
+}
+
+type Document struct {
+    Owner string   `noctis-guard:"owner"`
+    Type  string   `noctis-guard:"type"`
+    Tags  []string `noctis-guard:"tags"`
+}
+```
+
+### 2. Создайте политики
+
+```go
+import (
+    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/noctis-guard/internal/base"
+)
+
+policies := []base.Policy{
+    {
+        Name:   "admin-read",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:role": {
+                Eq: "admin",
+            },
+        },
+    },
+    {
+        Name:   "owner-read",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:name": {
+                Eq: "target:owner",
+            },
+        },
+    },
+}
+```
+
+### 3. Создайте движок и проверьте доступ
+
+```go
+import "context"
+
+// Создание движка
+engine, err := noctisguard.NewNoctisFromPolices(policies)
+if err != nil {
+    panic(err)
+}
+
+// Создание контекста
+ctx := context.Background()
+
+// Проверка доступа
+user := User{Name: "alice", Role: "user"}
+doc := Document{Owner: "alice", Type: "private"}
+
+allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+if err != nil {
+    // обработка ошибки
+}
+
+if allowed {
+    // доступ разрешен
+} else {
+    // доступ запрещен
+}
+```
+
+## Туториалы
+
+### Туториал 1: Базовая оценка политик
+
+Этот туториал показывает, как создать простую политику и проверить доступ.
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/noctis-guard/internal/base"
+)
+
+type User struct {
+    Name string `noctis-guard:"name"`
+    Role string `noctis-guard:"role"`
+}
+
+type Document struct {
+    Owner string `noctis-guard:"owner"`
+}
+
+func main() {
+    // Определение политик
+    policies := []base.Policy{
+        {
+            Name:   "admin-access",
+            Action: "user:read:document",
+            Effect: base.Effect_ALLOW,
+            Conditions: map[string]base.Condition{
+                "source:role": {
+                    Eq: "admin",
+                },
+            },
+        },
+    }
+
+    // Создание движка
+    engine, err := noctisguard.NewNoctisFromPolices(policies)
+    if err != nil {
+        panic(err)
+    }
+
+    // Тестовые случаи
+    ctx := context.Background()
+
+    // Пользователь-админ - должен быть разрешен
+    admin := User{Name: "admin", Role: "admin"}
+    doc := Document{Owner: "alice"}
+    allowed, _ := engine.Evaluate(ctx, admin, doc, "user:read:document")
+    fmt.Printf("Доступ админа: %v\n", allowed) // true
+
+    // Обычный пользователь - должен быть запрещен
+    user := User{Name: "bob", Role: "user"}
+    allowed, _ = engine.Evaluate(ctx, user, doc, "user:read:document")
+    fmt.Printf("Доступ пользователя: %v\n", allowed) // false
+}
+```
+
+### Туториал 2: Загрузка политик из JSON
+
+Этот туториал показывает, как загрузить политики из JSON файла.
+
+**policies.json:**
+```json
+[
+  {
+    "name": "admin-read",
+    "action": "user:read:document",
+    "effect": "allow",
+    "conditions": {
+      "source:role": {"eq": "admin"}
+    }
+  },
+  {
+    "name": "owner-read",
+    "action": "user:read:document",
+    "effect": "allow",
+    "conditions": {
+      "source:name": {"eq": "target:owner"}
+    }
+  }
+]
+```
+
+**main.go:**
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "github.com/dejitarudemon/noctis-guard"
+)
+
+func main() {
+    // Загрузка политик из файла
+    engine, err := noctisguard.NewNoctisFromFile("policies.json")
+    if err != nil {
+        panic(err)
+    }
+
+    ctx := context.Background()
+    user := User{Name: "alice", Role: "user"}
+    doc := Document{Owner: "alice", Type: "private"}
+
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("Доступ разрешен: %v\n", allowed) // true (политика owner-read прошла)
+}
+```
+
+### Туториал 3: Использование множественных условий
+
+Этот туториал показывает, как комбинировать несколько условий в одной политике.
+
+```go
+policies := []base.Policy{
+    {
+        Name:   "age-restricted-read",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:age": {
+                Lt: 18, // возраст < 18
+            },
+            "target:tags": {
+                Contains: []any{"public"}, // "public" в тегах
+            },
+        },
+    },
+}
+```
+
+### Туториал 4: Политики DENY
+
+Политики DENY имеют приоритет. Если условия политики DENY выполнены, доступ запрещается, даже если политики ALLOW прошли проверку.
+
+```go
+policies := []base.Policy{
+    {
+        Name:   "block-minors",
+        Action: "user:read:document",
+        Effect: base.Effect_DENY,
+        Conditions: map[string]base.Condition{
+            "source:age": {
+                Lt: 18, // возраст < 18
+            },
+            "target:tags": {
+                Contains: []any{"adult-only"},
+            },
+        },
+    },
+    {
+        Name:   "allow-all",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:role": {
+                Eq: "user",
+            },
+        },
+    },
+}
+```
+
+### Туториал 5: Отмена через контекст
+
+Этот туториал показывает, как использовать контекст для отмены и таймаутов.
+
+```go
+import (
+    "context"
+    "time"
+)
+
+func main() {
+    // Создание контекста с таймаутом
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    // Оценка с таймаутом
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        if err == base.ErrCancelled {
+            fmt.Println("Операция отменена")
+        } else {
+            panic(err)
+        }
+    }
+}
+```
+
+### Туториал 6: Кастомные типы с интерфейсом Comparable
+
+Для кастомных типов, требующих специальной логики сравнения, реализуйте интерфейс `Comparable`.
+
+```go
+type User struct {
+    Name string
+    Age  int
+}
+
+func (u User) Compare(other any) (int, bool) {
+    o, ok := other.(User)
+    if !ok {
+        return 0, false
+    }
+    if u.Age < o.Age {
+        return -1, true
+    }
+    if u.Age > o.Age {
+        return 1, true
+    }
+    return 0, true
+}
+```
+
+## Справочник API
+
+### Движок Noctis
+
+#### `NewNoctisFromPolices(policies []base.Policy) (*Noctis, error)`
+
+Создает новый экземпляр Noctis из списка политик.
+
+#### `NewNoctisFromFile(path string) (*Noctis, error)`
+
+Создает новый экземпляр Noctis из JSON файла.
+
+#### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
+
+Оценивает доступ для указанного действия. Возвращает `true`, если доступ разрешен, `false` в противном случае.
+
+### Структура Policy
+
+```go
+type Policy struct {
+    Name       string               `json:"name"`
+    Action     string               `json:"action"`
+    Effect     Effect               `json:"effect"`
+    Conditions map[string]Condition `json:"conditions"`
+}
+```
+
+### Типы условий
+
+- **Eq**: Проверка равенства (`left == right`)
+- **Neq**: Проверка неравенства (`left != right`)
+- **Lt**: Проверка меньше (`left < right`)
+- **Contains**: Проверяет, находится ли `left` в `right` (slice)
+
+### Эффекты
+
+- **Effect_ALLOW**: Разрешить действие, если условия выполнены
+- **Effect_DENY**: Запретить действие, если условия выполнены (имеет приоритет)
+
+## Обработка ошибок
+
+Библиотека предоставляет типизированные ошибки:
+
+- `ErrDuplicateName`: Имя политики уже существует
+- `ErrExport`: Ошибка экспорта политик
+- `ErrEvaluate`: Ошибка оценки политик
+- `ErrCancelled`: Операция отменена через контекст
+- `ErrInvalidPath`: Невалидный путь до поля
+- `ErrInvalidType`: Невалидный тип
+- `ErrUncomparable`: Невозможно сравнить значения
+
