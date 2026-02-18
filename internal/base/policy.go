@@ -8,6 +8,7 @@ Package base предоставляет базовые типы и функци�
 package base
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -299,7 +300,11 @@ func (p *Policy) get(source, target any, path string, mustBePath bool) (any, err
 проверяются все условия политики. Политика считается выполненной, если все условия
 выполнены (логическое И).
 
+Функция поддерживает отмену через context.Context, что позволяет прервать проверку
+условий при отмене контекста.
+
 Входные параметры:
+  - ctx - контекст для отмены операции и контроля таймаутов
   - source - первая проверяемая структура (обычно источник действия)
   - target - вторая проверяемая структура (обычно цель действия)
   - action - действие в формате "entity:action:extra..." для проверки
@@ -311,12 +316,13 @@ func (p *Policy) get(source, target any, path string, mustBePath bool) (any, err
   - error - ошибка выполнения, если возникла проблема при проверке условий
 
 Возможные ошибки:
+  - ErrCancelled - операция была отменена через context.Context
   - ErrInvalidPath - ошибка парсинга пути или поиска поля в структуре
   - ErrInvalidType - ошибка типа при получении значения поля (структура не того типа)
   - ErrUncomparable - невозможно сравнить значения в условии (несовместимые типы)
   - ErrInexpectedBehavior - внутренняя ошибка: функция условия не найдена в CONDITION_TO_FUNC
 */
-func (p *Policy) Evaluate(source, target any, action string) (bool, error) {
+func (p *Policy) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
 	if p.Action != action {
 		return false, nil
 	}
@@ -333,26 +339,31 @@ func (p *Policy) Evaluate(source, target any, action string) (bool, error) {
 		c := reflect.ValueOf(condition)
 
 		for i := range c.NumField() {
-			if !c.Field(i).IsZero() {
-				if f, ok := CONDITION_TO_FUNC[t.Field(i).Name]; ok {
+			select {
+			case <-ctx.Done():
+				return false, ErrCancelled
+			default:
+				if !c.Field(i).IsZero() {
+					if f, ok := CONDITION_TO_FUNC[t.Field(i).Name]; ok {
 
-					right := c.Field(i).Interface()
+						right := c.Field(i).Interface()
 
-					if r, ok := right.(string); ok {
-						right, err = p.get(source, target, r, false)
+						if r, ok := right.(string); ok {
+							right, err = p.get(source, target, r, false)
+							if err != nil {
+								return false, err
+							}
+						}
+
+						m, err := f(ctx, left, right)
 						if err != nil {
 							return false, err
 						}
-					}
 
-					m, err := f(left, right)
-					if err != nil {
-						return false, err
+						match = match && m
+					} else {
+						return false, NewErrInexpectedBehavior("Policy.Evaluate()", fmt.Sprintf("condition func for %v doesn't exist", t.Field(i).Name))
 					}
-
-					match = match && m
-				} else {
-					return false, NewErrInexpectedBehavior("Policy.Evaluate()", fmt.Sprintf("condition func for %v doesn't exist", t.Field(i).Name))
 				}
 			}
 		}
