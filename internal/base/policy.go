@@ -162,7 +162,7 @@ func (p *Policy) get(source, target any, path string, mustBePath bool) (any, err
 }
 
 /*
-Функция Evaluate для Policy предназначена для проверки политики по отношению
+Функция Evaluate для Policy предназначена для применения политики по отношению
 к target и source, которые должны являться структурами
 
 Входные параметры:
@@ -217,4 +217,32 @@ func (p *Policy) Evaluate(source, target any, action string) (bool, error) {
 	}
 
 	return match, nil
+}
+
+/*
+Функция IsValid для Policy предназначена для проверки политики
+
+Выходные параметры:
+  - error - ошибка валидности, если политика невалидна
+*/
+
+func (p *Policy) IsValid() error {
+	actions := strings.Split(p.Action, PATH_SEP)
+	if len(actions) < MIN_ACTION_PARTS {
+		return NewErrInvalidPath(p.Action, "not enough parts of action. use: entity:action:extra1:extra2 etc")
+	}
+
+	for i, action := range actions {
+		if action == "" {
+			return NewErrInvalidPath(p.Action, fmt.Sprintf("empty part: %v", i))
+		}
+	}
+
+	for field := range p.Conditions {
+		if _, _, err := p.parsePath(field); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
