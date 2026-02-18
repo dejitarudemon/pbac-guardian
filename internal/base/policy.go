@@ -217,13 +217,11 @@ func (p *Policy) getValue(entity any, path []string) (any, error) {
 		tag := fieldType.Tag.Get(TAG_KEY)
 
 		if tag != "" {
-			flags := strings.Split(tag, TAG_KEY)
 
-			if len(flags) < 1 {
-				continue
-			}
+			flags := strings.Split(tag, TAG_SEP)
+			tagValue := strings.TrimSpace(flags[0])
 
-			if flags[0] != path[0] {
+			if tagValue != path[0] {
 				continue
 			}
 
@@ -323,6 +321,13 @@ func (p *Policy) get(source, target any, path string, mustBePath bool) (any, err
   - ErrInexpectedBehavior - внутренняя ошибка: функция условия не найдена в CONDITION_TO_FUNC
 */
 func (p *Policy) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
+	if p == nil {
+		return false, NewErrInexpectedBehavior("Policy.Evaluate()", "policy is nil")
+	}
+	if ctx == nil {
+		return false, fmt.Errorf("context is nil")
+	}
+
 	if p.Action != action {
 		return false, nil
 	}
