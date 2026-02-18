@@ -9,6 +9,7 @@ Package noctisguard предоставляет движок для провер�
 	package main
 
 	import (
+		"context"
 		"fmt"
 		"github.com/dejitarudemon/noctis-guard"
 		"github.com/dejitarudemon/noctis-guard/internal/base"
@@ -55,13 +56,20 @@ Package noctisguard предоставляет движок для провер�
 			panic(err)
 		}
 
+		// Создание контекста
+		ctx := context.Background()
+
 		// Проверка доступа
 		user := User{Name: "alice", Role: "user"}
 		doc := Document{Owner: "alice", Type: "private"}
 
-		allowed, err := engine.Evaluate(user, doc, "user:read:document")
+		allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
 		if err != nil {
-			panic(err)
+			if err == base.ErrCancelled {
+				fmt.Println("Operation cancelled")
+			} else {
+				panic(err)
+			}
 		}
 
 		fmt.Printf("Access allowed: %v\n", allowed) // true (политика owner-read прошла)
@@ -209,7 +217,11 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 имеют приоритет и запрещают действие, если их условия не выполнены. Политики
 с эффектом ALLOW разрешают действие, если хотя бы одна из них проходит проверку.
 
+Функция поддерживает отмену через context.Context, что позволяет прервать
+длительные операции проверки условий.
+
 Входные параметры:
+  - ctx - контекст для отмены операции и контроля таймаутов
   - source - первая проверяемая структура (обычно источник действия)
   - target - вторая проверяемая структура (обычно цель действия)
   - action - действие в формате "entity:action:extra..." для которого проверяются политики
@@ -222,6 +234,7 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 
 Возможные ошибки:
   - ErrEvaluate - ошибка оценки политик. Может содержать ошибки из base:
+  - ErrCancelled - операция была отменена через context.Context
   - ErrInvalidPath - ошибка парсинга пути до поля или поле не найдено
   - ErrInvalidType - неверный тип структуры или поля
   - ErrUncomparable - невозможно сравнить значения в условии
@@ -230,11 +243,17 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 Логика работы:
  1. Если для указанного action нет политик, возвращается (false, nil)
  2. Для каждой политики проверяются условия:
+    - Если контекст отменен, возвращается (false, ErrCancelled)
     - Если политика имеет эффект DENY и условия не выполнены, возвращается (false, nil)
     - Если политика имеет эффект ALLOW и условия выполнены, устанавливается флаг allowed = true
  3. Возвращается результат: (allowed, nil) или (false, error) при ошибке
 
 Пример использования:
+
+	import (
+		"context"
+		"time"
+	)
 
 	type User struct {
 		Name string `noctis-guard:"name"`
@@ -248,10 +267,18 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 	user := User{Name: "alice", Role: "admin"}
 	doc := Document{Owner: "alice"}
 
+	// Создание контекста с таймаутом
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	// Проверка доступа на чтение документа
-	allowed, err := engine.Evaluate(user, doc, "user:read:document")
+	allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
 	if err != nil {
-		// обработка ошибки
+		if err == base.ErrCancelled {
+			// операция была отменена
+		} else {
+			// другая ошибка
+		}
 	}
 
 	if allowed {

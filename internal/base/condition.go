@@ -85,13 +85,17 @@ type Condition struct {
 Функции этого типа используются для проверки условий в политиках. Порядок аргументов
 имеет значение для операций Contains и Lt (left и right не взаимозаменяемы).
 
+Функции должны поддерживать отмену через context.Context и возвращать ErrCancelled
+при отмене контекста.
+
 Входные параметры:
+  - ctx - контекст для отмены операции и контроля таймаутов
   - left - левое сравниваемое значение (то, что проверяется)
   - right - правое сравниваемое значение (то, с чем сравнивается)
 
 Выходные параметры:
   - bool - результат сравнения (true если условие выполнено, false иначе)
-  - err - ошибка выполнения сравнения (nil если сравнение успешно)
+  - err - ошибка выполнения сравнения (nil если сравнение успешно, ErrCancelled при отмене контекста)
 */
 type conditionFunc func(ctx context.Context, left, right any) (bool, error)
 
@@ -99,17 +103,19 @@ type conditionFunc func(ctx context.Context, left, right any) (bool, error)
 Функция containsConditionFunc проверяет, находится ли значение left в списке right.
 
 Функция использует reflect.DeepEqual для сравнения элементов, что позволяет
-работать с любыми типами данных.
+работать с любыми типами данных. Поддерживает отмену через context.Context.
 
 Входные параметры:
+  - ctx - контекст для отмены операции и контроля таймаутов
   - left - значение, которое ищется в списке
   - right - список (slice) или указатель на список, в котором выполняется поиск
 
 Выходные параметры:
   - bool - true, если left найден в right, false иначе
-  - err - ошибка выполнения, если right не является списком
+  - err - ошибка выполнения, если right не является списком или операция отменена
 
 Возможные ошибки:
+  - ErrCancelled - операция была отменена через context.Context
   - ErrInvalidType - right не является slice или указателем на slice (может быть nil)
 */
 func containsConditionFunc(ctx context.Context, left, right any) (bool, error) {
@@ -149,6 +155,7 @@ func containsConditionFunc(ctx context.Context, left, right any) (bool, error) {
 ни одно значение не реализует Comparable, используется reflect.DeepEqual.
 
 Входные параметры:
+  - ctx - контекст для отмены операции и контроля таймаутов (не используется, но требуется для совместимости)
   - left - левое сравниваемое значение
   - right - правое сравниваемое значение
 
@@ -173,10 +180,11 @@ func eqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 /*
 Функция neqConditionFunc проверяет неравенство двух значений.
 
-Функция является инверсией eqConditionFunc: возвращает !eqConditionFunc(left, right).
+Функция является инверсией eqConditionFunc: возвращает !eqConditionFunc(ctx, left, right).
 Использует ту же логику сравнения через Comparable или DeepEqual.
 
 Входные параметры:
+  - ctx - контекст для отмены операции и контроля таймаутов (передается в eqConditionFunc)
   - left - левое сравниваемое значение
   - right - правое сравниваемое значение
 
@@ -197,6 +205,7 @@ func neqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 Типы должны совпадать для корректного сравнения.
 
 Входные параметры:
+  - ctx - контекст для отмены операции и контроля таймаутов (передается в ltPrimitives)
   - left - левое сравниваемое значение
   - right - правое сравниваемое значение
 
