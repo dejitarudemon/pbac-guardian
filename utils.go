@@ -7,25 +7,25 @@ import (
 )
 
 /*
-Функция export преобразует список политик в карту, организованную по действиям (action).
+export converts a list of policies into a map organized by actions.
 
-Функция выполняет следующие проверки:
- 1. Проверка на дубликаты имен политик
- 2. Валидация каждой политики через Policy.IsValid()
- 3. Группировка политик по действиям для быстрого доступа
+The function performs the following checks:
+ 1. Check for duplicate policy names
+ 2. Validate each policy through Policy.IsValid()
+ 3. Group policies by actions for fast access
 
-Входные параметры:
-  - polices - список политик для экспорта и группировки
+Parameters:
+  - polices - list of policies to export and group
 
-Выходные параметры:
-  - map[string][]base.Policy - карта политик, где:
-  - ключ - действие (action) в формате "entity:action:extra..."
-  - значение - список всех политик для этого действия
-  - error - ошибка экспорта, если найдены дубликаты имен или невалидные политики
+Returns:
+  - map[string][]base.Policy - map of policies where:
+  - key - action in format "entity:action:extra..."
+  - value - list of all policies for this action
+  - error - export error if duplicate names or invalid policies are found
 
-Возможные ошибки:
-  - ErrDuplicateName - имя политики уже используется другой политикой в списке
-  - ошибки из base.Policy.IsValid() - ErrInvalidPath при невалидном пути в условиях политики
+Possible errors:
+  - ErrDuplicateName - policy name is already used by another policy in the list
+  - errors from base.Policy.IsValid() - ErrInvalidPath when path in policy conditions is invalid
 */
 func export(polices []base.Policy) (map[string][]base.Policy, error) {
 	mappedPolices := make(map[string][]base.Policy)

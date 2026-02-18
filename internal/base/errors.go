@@ -1,9 +1,9 @@
 /*
-Package base предоставляет базовые типы и функции для работы с политиками,
-условиями, эффектами и сущностями в системе проверки доступа.
+Package base provides basic types and functions for working with policies,
+conditions, effects, and entities in the access control system.
 
-Пакет содержит определения политик, условий сравнения, эффектов (allow/deny),
-сущностей (source/target) и интерфейсов для кастомного сравнения.
+The package contains definitions of policies, comparison conditions, effects (allow/deny),
+entities (source/target) and interfaces for custom comparison.
 */
 package base
 
@@ -13,25 +13,24 @@ import (
 )
 
 /*
-В этом файле представлены кастомные ошибки для базы движка
+This file contains custom errors for the engine base
 */
 
 var (
-	// ErrNotComparableStruct представляет ошибку, возникающую когда левый аргумент
-	// является структурой, но не реализует метод Compare()
+	// ErrNotComparableStruct represents an error that occurs when the left argument
+	// is a structure but does not implement the Compare() method
 	ErrNotComparableStruct = errors.New("left argument is a struct, but it doesn't implement Comapre() method")
 
-	// ErrCancelled представляет ошибку, возникающую при отмене операции через context.Context.
-	// Используется для прерывания длительных операций проверки условий при отмене контекста.
+	// ErrCancelled represents an error that occurs when an operation is cancelled through context.Context.
+	// Used to interrupt long-running condition checking operations when context is cancelled.
 	ErrCancelled = errors.New("cancelled by context")
 )
 
 /*
-Структура ErrInvalidType представляет ошибку, возникающую при несоответствии
-ожидаемого и полученного типов.
+ErrInvalidType represents an error that occurs when expected and received types do not match.
 
-Ошибка используется, когда функция ожидает определенный тип (например, структуру
-или slice), но получает другой тип.
+The error is used when a function expects a certain type (e.g., a structure
+or slice) but receives a different type.
 */
 type ErrInvalidType struct {
 	expected any
@@ -39,14 +38,14 @@ type ErrInvalidType struct {
 }
 
 /*
-Функция NewErrInvalidType создает новую ошибку ErrInvalidType.
+NewErrInvalidType creates a new ErrInvalidType error.
 
-Входные параметры:
-  - expected - ожидаемый тип (может быть строкой или типом)
-  - got - полученный тип (может быть строкой, типом или nil)
+Parameters:
+  - expected - expected type (can be a string or type)
+  - got - received type (can be a string, type, or nil)
 
-Выходные параметры:
-  - error - созданная ошибка типа ErrInvalidType
+Returns:
+  - error - created ErrInvalidType error
 */
 func NewErrInvalidType(expected, got any) error {
 	return ErrInvalidType{expected: expected, got: got}
@@ -57,11 +56,11 @@ func (e ErrInvalidType) Error() string {
 }
 
 /*
-Структура ErrUncomparable представляет ошибку, возникающую при попытке
-сравнить два значения, которые невозможно сравнить между собой.
+ErrUncomparable represents an error that occurs when trying to
+compare two values that cannot be compared with each other.
 
-Ошибка возникает, когда типы значений несовместимы для сравнения (например,
-разные типы примитивов в операции Lt) или метод Compare() вернул false.
+The error occurs when value types are incompatible for comparison (e.g.,
+different primitive types in Lt operation) or the Compare() method returned false.
 */
 type ErrUncomparable struct {
 	left  any
@@ -69,14 +68,14 @@ type ErrUncomparable struct {
 }
 
 /*
-Функция NewErrUncomparable создает новую ошибку ErrUncomparable.
+NewErrUncomparable creates a new ErrUncomparable error.
 
-Входные параметры:
-  - left - левое сравниваемое значение
-  - right - правое сравниваемое значение
+Parameters:
+  - left - left value to compare
+  - right - right value to compare
 
-Выходные параметры:
-  - error - созданная ошибка типа ErrUncomparable
+Returns:
+  - error - created ErrUncomparable error
 */
 func NewErrUncomparable(left, right any) error {
 	return ErrUncomparable{left: left, right: right}
@@ -87,11 +86,11 @@ func (e ErrUncomparable) Error() string {
 }
 
 /*
-Структура ErrInvalidPath представляет ошибку, возникающую при работе
-с невалидным путем до поля структуры.
+ErrInvalidPath represents an error that occurs when working
+with an invalid path to a structure field.
 
-Ошибка используется при парсинге путей в формате "entity:field1:field2..."
-или при поиске полей в структурах. Содержит путь и детали проблемы.
+The error is used when parsing paths in format "entity:field1:field2..."
+or when searching for fields in structures. Contains the path and problem details.
 */
 type ErrInvalidPath struct {
 	path    string
@@ -99,14 +98,14 @@ type ErrInvalidPath struct {
 }
 
 /*
-Функция NewErrInvalidPath создает новую ошибку ErrInvalidPath.
+NewErrInvalidPath creates a new ErrInvalidPath error.
 
-Входные параметры:
-  - path - невалидный путь, который вызвал ошибку
-  - details - детали ошибки (описание проблемы)
+Parameters:
+  - path - invalid path that caused the error
+  - details - error details (problem description)
 
-Выходные параметры:
-  - error - созданная ошибка типа ErrInvalidPath
+Returns:
+  - error - created ErrInvalidPath error
 */
 func NewErrInvalidPath(path, details string) error {
 	return ErrInvalidPath{path: path, details: details}
@@ -117,11 +116,11 @@ func (e ErrInvalidPath) Error() string {
 }
 
 /*
-Структура ErrInexpectedBehavior представляет внутреннюю ошибку библиотеки,
-возникающую при неожиданном поведении в коде.
+ErrInexpectedBehavior represents an internal library error
+that occurs with unexpected behavior in the code.
 
-Ошибка указывает на проблему в логике библиотеки (например, отсутствие функции
-условия в CONDITION_TO_FUNC) и обычно не должна возникать при правильном использовании.
+The error indicates a problem in the library logic (e.g., missing condition
+function in CONDITION_TO_FUNC) and usually should not occur with proper usage.
 */
 type ErrInexpectedBehavior struct {
 	source  string
@@ -129,14 +128,14 @@ type ErrInexpectedBehavior struct {
 }
 
 /*
-Функция NewErrInexpectedBehavior создает новую ошибку ErrInexpectedBehavior.
+NewErrInexpectedBehavior creates a new ErrInexpectedBehavior error.
 
-Входные параметры:
-  - source - источник ошибки (название функции или места возникновения, например "Policy.Evaluate()")
-  - details - детали неожиданного поведения (описание проблемы)
+Parameters:
+  - source - error source (function name or location, e.g., "Policy.Evaluate()")
+  - details - unexpected behavior details (problem description)
 
-Выходные параметры:
-  - error - созданная ошибка типа ErrInexpectedBehavior
+Returns:
+  - error - created ErrInexpectedBehavior error
 */
 func NewErrInexpectedBehavior(source, details string) error {
 	return ErrInexpectedBehavior{source: source, details: details}

@@ -3,24 +3,24 @@ package noctisguard
 import "fmt"
 
 /*
-Структура ErrDuplicateName представляет ошибку, возникающую при попытке
-создать политику с именем, которое уже используется другой политикой.
+ErrDuplicateName represents an error that occurs when trying to create a policy
+with a name that is already used by another policy.
 
-Каждая политика должна иметь уникальное имя. При попытке добавить политику
-с уже существующим именем возвращается эта ошибка.
+Each policy must have a unique name. When trying to add a policy with an
+already existing name, this error is returned.
 */
 type ErrDuplicateName struct {
 	name string
 }
 
 /*
-Функция NewErrDuplicateName создает новую ошибку ErrDuplicateName.
+NewErrDuplicateName creates a new ErrDuplicateName error.
 
-Входные параметры:
-  - name - имя политики, которое уже используется другой политикой
+Parameters:
+  - name - policy name that is already used by another policy
 
-Выходные параметры:
-  - error - созданная ошибка типа ErrDuplicateName
+Returns:
+  - error - created ErrDuplicateName error
 */
 func NewErrDuplicateName(name string) error {
 	return ErrDuplicateName{name: name}
@@ -31,25 +31,23 @@ func (e ErrDuplicateName) Error() string {
 }
 
 /*
-Структура ErrExport представляет ошибку, возникающую при экспорте политик
-в движок Noctis.
+ErrExport represents an error that occurs when exporting policies to the Noctis engine.
 
-Ошибка оборачивает исходную ошибку (source), что позволяет использовать
-errors.Unwrap() для получения деталей проблемы. Используется при создании
-движка из политик или файла.
+The error wraps the original error (source), allowing the use of errors.Unwrap()
+to get problem details. Used when creating the engine from policies or a file.
 */
 type ErrExport struct {
 	source error
 }
 
 /*
-Функция NewErrExport создает новую ошибку ErrExport, оборачивающую исходную ошибку.
+NewErrExport creates a new ErrExport error wrapping the original error.
 
-Входные параметры:
-  - source - исходная ошибка, которая привела к ошибке экспорта (может быть nil)
+Parameters:
+  - source - original error that led to the export error (may be nil)
 
-Выходные параметры:
-  - error - созданная ошибка типа ErrExport, которую можно развернуть через errors.Unwrap()
+Returns:
+  - error - created ErrExport error that can be unwrapped via errors.Unwrap()
 */
 func NewErrExport(source error) error {
 	return ErrExport{source: source}
@@ -64,25 +62,24 @@ func (e ErrExport) Error() string {
 }
 
 /*
-Структура ErrEvaluate представляет ошибку, возникающую при оценке политик
-во время выполнения метода Evaluate.
+ErrEvaluate represents an error that occurs when evaluating policies during
+the execution of the Evaluate method.
 
-Ошибка оборачивает исходную ошибку (source), что позволяет использовать
-errors.Unwrap() для получения деталей проблемы. Возникает при проверке
-условий политик или доступа к полям структур.
+The error wraps the original error (source), allowing the use of errors.Unwrap()
+to get problem details. Occurs when checking policy conditions or accessing structure fields.
 */
 type ErrEvaluate struct {
 	source error
 }
 
 /*
-Функция NewErrEvaluate создает новую ошибку ErrEvaluate, оборачивающую исходную ошибку.
+NewErrEvaluate creates a new ErrEvaluate error wrapping the original error.
 
-Входные параметры:
-  - source - исходная ошибка, которая привела к ошибке оценки (может быть nil)
+Parameters:
+  - source - original error that led to the evaluation error (may be nil)
 
-Выходные параметры:
-  - error - созданная ошибка типа ErrEvaluate, которую можно развернуть через errors.Unwrap()
+Returns:
+  - error - created ErrEvaluate error that can be unwrapped via errors.Unwrap()
 */
 func NewErrEvaluate(source error) error {
 	return ErrEvaluate{source: source}

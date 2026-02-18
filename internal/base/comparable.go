@@ -1,24 +1,24 @@
 /*
-Package base предоставляет базовые типы и функции для работы с политиками,
-условиями, эффектами и сущностями в системе проверки доступа.
+Package base provides basic types and functions for working with policies,
+conditions, effects, and entities in the access control system.
 
-Пакет содержит определения политик, условий сравнения, эффектов (allow/deny),
-сущностей (source/target) и интерфейсов для кастомного сравнения.
+The package contains definitions of policies, comparison conditions, effects (allow/deny),
+entities (source/target) and interfaces for custom comparison.
 */
 package base
 
 /*
-В этом файле представлены интерфейсы для операций сравнения
+This file contains interfaces for comparison operations
 */
 
 /*
-Интерфейс Comparable предназначен для кастомных типов, которые требуют
-специальной логики сравнения в условиях политик.
+Comparable interface is intended for custom types that require
+special comparison logic in policy conditions.
 
-Реализация интерфейса позволяет использовать структуры в условиях Lt, Eq и Neq
-с кастомной логикой сравнения вместо стандартного DeepEqual.
+Implementing the interface allows using structures in Lt, Eq, and Neq conditions
+with custom comparison logic instead of standard DeepEqual.
 
-Пример использования:
+Example usage:
 
 	type User struct {
 		Name string
@@ -41,22 +41,22 @@ package base
 */
 type Comparable interface {
 	/*
-		Метод Compare сравнивает объект, реализующий интерфейс, с другим объектом.
+		Compare compares the object implementing the interface with another object.
 
-		Метод используется в условиях Eq, Neq и Lt для кастомного сравнения структур.
-		Если метод возвращает false, используется стандартное сравнение через DeepEqual.
+		The method is used in Eq, Neq, and Lt conditions for custom structure comparison.
+		If the method returns false, standard comparison via DeepEqual is used.
 
-		Входные параметры:
-			- other - сравниваемый объект (может быть любого типа)
+		Parameters:
+			- other - object to compare (can be of any type)
 
-		Выходные параметры:
-			- int - результат сравнения:
-				* < 0 - текущий объект меньше other
-				* = 0 - объекты равны
-				* > 0 - текущий объект больше other
-			- bool - флаг корректности сравнения:
-				* true - сравнение выполнено успешно, результат корректен
-				* false - сравнение невозможно (несовместимые типы), будет использовано DeepEqual
+		Returns:
+			- int - comparison result:
+				* < 0 - current object is less than other
+				* = 0 - objects are equal
+				* > 0 - current object is greater than other
+			- bool - comparison correctness flag:
+				* true - comparison completed successfully, result is correct
+				* false - comparison impossible (incompatible types), DeepEqual will be used
 	*/
 	Compare(other any) (int, bool)
 }
