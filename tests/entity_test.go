@@ -1,8 +1,8 @@
 /*
-Пакет tests содержит тесты для публичного API пакета base.
+Package tests contains tests for public API of base package.
 
-Тесты проверяют валидацию значений Entity и корректность работы
-с сущностями source и target через публичный метод IsValid.
+Tests check Entity value validation and correctness of working
+with source and target entities through public IsValid method.
 */
 package tests
 
@@ -13,13 +13,13 @@ import (
 )
 
 /*
-TestEntityIsValid тестирует публичный метод IsValid для проверки валидности значения Entity.
+TestEntityIsValid tests the public IsValid method for checking Entity value validity.
 
-Тест проверяет:
-  - Валидность Entity_SOURCE ("source")
-  - Валидность Entity_TARGET ("target")
-  - Невалидность произвольных строк
-  - Невалидность пустой строки
+The test checks:
+  - Validity of Entity_SOURCE ("source")
+  - Validity of Entity_TARGET ("target")
+  - Invalidity of arbitrary strings
+  - Invalidity of empty string
 */
 func TestEntityIsValid(t *testing.T) {
 	tests := []struct {
@@ -27,10 +27,10 @@ func TestEntityIsValid(t *testing.T) {
 		entity  base.Entity
 		want    bool
 	}{
-		{"valid source", base.Entity_SOURCE, true},        // Валидная сущность source
-		{"valid target", base.Entity_TARGET, true},        // Валидная сущность target
-		{"invalid entity", base.Entity("invalid"), false}, // Невалидная сущность
-		{"empty entity", base.Entity(""), false},          // Пустая строка
+		{"valid source", base.Entity_SOURCE, true},        // Valid source entity
+		{"valid target", base.Entity_TARGET, true},        // Valid target entity
+		{"invalid entity", base.Entity("invalid"), false}, // Invalid entity
+		{"empty entity", base.Entity(""), false},          // Empty string
 	}
 
 	for _, tt := range tests {

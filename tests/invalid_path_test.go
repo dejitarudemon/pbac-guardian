@@ -1,8 +1,8 @@
 /*
-Пакет tests содержит тесты для обработки невалидных путей к полям.
+Package tests contains tests for handling invalid field paths.
 
-Тесты проверяют, что библиотека корректно обрабатывает ошибки при невалидных путях
-к полям в условиях политик.
+Tests check that the library correctly handles errors for invalid paths
+to fields in policy conditions.
 */
 package tests
 
@@ -15,21 +15,21 @@ import (
 )
 
 /*
-TestEvaluateInvalidFieldPath тестирует обработку ошибки при невалидном пути к полю.
+TestEvaluateInvalidFieldPath tests error handling for invalid field path.
 
-Тест создает политику с несуществующим полем в условии и проверяет,
-что Evaluate возвращает ошибку при попытке получить значение несуществующего поля.
+The test creates a policy with non-existent field in condition and checks
+that Evaluate returns an error when trying to get value of non-existent field.
 */
 func TestEvaluateInvalidFieldPath(t *testing.T) {
-	// Создаем политику с невалидным путем к полю
-	// Поле "nonexistent" не существует в структуре User
+	// Create policy with invalid field path
+	// Field "nonexistent" does not exist in User structure
 	policies := []base.Policy{
 		{
 			Name:   "invalid-path-policy",
 			Action: "user:read",
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
-				"source:nonexistent": {Eq: "value"}, // Несуществующее поле
+				"source:nonexistent": {Eq: "value"}, // Non-existent field
 			},
 		},
 	}
@@ -43,7 +43,7 @@ func TestEvaluateInvalidFieldPath(t *testing.T) {
 	source := User{Name: "user", Role: "user"}
 	target := Document{Owner: "user", Type: "public"}
 
-	// Ожидаем ошибку, так как поле "nonexistent" не существует в структуре User
+	// Expect error, as field "nonexistent" does not exist in User structure
 	_, err = engine.Evaluate(ctx, source, target, "user:read")
 	if err == nil {
 		t.Errorf("expected error for invalid field path, got nil")
@@ -51,21 +51,21 @@ func TestEvaluateInvalidFieldPath(t *testing.T) {
 }
 
 /*
-TestEvaluateInvalidNestedPath тестирует обработку ошибки при невалидном вложенном пути.
+TestEvaluateInvalidNestedPath tests error handling for invalid nested path.
 
-Тест создает политику с невалидным вложенным путем и проверяет,
-что Evaluate возвращает ошибку при попытке получить значение несуществующего вложенного поля.
+The test creates a policy with invalid nested path and checks
+that Evaluate returns an error when trying to get value of non-existent nested field.
 */
 func TestEvaluateInvalidNestedPath(t *testing.T) {
-	// Создаем политику с невалидным вложенным путем
-	// Путь "source:user:nonexistent" невалиден, так как поле "nonexistent" не существует
+	// Create policy with invalid nested path
+	// Path "source:user:nonexistent" is invalid, as field "nonexistent" does not exist
 	policies := []base.Policy{
 		{
 			Name:   "invalid-nested-path-policy",
 			Action: "user:read",
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
-				"source:user:nonexistent": {Eq: "value"}, // Несуществующее вложенное поле
+				"source:user:nonexistent": {Eq: "value"}, // Non-existent nested field
 			},
 		},
 	}
@@ -79,7 +79,7 @@ func TestEvaluateInvalidNestedPath(t *testing.T) {
 	source := User{Name: "user", Role: "user"}
 	target := Document{Owner: "user", Type: "public"}
 
-	// Ожидаем ошибку, так как вложенное поле "nonexistent" не существует
+	// Expect error, as nested field "nonexistent" does not exist
 	_, err = engine.Evaluate(ctx, source, target, "user:read")
 	if err == nil {
 		t.Errorf("expected error for invalid nested field path, got nil")
@@ -87,21 +87,21 @@ func TestEvaluateInvalidNestedPath(t *testing.T) {
 }
 
 /*
-TestEvaluateInvalidTargetPath тестирует обработку ошибки при невалидном пути к полю в target.
+TestEvaluateInvalidTargetPath tests error handling for invalid field path in target.
 
-Тест создает политику с невалидным путем к полю в структуре target и проверяет,
-что Evaluate возвращает ошибку при попытке получить значение несуществующего поля.
+The test creates a policy with invalid field path in target structure and checks
+that Evaluate returns an error when trying to get value of non-existent field.
 */
 func TestEvaluateInvalidTargetPath(t *testing.T) {
-	// Создаем политику с невалидным путем к полю в target
-	// Поле "nonexistent" не существует в структуре Document
+	// Create policy with invalid field path in target
+	// Field "nonexistent" does not exist in Document structure
 	policies := []base.Policy{
 		{
 			Name:   "invalid-target-path-policy",
 			Action: "user:read",
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
-				"target:nonexistent": {Eq: "value"}, // Несуществующее поле в target
+				"target:nonexistent": {Eq: "value"}, // Non-existent field in target
 			},
 		},
 	}
@@ -115,7 +115,7 @@ func TestEvaluateInvalidTargetPath(t *testing.T) {
 	source := User{Name: "user", Role: "user"}
 	target := Document{Owner: "user", Type: "public"}
 
-	// Ожидаем ошибку, так как поле "nonexistent" не существует в структуре Document
+	// Expect error, as field "nonexistent" does not exist in Document structure
 	_, err = engine.Evaluate(ctx, source, target, "user:read")
 	if err == nil {
 		t.Errorf("expected error for invalid target field path, got nil")

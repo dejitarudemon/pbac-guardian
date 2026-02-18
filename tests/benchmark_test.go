@@ -1,11 +1,11 @@
 /*
-Пакет tests содержит бенчмарк тесты для измерения производительности библиотеки.
+Package tests contains benchmark tests for measuring library performance.
 
-Бенчмарки проверяют производительность основных операций:
-  - Создание движка из политик
-  - Оценка политик для различных сценариев
-  - Работа с различными типами условий
-  - Обработка вложенных структур
+Benchmarks check performance of main operations:
+  - Engine creation from policies
+  - Policy evaluation for various scenarios
+  - Working with various condition types
+  - Handling nested structures
 */
 package tests
 
@@ -18,12 +18,12 @@ import (
 )
 
 /*
-BenchmarkNewNoctisFromPolices измеряет производительность создания движка из политик.
+BenchmarkNewNoctisFromPolices measures performance of engine creation from policies.
 
-Бенчмарк проверяет время создания движка с различным количеством политик.
+The benchmark checks time of engine creation with various number of policies.
 */
 func BenchmarkNewNoctisFromPolices(b *testing.B) {
-	// Создаем набор политик для тестирования
+	// Create set of policies for testing
 	policies := []base.Policy{
 		{
 			Name:   "admin-read",
@@ -62,9 +62,9 @@ func BenchmarkNewNoctisFromPolices(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateSimple измеряет производительность простой оценки политик.
+BenchmarkEvaluateSimple measures performance of simple policy evaluation.
 
-Бенчмарк проверяет время оценки политик с простыми условиями (Eq).
+The benchmark checks time of policy evaluation with simple conditions (Eq).
 */
 func BenchmarkEvaluateSimple(b *testing.B) {
 	policies := []base.Policy{
@@ -97,10 +97,10 @@ func BenchmarkEvaluateSimple(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateMultipleConditions измеряет производительность оценки политик
-с несколькими условиями.
+BenchmarkEvaluateMultipleConditions measures performance of policy evaluation
+with multiple conditions.
 
-Бенчмарк проверяет время оценки политик с комбинацией различных условий.
+The benchmark checks time of policy evaluation with combination of various conditions.
 */
 func BenchmarkEvaluateMultipleConditions(b *testing.B) {
 	policies := []base.Policy{
@@ -142,9 +142,9 @@ func BenchmarkEvaluateMultipleConditions(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateContains измеряет производительность условия Contains.
+BenchmarkEvaluateContains measures performance of Contains condition.
 
-Бенчмарк проверяет время поиска значения в списке через условие Contains.
+The benchmark checks time of searching value in list through Contains condition.
 */
 func BenchmarkEvaluateContains(b *testing.B) {
 	policies := []base.Policy{
@@ -179,9 +179,9 @@ func BenchmarkEvaluateContains(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateLt измеряет производительность условия Lt (less than).
+BenchmarkEvaluateLt measures performance of Lt (less than) condition.
 
-Бенчмарк проверяет время сравнения значений через условие Lt.
+The benchmark checks time of value comparison through Lt condition.
 */
 func BenchmarkEvaluateLt(b *testing.B) {
 	policies := []base.Policy{
@@ -216,10 +216,10 @@ func BenchmarkEvaluateLt(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateNestedStructures измеряет производительность работы
-с вложенными структурами.
+BenchmarkEvaluateNestedStructures measures performance of working
+with nested structures.
 
-Бенчмарк проверяет время получения значений из вложенных структур.
+The benchmark checks time of getting values from nested structures.
 */
 func BenchmarkEvaluateNestedStructures(b *testing.B) {
 	policies := []base.Policy{
@@ -254,10 +254,10 @@ func BenchmarkEvaluateNestedStructures(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateMultiplePolicies измеряет производительность оценки
-нескольких политик для одного действия.
+BenchmarkEvaluateMultiplePolicies measures performance of evaluating
+multiple policies for one action.
 
-Бенчмарк проверяет время оценки, когда для действия определено несколько политик.
+The benchmark checks time of evaluation when multiple policies are defined for action.
 */
 func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
 	policies := []base.Policy{
@@ -323,10 +323,10 @@ func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateFieldComparison измеряет производительность сравнения
-полей разных структур.
+BenchmarkEvaluateFieldComparison measures performance of comparing
+fields from different structures.
 
-Бенчмарк проверяет время сравнения полей source и target структур.
+The benchmark checks time of comparing fields from source and target structures.
 */
 func BenchmarkEvaluateFieldComparison(b *testing.B) {
 	policies := []base.Policy{
@@ -361,9 +361,9 @@ func BenchmarkEvaluateFieldComparison(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateDenyPolicy измеряет производительность политик с эффектом DENY.
+BenchmarkEvaluateDenyPolicy measures performance of policies with DENY effect.
 
-Бенчмарк проверяет время оценки политик, которые запрещают доступ.
+The benchmark checks time of evaluating policies that deny access.
 */
 func BenchmarkEvaluateDenyPolicy(b *testing.B) {
 	policies := []base.Policy{
@@ -397,18 +397,18 @@ func BenchmarkEvaluateDenyPolicy(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateLargeSlice измеряет производительность условия Contains
-с большим списком значений.
+BenchmarkEvaluateLargeSlice measures performance of Contains condition
+with large list of values.
 
-Бенчмарк проверяет время поиска в большом списке через условие Contains.
+The benchmark checks time of searching in large list through Contains condition.
 */
 func BenchmarkEvaluateLargeSlice(b *testing.B) {
-	// Создаем большой список ролей
+	// Create large list of roles
 	largeRoleList := make([]any, 1000)
 	for i := range largeRoleList {
 		largeRoleList[i] = "role" + string(rune(i%26+'a'))
 	}
-	largeRoleList[500] = "admin" // Искомое значение в середине списка
+	largeRoleList[500] = "admin" // Search value in middle of list
 
 	policies := []base.Policy{
 		{
@@ -442,10 +442,10 @@ func BenchmarkEvaluateLargeSlice(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateNoMatch измеряет производительность случая,
-когда политики не соответствуют действию.
+BenchmarkEvaluateNoMatch measures performance of case
+when policies do not match action.
 
-Бенчмарк проверяет время оценки, когда для действия нет подходящих политик.
+The benchmark checks time of evaluation when there are no suitable policies for action.
 */
 func BenchmarkEvaluateNoMatch(b *testing.B) {
 	policies := []base.Policy{

@@ -1,8 +1,8 @@
 /*
-Пакет tests содержит тесты для условий сравнения в политиках.
+Package tests contains tests for comparison conditions in policies.
 
-Тесты проверяют работу различных условий (Contains, Eq, Neq, Lt) через
-публичный API библиотеки, что позволяет улучшить покрытие внутренних функций условий.
+Tests check the work of various conditions (Contains, Eq, Neq, Lt) through
+the public API of the library, which allows improving coverage of internal condition functions.
 */
 package tests
 
@@ -15,10 +15,10 @@ import (
 )
 
 /*
-TestContainsCondition тестирует условие Contains через политики.
+TestContainsCondition tests the Contains condition through policies.
 
-Тест проверяет работу containsConditionFunc через использование условия Contains
-в политиках. Это улучшает покрытие функции containsConditionFunc с 0% до 100%.
+The test checks the work of containsConditionFunc through using the Contains condition
+in policies. This improves coverage of containsConditionFunc from 0% to 100%.
 */
 func TestContainsCondition(t *testing.T) {
 	ctx := context.Background()
@@ -34,7 +34,7 @@ func TestContainsCondition(t *testing.T) {
 	}{
 		{
 			name: "contains - found in slice",
-			// Тест проверяет, что условие Contains находит значение в списке
+			// Test checks that Contains condition finds value in list
 			policy: base.Policy{
 				Name:   "contains-test",
 				Action: "user:read",
@@ -53,7 +53,7 @@ func TestContainsCondition(t *testing.T) {
 		},
 		{
 			name: "contains - not found in slice",
-			// Тест проверяет, что условие Contains не находит значение, если его нет в списке
+			// Test checks that Contains condition does not find value if it's not in list
 			policy: base.Policy{
 				Name:   "contains-test",
 				Action: "user:read",
@@ -64,7 +64,7 @@ func TestContainsCondition(t *testing.T) {
 					},
 				},
 			},
-			source:  User{Name: "user", Role: "guest"}, // "guest" нет в списке
+			source:  User{Name: "user", Role: "guest"}, // "guest" not in list
 			target:  Document{Owner: "user", Type: "public"},
 			action:  "user:read",
 			want:    false,
@@ -72,7 +72,7 @@ func TestContainsCondition(t *testing.T) {
 		},
 		{
 			name: "contains - empty slice",
-			// Тест проверяет, что условие Contains возвращает false для пустого списка
+			// Test checks that Contains condition returns false for empty list
 			policy: base.Policy{
 				Name:   "contains-test",
 				Action: "user:read",
@@ -91,8 +91,8 @@ func TestContainsCondition(t *testing.T) {
 		},
 		{
 			name: "contains - with source role in list",
-			// Тест проверяет условие Contains с полем source:role
-			// Проверяем, что значение source.role находится в списке
+			// Test checks Contains condition with source:role field
+			// Check that source.role value is in list
 			policy: base.Policy{
 				Name:   "contains-source-test",
 				Action: "user:read",
@@ -111,7 +111,7 @@ func TestContainsCondition(t *testing.T) {
 		},
 		{
 			name: "contains - with integer values",
-			// Тест проверяет условие Contains с числовыми значениями
+			// Test checks Contains condition with numeric values
 			policy: base.Policy{
 				Name:   "contains-int-test",
 				Action: "user:read",
@@ -155,10 +155,10 @@ func TestContainsCondition(t *testing.T) {
 }
 
 /*
-TestLtCondition тестирует условие Lt (less than) через политики.
+TestLtCondition tests the Lt (less than) condition through policies.
 
-Тест проверяет работу ltConditionFunc и ltPrimitives через использование условия Lt
-в политиках. Это улучшает покрытие функций сравнения для различных типов данных.
+The test checks the work of ltConditionFunc and ltPrimitives through using the Lt condition
+in policies. This improves coverage of comparison functions for various data types.
 */
 func TestLtCondition(t *testing.T) {
 	ctx := context.Background()
@@ -174,7 +174,7 @@ func TestLtCondition(t *testing.T) {
 	}{
 		{
 			name: "lt - int less than",
-			// Тест проверяет условие Lt для целых чисел (int)
+			// Test checks Lt condition for integers (int)
 			policy: base.Policy{
 				Name:   "lt-int-test",
 				Action: "user:read",
@@ -193,7 +193,7 @@ func TestLtCondition(t *testing.T) {
 		},
 		{
 			name: "lt - int equal",
-			// Тест проверяет, что условие Lt возвращает false при равенстве
+			// Test checks that Lt condition returns false on equality
 			policy: base.Policy{
 				Name:   "lt-int-test",
 				Action: "user:read",
@@ -212,7 +212,7 @@ func TestLtCondition(t *testing.T) {
 		},
 		{
 			name: "lt - int greater than",
-			// Тест проверяет, что условие Lt возвращает false при большем значении
+			// Test checks that Lt condition returns false for greater value
 			policy: base.Policy{
 				Name:   "lt-int-test",
 				Action: "user:read",
@@ -231,15 +231,15 @@ func TestLtCondition(t *testing.T) {
 		},
 		{
 			name: "lt - with string comparison",
-			// Тест проверяет условие Lt для строк (лексикографическое сравнение)
-			// Для этого нужно использовать поле, которое можно сравнить как строку
+			// Test checks Lt condition for strings (lexicographic comparison)
+			// Need to use a field that can be compared as string
 			policy: base.Policy{
 				Name:   "lt-string-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:name": {
-						Lt: "m", // Имена до "m" в алфавитном порядке
+						Lt: "m", // Names before "m" in alphabetical order
 					},
 				},
 			},
@@ -251,7 +251,7 @@ func TestLtCondition(t *testing.T) {
 		},
 		{
 			name: "lt - string greater",
-			// Тест проверяет, что условие Lt возвращает false для строк, которые больше
+			// Test checks that Lt condition returns false for strings that are greater
 			policy: base.Policy{
 				Name:   "lt-string-test",
 				Action: "user:read",
@@ -270,15 +270,15 @@ func TestLtCondition(t *testing.T) {
 		},
 		{
 			name: "lt - compare with target field",
-			// Тест проверяет условие Lt с сравнением полей разных структур
-			// Для этого нужно добавить числовое поле в Document
+			// Test checks Lt condition with field comparison from different structures
+			// Need to add numeric field to Document
 			policy: base.Policy{
 				Name:   "lt-compare-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:age": {
-						Lt: "target:priority", // Сравнение с полем target
+						Lt: "target:priority", // Compare with target field
 					},
 				},
 			},
@@ -314,17 +314,17 @@ func TestLtCondition(t *testing.T) {
 	}
 }
 
-// DocumentWithPriority расширяет Document для тестирования числовых сравнений
+// DocumentWithPriority extends Document for testing numeric comparisons
 type DocumentWithPriority struct {
 	Document
 	Priority int `noctis-guard:"priority"`
 }
 
 /*
-TestEqConditionExtended тестирует расширенные случаи условия Eq.
+TestEqConditionExtended tests extended cases of Eq condition.
 
-Тест проверяет работу eqConditionFunc для различных типов данных и сценариев,
-включая сравнение с nil, структуры с Comparable интерфейсом и различные типы.
+The test checks the work of eqConditionFunc for various data types and scenarios,
+including comparison with nil, structures with Comparable interface and various types.
 */
 func TestEqConditionExtended(t *testing.T) {
 	ctx := context.Background()
@@ -340,7 +340,7 @@ func TestEqConditionExtended(t *testing.T) {
 	}{
 		{
 			name: "eq - integer comparison",
-			// Тест проверяет условие Eq для целых чисел
+			// Test checks Eq condition for integers
 			policy: base.Policy{
 				Name:   "eq-int-test",
 				Action: "user:read",
@@ -359,7 +359,7 @@ func TestEqConditionExtended(t *testing.T) {
 		},
 		{
 			name: "eq - integer not equal",
-			// Тест проверяет, что условие Eq возвращает false для неравных чисел
+			// Test checks that Eq condition returns false for unequal numbers
 			policy: base.Policy{
 				Name:   "eq-int-test",
 				Action: "user:read",
@@ -378,14 +378,14 @@ func TestEqConditionExtended(t *testing.T) {
 		},
 		{
 			name: "eq - compare integer with string path",
-			// Тест проверяет сравнение числа с полем, которое должно быть числом
+			// Test checks comparison of number with field that should be a number
 			policy: base.Policy{
 				Name:   "eq-mixed-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:age": {
-						Eq: "target:priority", // Сравнение числа с числом через путь
+						Eq: "target:priority", // Compare number with number via path
 					},
 				},
 			},
@@ -422,10 +422,10 @@ func TestEqConditionExtended(t *testing.T) {
 }
 
 /*
-TestMultipleConditionsCombined тестирует комбинацию нескольких условий в одной политике.
+TestMultipleConditionsCombined tests combination of multiple conditions in one policy.
 
-Тест проверяет, что все условия в политике должны быть выполнены (логическое И),
-что улучшает покрытие функции Evaluate для различных комбинаций условий.
+The test checks that all conditions in policy must be met (logical AND),
+which improves coverage of Evaluate function for various condition combinations.
 */
 func TestMultipleConditionsCombined(t *testing.T) {
 	ctx := context.Background()
@@ -441,7 +441,7 @@ func TestMultipleConditionsCombined(t *testing.T) {
 	}{
 		{
 			name: "multiple conditions - all match",
-			// Тест проверяет политику с несколькими условиями, все из которых выполнены
+			// Test checks policy with multiple conditions, all of which are met
 			policy: base.Policy{
 				Name:   "combined-test",
 				Action: "user:read",
@@ -464,7 +464,7 @@ func TestMultipleConditionsCombined(t *testing.T) {
 		},
 		{
 			name: "multiple conditions - one fails",
-			// Тест проверяет политику с несколькими условиями, одно из которых не выполнено
+			// Test checks policy with multiple conditions, one of which is not met
 			policy: base.Policy{
 				Name:   "combined-test",
 				Action: "user:read",
@@ -474,11 +474,11 @@ func TestMultipleConditionsCombined(t *testing.T) {
 						Eq: "admin",
 					},
 					"source:age": {
-						Lt: 10, // Возраст должен быть меньше 10
+						Lt: 10, // Age must be less than 10
 					},
 				},
 			},
-			source:  User{Name: "admin", Role: "admin", Age: 25}, // Возраст 25, условие не выполнено
+			source:  User{Name: "admin", Role: "admin", Age: 25}, // Age 25, condition not met
 			target:  Document{Owner: "user", Type: "public"},
 			action:  "user:read",
 			want:    false,
@@ -486,7 +486,7 @@ func TestMultipleConditionsCombined(t *testing.T) {
 		},
 		{
 			name: "multiple conditions - Contains and Lt",
-			// Тест проверяет комбинацию условий Contains и Lt
+			// Test checks combination of Contains and Lt conditions
 			policy: base.Policy{
 				Name:   "combined-contains-lt",
 				Action: "user:read",
