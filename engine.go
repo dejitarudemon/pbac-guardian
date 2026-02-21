@@ -88,6 +88,12 @@ import (
 )
 
 /*
+Todo:
+	- поправить документацию в связи с добавлением механизма кеширования
+	- поправить тесты и бенчмарки
+*/
+
+/*
 Noctis is the main engine of the library for checking structures against access policies.
 
 Noctis stores policies organized by actions and provides the Evaluate method
@@ -100,6 +106,7 @@ To create a Noctis instance, use:
 type Noctis struct {
 	// хранит политики, разделенные по действиям (action)
 	polices map[string][]base.Policy
+	cash    base.Casher
 }
 
 /*
@@ -109,6 +116,7 @@ The function performs policy validation and checks for duplicate names. Policies
 are grouped by actions for subsequent fast checking.
 
 Parameters:
+  - case - instance of base.Casher
   - polices - list of policies to initialize the engine
 
 Returns:
@@ -138,13 +146,13 @@ Example usage:
 		// handle error
 	}
 */
-func NewNoctisFromPolices(polices []base.Policy) (*Noctis, error) {
+func NewNoctisFromPolices(cash base.Casher, polices []base.Policy) (*Noctis, error) {
 	mapped, err := export(polices)
 	if err != nil {
 		return nil, NewErrExport(err)
 	}
 
-	return &Noctis{polices: mapped}, nil
+	return &Noctis{polices: mapped, cash: cash}, nil
 }
 
 /*
@@ -186,7 +194,7 @@ Example usage:
 		// handle error
 	}
 */
-func NewNoctisFromFile(path string) (*Noctis, error) {
+func NewNoctisFromFile(cash base.Casher, path string) (*Noctis, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModeAppend)
 	if err != nil {
 		return nil, NewErrExport(err)
@@ -203,7 +211,7 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 		return nil, NewErrExport(err)
 	}
 
-	return NewNoctisFromPolices(polices)
+	return NewNoctisFromPolices(cash, polices)
 }
 
 /*
