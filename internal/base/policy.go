@@ -264,12 +264,20 @@ Possible errors:
   - field search error (see getValue)
   - ErrInvalidType - entity is not a structure or pointer to structure (see getValue)
 */
-func (p *Policy) get(source, target any, path string, mustBePath bool) (any, error) {
+func (p *Policy) get(ctx context.Context, source, target any, path string, mustBePath bool, cash Casher, sessionID string) (any, error) {
 	if !p.isPath(path) {
 		if mustBePath {
 			return nil, NewErrInvalidPath(path, "must be a path, but it's literal value")
 		}
 		return path, nil
+	}
+
+	// Если кеш не отключен, ищем в нем по id сессии и ключу (пути до искомого поля)
+	if cash != nil {
+		value, err := cash.Get(ctx, sessionID, path)
+		if err == nil && value != nil {
+			return value, nil
+		}
 	}
 
 	entity, parsedPath, err := p.parsePath(path)
@@ -288,7 +296,15 @@ func (p *Policy) get(source, target any, path string, mustBePath bool) (any, err
 		err = NewErrInvalidPath(path, fmt.Sprintf("unxpected entity: %v", entity))
 	}
 
-	return value, err
+	if err != nil {
+		return nil, err
+	}
+
+	if cash != nil {
+		cash.Set(ctx, sessionID, path, value)
+	}
+
+	return value, nil
 }
 
 /*
@@ -320,7 +336,7 @@ Possible errors:
   - ErrUncomparable - cannot compare values in condition (incompatible types)
   - ErrInexpectedBehavior - internal error: condition function not found in CONDITION_TO_FUNC
 */
-func (p *Policy) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
+func (p *Policy) Evaluate(ctx context.Context, source, target any, action string, cash Casher, sessionID string) (bool, error) {
 	if p == nil {
 		return false, NewErrInexpectedBehavior("Policy.Evaluate()", "policy is nil")
 	}
@@ -336,7 +352,7 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 	t := reflect.TypeFor[Condition]()
 
 	for field, condition := range p.Conditions {
-		left, err := p.get(source, target, field, true)
+		left, err := p.get(ctx, source, target, field, true, cash, sessionID)
 		if err != nil {
 			return false, err
 		}
@@ -354,7 +370,7 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 						right := c.Field(i).Interface()
 
 						if r, ok := right.(string); ok {
-							right, err = p.get(source, target, r, false)
+							right, err = p.get(ctx, source, target, r, false, cash, sessionID)
 							if err != nil {
 								return false, err
 							}

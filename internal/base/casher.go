@@ -22,7 +22,7 @@ type Casher interface {
 		Returns:
 			- error - set value error.
 	*/
-	Set(ctx context.Context, key string, value any) error
+	Set(ctx context.Context, sessionID, key string, value any) error
 
 	/*
 		Get function is used to get some value from L1-cash by a key
@@ -35,10 +35,10 @@ type Casher interface {
 			- any - storaged value if it's exist. If error occured or it's not found, the function must return Nil
 			- error - get value error. If value is not found, must be Nil.
 	*/
-	Get(ctx context.Context, key string) (any, error)
+	Get(ctx context.Context, sessionID, key string) (any, error)
 
 	/*
-		Clyear function is used to clear value by its key
+		Clear function is used to clear value by its key
 
 		Parameters:
 			- ctx - perfoming context
@@ -47,5 +47,5 @@ type Casher interface {
 		Returns:
 			- error - clear error. If value is not found, must be Nil.
 	*/
-	Clear(ctx context.Context, key string) error
+	Clear(ctx context.Context, sessionID string) error
 }

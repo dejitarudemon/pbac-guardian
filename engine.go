@@ -306,9 +306,10 @@ func (n *Noctis) Evaluate(ctx context.Context, source, target any, action string
 	}
 
 	allowed := false
+	sessionID := generateNewSesstionID()
 
 	for _, policy := range polices {
-		ok, err := policy.Evaluate(ctx, source, target, action)
+		ok, err := policy.Evaluate(ctx, source, target, action, n.cash, sessionID)
 		if err != nil {
 			return false, NewErrEvaluate(err)
 		}
