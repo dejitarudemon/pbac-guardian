@@ -4,6 +4,7 @@ import (
 	"slices"
 
 	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/google/uuid"
 )
 
 /*
@@ -50,4 +51,8 @@ func export(polices []base.Policy) (map[string][]base.Policy, error) {
 	}
 
 	return mappedPolices, nil
+}
+
+func generateNewSesstionID() string {
+	return uuid.NewString()
 }
