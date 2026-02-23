@@ -305,7 +305,8 @@ func TestLtNumericTypes(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			engine, err := noctisguard.NewNoctisFromPolices([]base.Policy{tt.policy})
+			// Use nil casher for basic functionality tests
+			engine, err := noctisguard.NewNoctisFromPolices(nil, []base.Policy{tt.policy})
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
