@@ -376,6 +376,19 @@ func main() {
 - Fields accessed only once per session
 - Maximum performance for single-access scenarios
 
+**Performance Benchmarks:**
+
+The cache provides significant performance improvements in production scenarios:
+
+| Scenario | Policies | Field Accesses | Time Savings | Memory Savings | Allocation Reduction |
+|----------|----------|----------------|--------------|----------------|---------------------|
+| **20P-3A** | 20 | 3 | **14%** faster | +2.7% | **47%** fewer |
+| **30P-5A** | 30 | 5 | **32%** faster | **25%** less | **59%** fewer |
+| **30P-10A** | 30 | 10 | **41%** faster | **36%** less | **63%** fewer |
+| **Mixed** | 30 | 5+3+7 | **24%** faster | **23%** less | **53%** fewer |
+
+*Benchmarks conducted with 10+ actions and 20-30 policies per evaluation. Cache becomes beneficial at 3+ field accesses within a single action evaluation.*
+
 ### Tutorial 7: Custom Types with Comparable Interface
 
 For custom types that need special comparison logic, implement the `Comparable` interface.
@@ -823,6 +836,19 @@ func main() {
 - Простые оценки одной политики
 - Поля обращаются только один раз за сессию
 - Максимальная производительность для сценариев с однократным доступом
+
+**Результаты бенчмарков:**
+
+Кеш обеспечивает значительное улучшение производительности в production-сценариях:
+
+| Сценарий | Политики | Обращения к полю | Экономия времени | Экономия памяти | Уменьшение аллокаций |
+|----------|----------|------------------|------------------|------------------|----------------------|
+| **20P-3A** | 20 | 3 | **14%** быстрее | +2.7% | **47%** меньше |
+| **30P-5A** | 30 | 5 | **32%** быстрее | **25%** меньше | **59%** меньше |
+| **30P-10A** | 30 | 10 | **41%** быстрее | **36%** меньше | **63%** меньше |
+| **Mixed** | 30 | 5+3+7 | **24%** быстрее | **23%** меньше | **53%** меньше |
+
+*Бенчмарки проведены с 10+ действиями и 20-30 политиками на оценку. Кеш становится выгодным при 3+ обращениях к полю в рамках одной оценки действия.*
 
 ### Туториал 7: Кастомные типы с интерфейсом Comparable
 
