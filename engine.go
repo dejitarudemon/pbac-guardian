@@ -4,6 +4,10 @@ Package noctisguard provides an engine for checking structures against policies.
 The library allows you to define access policies and check structures against
 these policies using a flexible system of conditions and effects.
 
+The library supports L1 caching mechanism to avoid re-searching struct fields
+by reflect package. Each evaluation session uses a unique sessionID that identifies
+the cache scope for a single policy application.
+
 Example usage:
 
 	package main
@@ -13,6 +17,7 @@ Example usage:
 		"fmt"
 		"github.com/dejitarudemon/noctis-guard"
 		"github.com/dejitarudemon/noctis-guard/internal/base"
+		"github.com/dejitarudemon/noctis-guard/internal/implemented"
 	)
 
 	type User struct {
@@ -50,8 +55,11 @@ Example usage:
 			},
 		}
 
+		// Create cache instance (can be nil to disable caching)
+		casher := implemented.NewDefaultCasher()
+
 		// Create engine
-		engine, err := noctisguard.NewNoctisFromPolices(policies)
+		engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
 		if err != nil {
 			panic(err)
 		}
@@ -93,13 +101,23 @@ Noctis is the main engine of the library for checking structures against access 
 Noctis stores policies organized by actions and provides the Evaluate method
 to check structures against these policies.
 
+The engine uses L1 cache (Casher interface) to optimize field value retrieval
+by caching results of reflect-based field searches. Each evaluation session
+generates a unique sessionID that identifies the cache scope for a single
+policy application.
+
 To create a Noctis instance, use:
   - NewNoctisFromPolices - create from a list of policies passed programmatically
   - NewNoctisFromFile - create from a JSON file with policies
+
+Fields:
+  - polices - stores policies organized by actions (action -> []Policy)
+  - cash - L1 cache instance for storing field values (can be nil to disable caching)
 */
 type Noctis struct {
 	// хранит политики, разделенные по действиям (action)
 	polices map[string][]base.Policy
+	cash    base.Casher
 }
 
 /*
@@ -108,7 +126,12 @@ NewNoctisFromPolices creates a new Noctis instance from a list of policies passe
 The function performs policy validation and checks for duplicate names. Policies
 are grouped by actions for subsequent fast checking.
 
+The engine uses the provided Casher instance for L1 caching. If nil is passed,
+caching will be disabled and field values will be retrieved directly via reflection
+on each evaluation.
+
 Parameters:
+  - cash - instance of base.Casher for L1 caching (can be nil to disable caching)
   - polices - list of policies to initialize the engine
 
 Returns:
@@ -122,6 +145,9 @@ Possible errors:
 
 Example usage:
 
+	import "github.com/dejitarudemon/noctis-guard/internal/implemented"
+
+	casher := implemented.NewDefaultCasher()
 	policies := []base.Policy{
 		{
 			Name:   "allow-admin",
@@ -133,18 +159,18 @@ Example usage:
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
 	if err != nil {
 		// handle error
 	}
 */
-func NewNoctisFromPolices(polices []base.Policy) (*Noctis, error) {
+func NewNoctisFromPolices(cash base.Casher, polices []base.Policy) (*Noctis, error) {
 	mapped, err := export(polices)
 	if err != nil {
 		return nil, NewErrExport(err)
 	}
 
-	return &Noctis{polices: mapped}, nil
+	return &Noctis{polices: mapped, cash: cash}, nil
 }
 
 /*
@@ -153,7 +179,12 @@ NewNoctisFromFile creates a new Noctis instance from a JSON file containing an a
 The function reads the file, parses JSON and creates the engine similar to NewNoctisFromPolices.
 The file must contain a valid JSON array of Policy objects.
 
+The engine uses the provided Casher instance for L1 caching. If nil is passed,
+caching will be disabled and field values will be retrieved directly via reflection
+on each evaluation.
+
 Parameters:
+  - cash - instance of base.Casher for L1 caching (can be nil to disable caching)
   - path - path to the file with policies in JSON format
 
 Returns:
@@ -169,6 +200,8 @@ Possible errors:
 
 Example usage:
 
+	import "github.com/dejitarudemon/noctis-guard/internal/implemented"
+
 	// File policies.json:
 	// [
 	//   {
@@ -181,12 +214,13 @@ Example usage:
 	//   }
 	// ]
 
-	engine, err := noctisguard.NewNoctisFromFile("policies.json")
+	casher := implemented.NewDefaultCasher()
+	engine, err := noctisguard.NewNoctisFromFile(casher, "policies.json")
 	if err != nil {
 		// handle error
 	}
 */
-func NewNoctisFromFile(path string) (*Noctis, error) {
+func NewNoctisFromFile(cash base.Casher, path string) (*Noctis, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModeAppend)
 	if err != nil {
 		return nil, NewErrExport(err)
@@ -203,7 +237,7 @@ func NewNoctisFromFile(path string) (*Noctis, error) {
 		return nil, NewErrExport(err)
 	}
 
-	return NewNoctisFromPolices(polices)
+	return NewNoctisFromPolices(cash, polices)
 }
 
 /*
@@ -216,6 +250,11 @@ ALLOW effect allow the action if at least one of them passes the check.
 
 The function supports cancellation through context.Context, allowing to interrupt
 long-running condition checking operations.
+
+Each evaluation session generates a unique sessionID that identifies the cache scope
+for a single policy application. This sessionID is used to cache field values retrieved
+via reflection, avoiding repeated field searches within the same evaluation session.
+The cache is cleared after the evaluation completes.
 
 Parameters:
   - ctx - context for operation cancellation and timeout control
@@ -238,12 +277,14 @@ Possible errors:
   - ErrInexpectedBehavior - internal error (condition function not found)
 
 Logic:
- 1. If there are no policies for the specified action, returns (false, nil)
- 2. For each policy, conditions are checked:
+ 1. Generate unique sessionID for this evaluation session
+ 2. If there are no policies for the specified action, returns (false, nil)
+ 3. For each policy, conditions are checked:
     - If context is cancelled, returns (false, ErrCancelled)
+    - Field values are retrieved using get() which checks cache first (if cash is not nil)
     - If policy has DENY effect and conditions are not met, returns (false, nil)
     - If policy has ALLOW effect and conditions are met, sets allowed = true flag
- 3. Returns result: (allowed, nil) or (false, error) on error
+ 4. Returns result: (allowed, nil) or (false, error) on error
 
 Example usage:
 
@@ -298,9 +339,10 @@ func (n *Noctis) Evaluate(ctx context.Context, source, target any, action string
 	}
 
 	allowed := false
+	sessionID := generateNewSesstionID()
 
 	for _, policy := range polices {
-		ok, err := policy.Evaluate(ctx, source, target, action)
+		ok, err := policy.Evaluate(ctx, source, target, action, n.cash, sessionID)
 		if err != nil {
 			return false, NewErrEvaluate(err)
 		}

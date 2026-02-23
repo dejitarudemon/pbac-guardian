@@ -151,7 +151,8 @@ func TestNewNoctisFromPolices(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			engine, err := noctisguard.NewNoctisFromPolices(tt.policies)
+			// Use nil casher for basic functionality tests
+			engine, err := noctisguard.NewNoctisFromPolices(nil, tt.policies)
 			if tt.wantErr {
 				// Expect error
 				if err == nil {
@@ -264,7 +265,8 @@ func TestNewNoctisFromFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			engine, err := noctisguard.NewNoctisFromFile(tt.path)
+			// Use nil casher for basic functionality tests
+			engine, err := noctisguard.NewNoctisFromFile(nil, tt.path)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -329,7 +331,8 @@ func TestEvaluate(t *testing.T) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	// Use nil casher for basic functionality tests
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -438,7 +441,8 @@ func TestEvaluateWithContextCancellation(t *testing.T) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	// Use nil casher for basic functionality tests
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -477,7 +481,8 @@ func TestEvaluateWithTimeout(t *testing.T) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	// Use nil casher for basic functionality tests
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -524,7 +529,8 @@ func TestEvaluateNestedStructures(t *testing.T) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	// Use nil casher for basic functionality tests
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}

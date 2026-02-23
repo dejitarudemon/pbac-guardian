@@ -165,7 +165,8 @@ func TestPolicyEvaluate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.policy.Evaluate(ctx, tt.source, tt.target, tt.action)
+			// Use nil casher and empty sessionID for direct Policy.Evaluate tests
+			got, err := tt.policy.Evaluate(ctx, tt.source, tt.target, tt.action, nil, "")
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
