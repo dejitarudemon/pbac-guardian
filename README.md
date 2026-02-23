@@ -19,6 +19,8 @@ Current version: 0.3.7
 - **Declarative Policies**: Define policies in JSON or programmatically
 - **Flexible Conditions**: Support for equality, inequality, less-than, and contains operations
 - **Context Support**: Built-in support for cancellation and timeouts via `context.Context`
+- **Optional L1 Caching**: Optimized cache mechanism for improved performance with repeated field access
+- **Thread-Safe**: Fully concurrent-safe implementation
 - **No Dependencies**: Uses only the standard Go library
 - **Type Safety**: Typed constants and validation
 
@@ -83,10 +85,17 @@ policies := []base.Policy{
 ### 3. Create Engine and Evaluate
 
 ```go
-import "context"
+import (
+    "context"
+    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+)
+
+// Create cache instance (optional - pass nil to disable caching)
+casher := implemented.NewDefaultCasher()
 
 // Create engine
-engine, err := noctisguard.NewNoctisFromPolices(policies)
+engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
 if err != nil {
     panic(err)
 }
@@ -109,6 +118,8 @@ if allowed {
     // access denied
 }
 ```
+
+**Note**: The `casher` parameter is optional. Pass `nil` to disable caching if you don't need it. Caching is beneficial when the same fields are accessed multiple times within an evaluation session.
 
 ## Tutorials
 
@@ -150,8 +161,8 @@ func main() {
         },
     }
 
-    // Create engine
-    engine, err := noctisguard.NewNoctisFromPolices(policies)
+    // Create engine (nil casher disables caching)
+    engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
     if err != nil {
         panic(err)
     }
@@ -209,8 +220,8 @@ import (
 )
 
 func main() {
-    // Load policies from file
-    engine, err := noctisguard.NewNoctisFromFile("policies.json")
+    // Load policies from file (nil casher disables caching)
+    engine, err := noctisguard.NewNoctisFromFile(nil, "policies.json")
     if err != nil {
         panic(err)
     }
@@ -309,7 +320,63 @@ func main() {
 }
 ```
 
-### Tutorial 6: Custom Types with Comparable Interface
+### Tutorial 6: Using L1 Cache for Performance
+
+This tutorial shows how to enable the optional L1 cache for improved performance when fields are accessed multiple times.
+
+```go
+import (
+    "context"
+    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+)
+
+func main() {
+    policies := []base.Policy{
+        {
+            Name:   "admin-read",
+            Action: "user:read:document",
+            Effect: base.Effect_ALLOW,
+            Conditions: map[string]base.Condition{
+                "source:role": {Eq: "admin"},
+            },
+        },
+    }
+
+    // Enable caching for better performance with repeated field access
+    casher := implemented.NewDefaultCasher()
+    engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+    if err != nil {
+        panic(err)
+    }
+
+    ctx := context.Background()
+    user := User{Name: "admin", Role: "admin"}
+    doc := Document{Owner: "alice", Type: "public"}
+
+    // Cache will store field values during evaluation
+    // Subsequent accesses to the same fields within the session will be faster
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("Access allowed: %v\n", allowed)
+}
+```
+
+**When to use cache:**
+- Multiple policies accessing the same fields
+- Fields accessed multiple times within an evaluation session
+- Applications prioritizing reduced allocations
+
+**When to disable cache (pass nil):**
+- Simple single-policy evaluations
+- Fields accessed only once per session
+- Maximum performance for single-access scenarios
+
+### Tutorial 7: Custom Types with Comparable Interface
 
 For custom types that need special comparison logic, implement the `Comparable` interface.
 
@@ -338,17 +405,17 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Noctis Engine
 
-#### `NewNoctisFromPolices(policies []base.Policy) (*Noctis, error)`
+#### `NewNoctisFromPolices(casher base.Casher, policies []base.Policy) (*Noctis, error)`
 
-Creates a new Noctis instance from a list of policies.
+Creates a new Noctis instance from a list of policies. The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
 
-#### `NewNoctisFromFile(path string) (*Noctis, error)`
+#### `NewNoctisFromFile(casher base.Casher, path string) (*Noctis, error)`
 
-Creates a new Noctis instance from a JSON file.
+Creates a new Noctis instance from a JSON file. The `casher` parameter is optional - pass `nil` to disable caching.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 
-Evaluates access for the given action. Returns `true` if access is allowed, `false` otherwise.
+Evaluates access for the given action. Returns `true` if access is allowed, `false` otherwise. Each evaluation uses a unique session ID for cache isolation.
 
 ### Policy Structure
 
@@ -400,6 +467,8 @@ The library provides typed errors:
 - **Декларативные политики**: Определение политик в JSON или программно
 - **Гибкие условия**: Поддержка операций равенства, неравенства, меньше и содержит
 - **Поддержка контекста**: Встроенная поддержка отмены и таймаутов через `context.Context`
+- **Опциональное L1-кеширование**: Оптимизированный механизм кеша для улучшения производительности при повторном доступе к полям
+- **Потокобезопасность**: Полностью потокобезопасная реализация
 - **Без зависимостей**: Использует только стандартную библиотеку Go
 - **Безопасность типов**: Типизированные константы и валидация
 
@@ -464,10 +533,17 @@ policies := []base.Policy{
 ### 3. Создайте движок и проверьте доступ
 
 ```go
-import "context"
+import (
+    "context"
+    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+)
+
+// Создание экземпляра кеша (опционально - передайте nil для отключения кеширования)
+casher := implemented.NewDefaultCasher()
 
 // Создание движка
-engine, err := noctisguard.NewNoctisFromPolices(policies)
+engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
 if err != nil {
     panic(err)
 }
@@ -490,6 +566,8 @@ if allowed {
     // доступ запрещен
 }
 ```
+
+**Примечание**: Параметр `casher` опционален. Передайте `nil` для отключения кеширования, если оно не нужно. Кеширование полезно, когда одни и те же поля обращаются несколько раз в рамках сессии оценки.
 
 ## Туториалы
 
@@ -531,8 +609,8 @@ func main() {
         },
     }
 
-    // Создание движка
-    engine, err := noctisguard.NewNoctisFromPolices(policies)
+    // Создание движка (nil casher отключает кеширование)
+    engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
     if err != nil {
         panic(err)
     }
@@ -590,8 +668,8 @@ import (
 )
 
 func main() {
-    // Загрузка политик из файла
-    engine, err := noctisguard.NewNoctisFromFile("policies.json")
+    // Загрузка политик из файла (nil casher отключает кеширование)
+    engine, err := noctisguard.NewNoctisFromFile(nil, "policies.json")
     if err != nil {
         panic(err)
     }
@@ -690,7 +768,63 @@ func main() {
 }
 ```
 
-### Туториал 6: Кастомные типы с интерфейсом Comparable
+### Туториал 6: Использование L1-кеша для производительности
+
+Этот туториал показывает, как включить опциональный L1-кеш для улучшения производительности при повторном доступе к полям.
+
+```go
+import (
+    "context"
+    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+)
+
+func main() {
+    policies := []base.Policy{
+        {
+            Name:   "admin-read",
+            Action: "user:read:document",
+            Effect: base.Effect_ALLOW,
+            Conditions: map[string]base.Condition{
+                "source:role": {Eq: "admin"},
+            },
+        },
+    }
+
+    // Включить кеширование для лучшей производительности при повторном доступе к полям
+    casher := implemented.NewDefaultCasher()
+    engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+    if err != nil {
+        panic(err)
+    }
+
+    ctx := context.Background()
+    user := User{Name: "admin", Role: "admin"}
+    doc := Document{Owner: "alice", Type: "public"}
+
+    // Кеш будет хранить значения полей во время оценки
+    // Последующие обращения к тем же полям в рамках сессии будут быстрее
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("Доступ разрешен: %v\n", allowed)
+}
+```
+
+**Когда использовать кеш:**
+- Несколько политик обращаются к одним и тем же полям
+- Поля обращаются несколько раз в рамках сессии оценки
+- Приложения, приоритизирующие уменьшенные аллокации
+
+**Когда отключать кеш (передать nil):**
+- Простые оценки одной политики
+- Поля обращаются только один раз за сессию
+- Максимальная производительность для сценариев с однократным доступом
+
+### Туториал 7: Кастомные типы с интерфейсом Comparable
 
 Для кастомных типов, требующих специальной логики сравнения, реализуйте интерфейс `Comparable`.
 
@@ -719,17 +853,17 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Движок Noctis
 
-#### `NewNoctisFromPolices(policies []base.Policy) (*Noctis, error)`
+#### `NewNoctisFromPolices(casher base.Casher, policies []base.Policy) (*Noctis, error)`
 
-Создает новый экземпляр Noctis из списка политик.
+Создает новый экземпляр Noctis из списка политик. Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
 
-#### `NewNoctisFromFile(path string) (*Noctis, error)`
+#### `NewNoctisFromFile(casher base.Casher, path string) (*Noctis, error)`
 
-Создает новый экземпляр Noctis из JSON файла.
+Создает новый экземпляр Noctis из JSON файла. Параметр `casher` опционален - передайте `nil` для отключения кеширования.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 
-Оценивает доступ для указанного действия. Возвращает `true`, если доступ разрешен, `false` в противном случае.
+Оценивает доступ для указанного действия. Возвращает `true`, если доступ разрешен, `false` в противном случае. Каждая оценка использует уникальный идентификатор сессии для изоляции кеша.
 
 ### Структура Policy
 
