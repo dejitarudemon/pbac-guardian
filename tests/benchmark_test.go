@@ -15,6 +15,7 @@ import (
 
 	noctisguard "github.com/dejitarudemon/noctis-guard"
 	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/dejitarudemon/noctis-guard/internal/implemented"
 )
 
 /*
@@ -54,7 +55,7 @@ func BenchmarkNewNoctisFromPolices(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := noctisguard.NewNoctisFromPolices(policies)
+		_, err := noctisguard.NewNoctisFromPolices(nil, policies)
 		if err != nil {
 			b.Fatalf("failed to create engine: %v", err)
 		}
@@ -78,7 +79,7 @@ func BenchmarkEvaluateSimple(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -123,7 +124,7 @@ func BenchmarkEvaluateMultipleConditions(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -160,7 +161,7 @@ func BenchmarkEvaluateContains(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -197,7 +198,7 @@ func BenchmarkEvaluateLt(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -235,7 +236,7 @@ func BenchmarkEvaluateNestedStructures(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -304,7 +305,7 @@ func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -342,7 +343,7 @@ func BenchmarkEvaluateFieldComparison(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -378,7 +379,7 @@ func BenchmarkEvaluateDenyPolicy(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -423,7 +424,7 @@ func BenchmarkEvaluateLargeSlice(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -459,7 +460,7 @@ func BenchmarkEvaluateNoMatch(b *testing.B) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -471,6 +472,219 @@ func BenchmarkEvaluateNoMatch(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, err := engine.Evaluate(ctx, source, target, "user:read:document")
+		if err != nil {
+			b.Fatalf("failed to evaluate: %v", err)
+		}
+	}
+}
+
+/*
+BenchmarkEvaluateWithCache measures performance of policy evaluation with L1 cache enabled.
+
+The benchmark compares evaluation performance with cache vs without cache to measure
+the performance improvement from caching field values.
+*/
+func BenchmarkEvaluateWithCache(b *testing.B) {
+	policies := []base.Policy{
+		{
+			Name:   "admin-read",
+			Action: "user:read:document",
+			Effect: base.Effect_ALLOW,
+			Conditions: map[string]base.Condition{
+				"source:role": {Eq: "admin"},
+			},
+		},
+		{
+			Name:   "owner-read",
+			Action: "user:read:document",
+			Effect: base.Effect_ALLOW,
+			Conditions: map[string]base.Condition{
+				"source:name": {Eq: "target:owner"},
+			},
+		},
+		{
+			Name:   "deny-private",
+			Action: "user:read:document",
+			Effect: base.Effect_DENY,
+			Conditions: map[string]base.Condition{
+				"target:type": {Eq: "private"},
+				"source:role": {Neq: "admin"},
+			},
+		},
+	}
+
+	casher := implemented.NewDefaultCasher()
+	engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+	if err != nil {
+		b.Fatalf("failed to create engine: %v", err)
+	}
+
+	ctx := context.Background()
+	source := User{Name: "admin", Role: "admin"}
+	target := Document{Owner: "user", Type: "public"}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := engine.Evaluate(ctx, source, target, "user:read:document")
+		if err != nil {
+			b.Fatalf("failed to evaluate: %v", err)
+		}
+	}
+}
+
+/*
+BenchmarkEvaluateWithoutCache measures performance of policy evaluation without L1 cache.
+
+This benchmark is used for comparison with BenchmarkEvaluateWithCache to measure
+the performance improvement from caching.
+*/
+func BenchmarkEvaluateWithoutCache(b *testing.B) {
+	policies := []base.Policy{
+		{
+			Name:   "admin-read",
+			Action: "user:read:document",
+			Effect: base.Effect_ALLOW,
+			Conditions: map[string]base.Condition{
+				"source:role": {Eq: "admin"},
+			},
+		},
+		{
+			Name:   "owner-read",
+			Action: "user:read:document",
+			Effect: base.Effect_ALLOW,
+			Conditions: map[string]base.Condition{
+				"source:name": {Eq: "target:owner"},
+			},
+		},
+		{
+			Name:   "deny-private",
+			Action: "user:read:document",
+			Effect: base.Effect_DENY,
+			Conditions: map[string]base.Condition{
+				"target:type": {Eq: "private"},
+				"source:role": {Neq: "admin"},
+			},
+		},
+	}
+
+	// Use nil casher to disable caching
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	if err != nil {
+		b.Fatalf("failed to create engine: %v", err)
+	}
+
+	ctx := context.Background()
+	source := User{Name: "admin", Role: "admin"}
+	target := Document{Owner: "user", Type: "public"}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := engine.Evaluate(ctx, source, target, "user:read:document")
+		if err != nil {
+			b.Fatalf("failed to evaluate: %v", err)
+		}
+	}
+}
+
+/*
+BenchmarkEvaluateMultiplePoliciesWithCache measures performance of evaluating
+multiple policies with cache enabled.
+*/
+func BenchmarkEvaluateMultiplePoliciesWithCache(b *testing.B) {
+	policies := []base.Policy{
+		{
+			Name:   "policy-1",
+			Action: "user:read:document",
+			Effect: base.Effect_ALLOW,
+			Conditions: map[string]base.Condition{
+				"source:role": {Eq: "admin"},
+			},
+		},
+		{
+			Name:   "policy-2",
+			Action: "user:read:document",
+			Effect: base.Effect_ALLOW,
+			Conditions: map[string]base.Condition{
+				"source:name": {Eq: "target:owner"},
+			},
+		},
+		{
+			Name:   "policy-3",
+			Action: "user:read:document",
+			Effect: base.Effect_DENY,
+			Conditions: map[string]base.Condition{
+				"target:type": {Eq: "private"},
+				"source:role": {Neq: "admin"},
+			},
+		},
+		{
+			Name:   "policy-4",
+			Action: "user:read:document",
+			Effect: base.Effect_ALLOW,
+			Conditions: map[string]base.Condition{
+				"source:age": {Lt: 18},
+			},
+		},
+		{
+			Name:   "policy-5",
+			Action: "user:read:document",
+			Effect: base.Effect_ALLOW,
+			Conditions: map[string]base.Condition{
+				"source:role": {Contains: []any{"moderator", "editor"}},
+			},
+		},
+	}
+
+	casher := implemented.NewDefaultCasher()
+	engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+	if err != nil {
+		b.Fatalf("failed to create engine: %v", err)
+	}
+
+	ctx := context.Background()
+	source := User{Name: "admin", Role: "admin", Age: 25}
+	target := Document{Owner: "admin", Type: "public"}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := engine.Evaluate(ctx, source, target, "user:read:document")
+		if err != nil {
+			b.Fatalf("failed to evaluate: %v", err)
+		}
+	}
+}
+
+/*
+BenchmarkEvaluateNestedStructuresWithCache measures performance of working
+with nested structures with cache enabled.
+*/
+func BenchmarkEvaluateNestedStructuresWithCache(b *testing.B) {
+	policies := []base.Policy{
+		{
+			Name:   "nested-policy",
+			Action: "user:read",
+			Effect: base.Effect_ALLOW,
+			Conditions: map[string]base.Condition{
+				"source:user:role": {
+					Eq: "admin",
+				},
+			},
+		},
+	}
+
+	casher := implemented.NewDefaultCasher()
+	engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+	if err != nil {
+		b.Fatalf("failed to create engine: %v", err)
+	}
+
+	ctx := context.Background()
+	source := NestedUser{User: User{Name: "admin", Role: "admin"}}
+	target := NestedDocument{Doc: Document{Owner: "user", Type: "public", Tags: []string{}}}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, err := engine.Evaluate(ctx, source, target, "user:read")
 		if err != nil {
 			b.Fatalf("failed to evaluate: %v", err)
 		}

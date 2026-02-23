@@ -247,11 +247,20 @@ If path is a path (contains ":"), the function parses it and extracts the value
 from the corresponding structure (source or target). If path is not a path,
 returns the path value itself as a literal value.
 
+The function uses L1 cache to optimize field value retrieval. Before searching
+for a field via reflection, it checks the cache using sessionID and path as key.
+If the value is found in cache, it is returned immediately. After retrieving
+a value via reflection, it is stored in cache for subsequent use within the
+same evaluation session.
+
 Parameters:
+  - ctx - context for operation cancellation and timeout control
   - source - first structure to search for fields (used for paths "source:...")
   - target - second structure to search for fields (used for paths "target:...")
   - path - path to field (e.g., "source:name") or literal value (e.g., "admin")
   - mustBePath - flag indicating whether path must be a path (true) or can be a literal (false)
+  - cash - L1 cache instance for storing field values (can be nil to disable caching)
+  - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
   - any - found field value from structure or literal path value
@@ -264,12 +273,20 @@ Possible errors:
   - field search error (see getValue)
   - ErrInvalidType - entity is not a structure or pointer to structure (see getValue)
 */
-func (p *Policy) get(source, target any, path string, mustBePath bool) (any, error) {
+func (p *Policy) get(ctx context.Context, source, target any, path string, mustBePath bool, cash Casher, sessionID string) (any, error) {
 	if !p.isPath(path) {
 		if mustBePath {
 			return nil, NewErrInvalidPath(path, "must be a path, but it's literal value")
 		}
 		return path, nil
+	}
+
+	// Если кеш не отключен, ищем в нем по id сессии и ключу (пути до искомого поля)
+	if cash != nil {
+		value, err := cash.Get(ctx, sessionID, path)
+		if err == nil && value != nil {
+			return value, nil
+		}
 	}
 
 	entity, parsedPath, err := p.parsePath(path)
@@ -288,7 +305,15 @@ func (p *Policy) get(source, target any, path string, mustBePath bool) (any, err
 		err = NewErrInvalidPath(path, fmt.Sprintf("unxpected entity: %v", entity))
 	}
 
-	return value, err
+	if err != nil {
+		return nil, err
+	}
+
+	if cash != nil {
+		cash.Set(ctx, sessionID, path, value)
+	}
+
+	return value, nil
 }
 
 /*
@@ -301,11 +326,18 @@ conditions are met (logical AND).
 The function supports cancellation through context.Context, allowing to interrupt
 condition checking when context is cancelled.
 
+Field values are retrieved using the get() method, which utilizes L1 cache to
+optimize performance. The cache is scoped by sessionID, which is unique for each
+evaluation session. This allows reusing field values within the same evaluation
+without repeated reflection-based searches.
+
 Parameters:
   - ctx - context for operation cancellation and timeout control
   - source - first structure to check (usually the action source)
   - target - second structure to check (usually the action target)
   - action - action in format "entity:action:extra..." to check
+  - cash - L1 cache instance for storing field values (can be nil to disable caching)
+  - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
   - bool - policy application result:
@@ -320,7 +352,7 @@ Possible errors:
   - ErrUncomparable - cannot compare values in condition (incompatible types)
   - ErrInexpectedBehavior - internal error: condition function not found in CONDITION_TO_FUNC
 */
-func (p *Policy) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
+func (p *Policy) Evaluate(ctx context.Context, source, target any, action string, cash Casher, sessionID string) (bool, error) {
 	if p == nil {
 		return false, NewErrInexpectedBehavior("Policy.Evaluate()", "policy is nil")
 	}
@@ -336,7 +368,7 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 	t := reflect.TypeFor[Condition]()
 
 	for field, condition := range p.Conditions {
-		left, err := p.get(source, target, field, true)
+		left, err := p.get(ctx, source, target, field, true, cash, sessionID)
 		if err != nil {
 			return false, err
 		}
@@ -354,7 +386,7 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 						right := c.Field(i).Interface()
 
 						if r, ok := right.(string); ok {
-							right, err = p.get(source, target, r, false)
+							right, err = p.get(ctx, source, target, r, false, cash, sessionID)
 							if err != nil {
 								return false, err
 							}

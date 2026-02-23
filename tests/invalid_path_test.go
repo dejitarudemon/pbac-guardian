@@ -34,7 +34,8 @@ func TestEvaluateInvalidFieldPath(t *testing.T) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	// Use nil casher for basic functionality tests
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -70,7 +71,8 @@ func TestEvaluateInvalidNestedPath(t *testing.T) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	// Use nil casher for basic functionality tests
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -106,7 +108,8 @@ func TestEvaluateInvalidTargetPath(t *testing.T) {
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(policies)
+	// Use nil casher for basic functionality tests
+	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
