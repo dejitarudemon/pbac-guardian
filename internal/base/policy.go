@@ -247,11 +247,20 @@ If path is a path (contains ":"), the function parses it and extracts the value
 from the corresponding structure (source or target). If path is not a path,
 returns the path value itself as a literal value.
 
+The function uses L1 cache to optimize field value retrieval. Before searching
+for a field via reflection, it checks the cache using sessionID and path as key.
+If the value is found in cache, it is returned immediately. After retrieving
+a value via reflection, it is stored in cache for subsequent use within the
+same evaluation session.
+
 Parameters:
+  - ctx - context for operation cancellation and timeout control
   - source - first structure to search for fields (used for paths "source:...")
   - target - second structure to search for fields (used for paths "target:...")
   - path - path to field (e.g., "source:name") or literal value (e.g., "admin")
   - mustBePath - flag indicating whether path must be a path (true) or can be a literal (false)
+  - cash - L1 cache instance for storing field values (can be nil to disable caching)
+  - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
   - any - found field value from structure or literal path value
@@ -317,11 +326,18 @@ conditions are met (logical AND).
 The function supports cancellation through context.Context, allowing to interrupt
 condition checking when context is cancelled.
 
+Field values are retrieved using the get() method, which utilizes L1 cache to
+optimize performance. The cache is scoped by sessionID, which is unique for each
+evaluation session. This allows reusing field values within the same evaluation
+without repeated reflection-based searches.
+
 Parameters:
   - ctx - context for operation cancellation and timeout control
   - source - first structure to check (usually the action source)
   - target - second structure to check (usually the action target)
   - action - action in format "entity:action:extra..." to check
+  - cash - L1 cache instance for storing field values (can be nil to disable caching)
+  - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
   - bool - policy application result:

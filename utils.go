@@ -53,6 +53,17 @@ func export(polices []base.Policy) (map[string][]base.Policy, error) {
 	return mappedPolices, nil
 }
 
+/*
+generateNewSesstionID generates a unique identifier for an evaluation session.
+
+The function creates a new UUID string that serves as a session identifier.
+This sessionID is used to scope the L1 cache for a single policy application,
+allowing multiple concurrent evaluations to use the same cache instance without
+interference.
+
+Returns:
+  - string - unique session identifier (UUID string)
+*/
 func generateNewSesstionID() string {
 	return uuid.NewString()
 }
