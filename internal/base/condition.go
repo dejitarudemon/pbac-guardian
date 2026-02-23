@@ -146,8 +146,8 @@ func containsConditionFunc(ctx context.Context, left, right any) (bool, error) {
 		case <-ctx.Done():
 			return false, ErrCancelled
 		default:
-		if reflect.DeepEqual(left, slice.Index(i).Interface()) {
-			return true, nil
+			if reflect.DeepEqual(left, slice.Index(i).Interface()) {
+				return true, nil
 			}
 		}
 	}
