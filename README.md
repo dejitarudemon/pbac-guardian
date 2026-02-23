@@ -1,6 +1,6 @@
 # noctis-guard
 
-Current version: 0.3.7
+Current version: 0.4.0
 
 [English](#english) | [Русский](#русский)
 
