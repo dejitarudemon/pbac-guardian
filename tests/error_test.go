@@ -1,11 +1,11 @@
 /*
-Package tests contains tests for error types of the noctis-guard library.
+Package tests contains tests for error types of the pbac-guardian library.
 
 Tests check creation, wrapping and unwrapping of errors,
 as well as correctness of error messages.
 
 This file is in the tests directory for test organization.
-Tests import the noctisguard package as regular library users.
+Tests import the guardian package as regular library users.
 */
 package tests
 
@@ -13,7 +13,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dejitarudemon/noctis-guard"
+	guardian "github.com/dejitarudemon/pbac-guardian"
 )
 
 /*
@@ -27,7 +27,7 @@ The test checks:
 */
 func TestErrDuplicateName(t *testing.T) {
 	// Create error with test policy name
-	err := noctisguard.NewErrDuplicateName("test-policy")
+	err := guardian.NewErrDuplicateName("test-policy")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -53,9 +53,9 @@ The test checks:
 func TestErrExport(t *testing.T) {
 	// Create original error that will be wrapped
 	originalErr := errors.New("original error")
-	
+
 	// Wrap it in ErrExport
-	err := noctisguard.NewErrExport(originalErr)
+	err := guardian.NewErrExport(originalErr)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -96,9 +96,9 @@ e.g., invalid field paths or comparison errors.
 func TestErrEvaluate(t *testing.T) {
 	// Create original error that will be wrapped
 	originalErr := errors.New("original error")
-	
+
 	// Wrap it in ErrEvaluate
-	err := noctisguard.NewErrEvaluate(originalErr)
+	err := guardian.NewErrEvaluate(originalErr)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}

@@ -1,4 +1,4 @@
-module github.com/dejitarudemon/noctis-guard
+module github.com/dejitarudemon/pbac-guardian
 
 go 1.25.1
 

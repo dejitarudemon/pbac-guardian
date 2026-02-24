@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*

@@ -9,7 +9,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -23,9 +23,9 @@ The test checks:
 */
 func TestEntityIsValid(t *testing.T) {
 	tests := []struct {
-		name    string
-		entity  base.Entity
-		want    bool
+		name   string
+		entity base.Entity
+		want   bool
 	}{
 		{"valid source", base.Entity_SOURCE, true},        // Valid source entity
 		{"valid target", base.Entity_TARGET, true},        // Valid target entity
@@ -42,4 +42,3 @@ func TestEntityIsValid(t *testing.T) {
 		})
 	}
 }
-

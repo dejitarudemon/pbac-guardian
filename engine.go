@@ -1,5 +1,5 @@
 /*
-Package noctisguard provides an engine for checking structures against policies.
+Package guardian provides an engine for checking structures against policies.
 
 The library allows you to define access policies and check structures against
 these policies using a flexible system of conditions and effects.
@@ -15,19 +15,19 @@ Example usage:
 	import (
 		"context"
 		"fmt"
-		"github.com/dejitarudemon/noctis-guard"
-		"github.com/dejitarudemon/noctis-guard/internal/base"
-		"github.com/dejitarudemon/noctis-guard/internal/implemented"
+		"github.com/dejitarudemon/pbac-guardian"
+		"github.com/dejitarudemon/pbac-guardian/internal/base"
+		"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 	)
 
 	type User struct {
-		Name string `noctis-guard:"name"`
-		Role string `noctis-guard:"role"`
+		Name string `pbac-guardian:"name"`
+		Role string `pbac-guardian:"role"`
 	}
 
 	type Document struct {
-		Owner string `noctis-guard:"owner"`
-		Type  string `noctis-guard:"type"`
+		Owner string `pbac-guardian:"owner"`
+		Type  string `pbac-guardian:"type"`
 	}
 
 	func main() {
@@ -59,7 +59,7 @@ Example usage:
 		casher := implemented.NewDefaultCasher()
 
 		// Create engine
-		engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+		engine, err := guardian.NewGuardianFromPolices(casher, policies)
 		if err != nil {
 			panic(err)
 		}
@@ -83,7 +83,7 @@ Example usage:
 		fmt.Printf("Access allowed: %v\n", allowed) // true (owner-read policy passed)
 	}
 */
-package noctisguard
+package guardian
 
 import (
 	"context"
@@ -92,13 +92,13 @@ import (
 	"io"
 	"os"
 
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
-Noctis is the main engine of the library for checking structures against access policies.
+Guardian is the main engine of the library for checking structures against access policies.
 
-Noctis stores policies organized by actions and provides the Evaluate method
+Guardian stores policies organized by actions and provides the Evaluate method
 to check structures against these policies.
 
 The engine uses L1 cache (Casher interface) to optimize field value retrieval
@@ -106,22 +106,22 @@ by caching results of reflect-based field searches. Each evaluation session
 generates a unique sessionID that identifies the cache scope for a single
 policy application.
 
-To create a Noctis instance, use:
-  - NewNoctisFromPolices - create from a list of policies passed programmatically
-  - NewNoctisFromFile - create from a JSON file with policies
+To create a Guardian instance, use:
+  - NewGuardianFromPolices - create from a list of policies passed programmatically
+  - NewGuardianFromFile - create from a JSON file with policies
 
 Fields:
   - polices - stores policies organized by actions (action -> []Policy)
   - cash - L1 cache instance for storing field values (can be nil to disable caching)
 */
-type Noctis struct {
+type Guardian struct {
 	// хранит политики, разделенные по действиям (action)
 	polices map[string][]base.Policy
 	cash    base.Casher
 }
 
 /*
-NewNoctisFromPolices creates a new Noctis instance from a list of policies passed programmatically.
+NewGuardianFromPolices creates a new Guardian instance from a list of policies passed programmatically.
 
 The function performs policy validation and checks for duplicate names. Policies
 are grouped by actions for subsequent fast checking.
@@ -135,7 +135,7 @@ Parameters:
   - polices - list of policies to initialize the engine
 
 Returns:
-  - *Noctis - created engine instance, ready to use
+  - *Guardian - created engine instance, ready to use
   - error - creation error if policies contain duplicate names or are invalid
 
 Possible errors:
@@ -145,7 +145,7 @@ Possible errors:
 
 Example usage:
 
-	import "github.com/dejitarudemon/noctis-guard/internal/implemented"
+	import "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 
 	casher := implemented.NewDefaultCasher()
 	policies := []base.Policy{
@@ -159,24 +159,24 @@ Example usage:
 		},
 	}
 
-	engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies)
 	if err != nil {
 		// handle error
 	}
 */
-func NewNoctisFromPolices(cash base.Casher, polices []base.Policy) (*Noctis, error) {
+func NewGuardianFromPolices(cash base.Casher, polices []base.Policy) (*Guardian, error) {
 	mapped, err := export(polices)
 	if err != nil {
 		return nil, NewErrExport(err)
 	}
 
-	return &Noctis{polices: mapped, cash: cash}, nil
+	return &Guardian{polices: mapped, cash: cash}, nil
 }
 
 /*
-NewNoctisFromFile creates a new Noctis instance from a JSON file containing an array of policies.
+NewGuardianFromFile creates a new Guardian instance from a JSON file containing an array of policies.
 
-The function reads the file, parses JSON and creates the engine similar to NewNoctisFromPolices.
+The function reads the file, parses JSON and creates the engine similar to NewGuardianFromPolices.
 The file must contain a valid JSON array of Policy objects.
 
 The engine uses the provided Casher instance for L1 caching. If nil is passed,
@@ -188,7 +188,7 @@ Parameters:
   - path - path to the file with policies in JSON format
 
 Returns:
-  - *Noctis - created engine instance, ready to use
+  - *Guardian - created engine instance, ready to use
   - error - creation error if the file is unavailable or contains invalid data
 
 Possible errors:
@@ -200,7 +200,7 @@ Possible errors:
 
 Example usage:
 
-	import "github.com/dejitarudemon/noctis-guard/internal/implemented"
+	import "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 
 	// File policies.json:
 	// [
@@ -215,12 +215,12 @@ Example usage:
 	// ]
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := noctisguard.NewNoctisFromFile(casher, "policies.json")
+	engine, err := guardian.NewGuardianFromFile(casher, "policies.json")
 	if err != nil {
 		// handle error
 	}
 */
-func NewNoctisFromFile(cash base.Casher, path string) (*Noctis, error) {
+func NewGuardianFromFile(cash base.Casher, path string) (*Guardian, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModeAppend)
 	if err != nil {
 		return nil, NewErrExport(err)
@@ -237,7 +237,7 @@ func NewNoctisFromFile(cash base.Casher, path string) (*Noctis, error) {
 		return nil, NewErrExport(err)
 	}
 
-	return NewNoctisFromPolices(cash, polices)
+	return NewGuardianFromPolices(cash, polices)
 }
 
 /*
@@ -294,12 +294,12 @@ Example usage:
 	)
 
 	type User struct {
-		Name string `noctis-guard:"name"`
-		Role string `noctis-guard:"role"`
+		Name string `pbac-guardian:"name"`
+		Role string `pbac-guardian:"role"`
 	}
 
 	type Document struct {
-		Owner string `noctis-guard:"owner"`
+		Owner string `pbac-guardian:"owner"`
 	}
 
 	user := User{Name: "alice", Role: "admin"}
@@ -325,7 +325,7 @@ Example usage:
 		// access denied
 	}
 */
-func (n *Noctis) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
+func (n *Guardian) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
 	if n == nil {
 		return false, NewErrEvaluate(fmt.Errorf("noctis engine is nil"))
 	}

@@ -1,3 +1,20 @@
+## v 0.4.1
+
+### Русский
+
+**Изменено:**
+
+- noctis-guard переименован в pbac-guardian
+
+---
+
+### English
+
+**Changed:**
+
+- noctis-guard renamed to pbac-guardian
+
+
 ## v 0.4.0
 
 ### Русский
@@ -8,7 +25,7 @@
 - Встроенный кеш-движок `DefaultCasher` с оптимизированной реализацией на основе `sync.RWMutex`
 - Интерфейс `base.Casher` для кастомных реализаций кеша
 - Автоматическая генерация уникальных `sessionID` для изоляции кеша между сессиями
-- Параметр `casher` в `NewNoctisFromPolices` и `NewNoctisFromFile` (опциональный, можно передать `nil`)
+- Параметр `casher` в `NewGuardianFromPolices` и `NewGuardianFromFile` (опциональный, можно передать `nil`)
 
 **Оптимизации:**
 
@@ -45,7 +62,7 @@
 - Built-in cache engine `DefaultCasher` with optimized implementation based on `sync.RWMutex`
 - `base.Casher` interface for custom cache implementations
 - Automatic generation of unique `sessionID` for cache isolation between sessions
-- `casher` parameter in `NewNoctisFromPolices` and `NewNoctisFromFile` (optional, can pass `nil`)
+- `casher` parameter in `NewGuardianFromPolices` and `NewGuardianFromFile` (optional, can pass `nil`)
 
 **Optimizations:**
 

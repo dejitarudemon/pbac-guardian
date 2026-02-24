@@ -12,7 +12,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/dejitarudemon/noctis-guard/internal/implemented"
+	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 /*
@@ -321,4 +321,3 @@ func TestDefaultCasherSessionIsolation(t *testing.T) {
 		t.Errorf("session3: expected 'charlie', got %v", value3)
 	}
 }
-
