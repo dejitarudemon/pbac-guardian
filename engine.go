@@ -164,8 +164,8 @@ Example usage:
 		// handle error
 	}
 */
-func NewGuardianFromPolices(cash base.Casher, polices []base.Policy) (*Guardian, error) {
-	mapped, err := export(polices)
+func NewGuardianFromPolices(cash base.Casher, polices []base.Policy, funcConfig base.ConditionFuncsConfig) (*Guardian, error) {
+	mapped, err := export(polices, funcConfig)
 	if err != nil {
 		return nil, NewErrExport(err)
 	}
@@ -220,7 +220,7 @@ Example usage:
 		// handle error
 	}
 */
-func NewGuardianFromFile(cash base.Casher, path string) (*Guardian, error) {
+func NewGuardianFromFile(cash base.Casher, path string, funcConfig base.ConditionFuncsConfig) (*Guardian, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModeAppend)
 	if err != nil {
 		return nil, NewErrExport(err)
@@ -237,7 +237,7 @@ func NewGuardianFromFile(cash base.Casher, path string) (*Guardian, error) {
 		return nil, NewErrExport(err)
 	}
 
-	return NewGuardianFromPolices(cash, polices)
+	return NewGuardianFromPolices(cash, polices, funcConfig)
 }
 
 /*
