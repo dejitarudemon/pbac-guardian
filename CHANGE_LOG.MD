@@ -1,3 +1,20 @@
+## v 0.4.1
+
+### Русский
+
+**Изменено:**
+
+- noctis-guard переименован в pbac-guardian
+
+---
+
+### English
+
+**Changed:**
+
+- noctis-guard renamed to pbac-guardian
+
+
 ## v 0.4.0
 
 ### Русский
