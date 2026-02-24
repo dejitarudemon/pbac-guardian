@@ -2,7 +2,13 @@
 Package tests contains tests for the pbac-guardian library.
 
 Tests check the functionality of creating an engine from policies and files,
-as well as policy evaluation for various access scenarios.
+as well as policy evaluation for various access scenarios. The tests verify:
+
+  - Engine creation with and without caching (casher parameter)
+  - Policy evaluation with different condition types
+  - Context cancellation and timeout handling
+  - Nested structure support
+  - Custom condition functions configuration (funcConfig parameter)
 
 This file is in the tests directory for test organization.
 Tests import the guardian package as regular library users.
@@ -152,7 +158,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, tt.policies)
+			engine, err := guardian.NewGuardianFromPolices(nil, tt.policies, nil)
 			if tt.wantErr {
 				// Expect error
 				if err == nil {
@@ -266,7 +272,7 @@ func TestNewGuardianFromFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromFile(nil, tt.path)
+			engine, err := guardian.NewGuardianFromFile(nil, tt.path, nil)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -332,7 +338,7 @@ func TestEvaluate(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -442,7 +448,7 @@ func TestEvaluateWithContextCancellation(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -482,7 +488,7 @@ func TestEvaluateWithTimeout(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -530,7 +536,7 @@ func TestEvaluateNestedStructures(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}

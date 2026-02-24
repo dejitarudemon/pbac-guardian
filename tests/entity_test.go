@@ -3,6 +3,8 @@ Package tests contains tests for public API of base package.
 
 Tests check Entity value validation and correctness of working
 with source and target entities through public IsValid method.
+The tests verify that only Entity_SOURCE and Entity_TARGET are
+considered valid entity values.
 */
 package tests
 

@@ -1,9 +1,14 @@
 /*
 Package tests contains tests for various numeric types in comparison conditions.
 
-Tests check the work of ltPrimitives and ltConditionFunc for all supported
-numeric types (int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64),
-which improves coverage of ltPrimitives function from 38.9% to a higher level.
+Tests check the work of Lt condition for all supported numeric types:
+  - Signed integers: int, int8, int16, int32, int64
+  - Unsigned integers: uint, uint8, uint16, uint32, uint64
+  - Floating point: float32, float64
+  - Strings (lexicographic comparison)
+
+The tests verify that numeric comparisons work correctly across different
+type sizes and signedness, ensuring type safety and correct comparison logic.
 */
 package tests
 
@@ -306,7 +311,7 @@ func TestLtNumericTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}

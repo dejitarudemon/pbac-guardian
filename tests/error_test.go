@@ -2,7 +2,13 @@
 Package tests contains tests for error types of the pbac-guardian library.
 
 Tests check creation, wrapping and unwrapping of errors,
-as well as correctness of error messages.
+as well as correctness of error messages. The tests verify:
+
+  - ErrDuplicateName - duplicate policy names
+  - ErrExport - policy export errors with error wrapping
+  - ErrEvaluate - policy evaluation errors with error wrapping
+  - Error message formatting and content
+  - Error unwrapping using errors.Unwrap()
 
 This file is in the tests directory for test organization.
 Tests import the guardian package as regular library users.

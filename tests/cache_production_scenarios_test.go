@@ -94,7 +94,7 @@ func BenchmarkProductionScenario_20Policies_3Accesses(b *testing.B) {
 	policies := createMultipleActions(actions, 2, 3) // 10 actions × 2 policies = 20 policies
 
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -111,7 +111,7 @@ func BenchmarkProductionScenario_20Policies_3Accesses_NoCache(b *testing.B) {
 		"doc:read", "doc:write", "doc:delete", "doc:update", "doc:create"}
 	policies := createMultipleActions(actions, 2, 3)
 
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -133,7 +133,7 @@ func BenchmarkProductionScenario_30Policies_5Accesses(b *testing.B) {
 	policies := createMultipleActions(actions, 3, 5) // 10 actions × 3 policies = 30 policies
 
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -150,7 +150,7 @@ func BenchmarkProductionScenario_30Policies_5Accesses_NoCache(b *testing.B) {
 		"doc:read", "doc:write", "doc:delete", "doc:update", "doc:create"}
 	policies := createMultipleActions(actions, 3, 5)
 
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -172,7 +172,7 @@ func BenchmarkProductionScenario_30Policies_10Accesses(b *testing.B) {
 	policies := createMultipleActions(actions, 3, 10) // 10 actions × 3 policies = 30 policies, 10 accesses each
 
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -189,7 +189,7 @@ func BenchmarkProductionScenario_30Policies_10Accesses_NoCache(b *testing.B) {
 		"doc:read", "doc:write", "doc:delete", "doc:update", "doc:create"}
 	policies := createMultipleActions(actions, 3, 10)
 
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -262,7 +262,7 @@ func BenchmarkProductionScenario_MixedFields(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, allPolicies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, allPolicies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -328,7 +328,7 @@ func BenchmarkProductionScenario_MixedFields_NoCache(b *testing.B) {
 		}
 	}
 
-	engine, _ := guardian.NewGuardianFromPolices(nil, allPolicies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, allPolicies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}

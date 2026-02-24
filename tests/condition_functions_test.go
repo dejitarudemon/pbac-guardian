@@ -1,9 +1,12 @@
 /*
 Package tests contains direct tests for condition comparison functions.
 
-Tests check the work of internal condition functions (containsConditionFunc,
-eqConditionFunc, ltConditionFunc) directly through reflection, which allows
-improving coverage of these functions to 100%.
+Tests check the work of condition functions (ContainsConditionFunc,
+EqConditionFunc, LtConditionFunc) from implemented.DefaultConditionsFuncs,
+which allows improving coverage of these functions to 100%.
+
+The tests verify that condition functions work correctly with various
+data types, handle edge cases, and properly support context cancellation.
 */
 package tests
 
@@ -13,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 /*
@@ -24,30 +28,10 @@ including edge cases and error handling.
 func TestContainsConditionFunc(t *testing.T) {
 	ctx := context.Background()
 
-	// Get function through reflection
-	// conditionFunc is not exported, so we use reflection to call it
-	conditionToFunc := reflect.ValueOf(base.CONDITION_TO_FUNC)
-	containsFuncValue := conditionToFunc.MapIndex(reflect.ValueOf("Contains"))
-	if !containsFuncValue.IsValid() {
-		t.Fatalf("Contains function not found in CONDITION_TO_FUNC")
-	}
-
-	// Call function through reflection
-	containsFuncTyped := func(ctx context.Context, left, right any) (bool, error) {
-		// For nil values use reflect.ValueOf directly - this works for interface{}
-		ctxVal := reflect.ValueOf(ctx)
-		leftVal := reflect.ValueOf(left)
-		rightVal := reflect.ValueOf(right)
-
-		results := containsFuncValue.Call([]reflect.Value{ctxVal, leftVal, rightVal})
-		if len(results) != 2 {
-			t.Fatalf("unexpected number of return values")
-		}
-		var err error
-		if !results[1].IsNil() {
-			err = results[1].Interface().(error)
-		}
-		return results[0].Bool(), err
+	// Use default condition functions from implemented package
+	containsFunc := implemented.DefaultConditionsFuncs.Contains
+	if containsFunc == nil {
+		t.Fatalf("Contains function not found in DefaultConditionsFuncs")
 	}
 
 	tests := []struct {
@@ -107,7 +91,7 @@ func TestContainsConditionFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := containsFuncTyped(ctx, tt.left, tt.right)
+			got, err := containsFunc(ctx, tt.left, tt.right)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -139,42 +123,10 @@ including comparison of various types, nil values and structures with Comparable
 func TestEqConditionFunc(t *testing.T) {
 	ctx := context.Background()
 
-	// Get function through reflection
-	conditionToFunc := reflect.ValueOf(base.CONDITION_TO_FUNC)
-	eqFuncValue := conditionToFunc.MapIndex(reflect.ValueOf("Eq"))
-	if !eqFuncValue.IsValid() {
-		t.Fatalf("Eq function not found in CONDITION_TO_FUNC")
-	}
-
-	eqFuncTyped := func(ctx context.Context, left, right any) (bool, error) {
-		funcType := eqFuncValue.Type()
-
-		var ctxVal, leftVal, rightVal reflect.Value
-		if ctx == nil {
-			ctxVal = reflect.Zero(funcType.In(0))
-		} else {
-			ctxVal = reflect.ValueOf(ctx)
-		}
-		if left == nil {
-			leftVal = reflect.Zero(funcType.In(1))
-		} else {
-			leftVal = reflect.ValueOf(left)
-		}
-		if right == nil {
-			rightVal = reflect.Zero(funcType.In(2))
-		} else {
-			rightVal = reflect.ValueOf(right)
-		}
-
-		results := eqFuncValue.Call([]reflect.Value{ctxVal, leftVal, rightVal})
-		if len(results) != 2 {
-			t.Fatalf("unexpected number of return values")
-		}
-		var err error
-		if !results[1].IsNil() {
-			err = results[1].Interface().(error)
-		}
-		return results[0].Bool(), err
+	// Use default condition functions from implemented package
+	eqFunc := implemented.DefaultConditionsFuncs.Eq
+	if eqFunc == nil {
+		t.Fatalf("Eq function not found in DefaultConditionsFuncs")
 	}
 
 	tests := []struct {
@@ -251,7 +203,7 @@ func TestEqConditionFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := eqFuncTyped(ctx, tt.left, tt.right)
+			got, err := eqFunc(ctx, tt.left, tt.right)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -277,42 +229,10 @@ including comparison of primitive types, structures with Comparable and error ha
 func TestLtConditionFunc(t *testing.T) {
 	ctx := context.Background()
 
-	// Get function through reflection
-	conditionToFunc := reflect.ValueOf(base.CONDITION_TO_FUNC)
-	ltFuncValue := conditionToFunc.MapIndex(reflect.ValueOf("Lt"))
-	if !ltFuncValue.IsValid() {
-		t.Fatalf("Lt function not found in CONDITION_TO_FUNC")
-	}
-
-	ltFuncTyped := func(ctx context.Context, left, right any) (bool, error) {
-		funcType := ltFuncValue.Type()
-
-		var ctxVal, leftVal, rightVal reflect.Value
-		if ctx == nil {
-			ctxVal = reflect.Zero(funcType.In(0))
-		} else {
-			ctxVal = reflect.ValueOf(ctx)
-		}
-		if left == nil {
-			leftVal = reflect.Zero(funcType.In(1))
-		} else {
-			leftVal = reflect.ValueOf(left)
-		}
-		if right == nil {
-			rightVal = reflect.Zero(funcType.In(2))
-		} else {
-			rightVal = reflect.ValueOf(right)
-		}
-
-		results := ltFuncValue.Call([]reflect.Value{ctxVal, leftVal, rightVal})
-		if len(results) != 2 {
-			t.Fatalf("unexpected number of return values")
-		}
-		var err error
-		if !results[1].IsNil() {
-			err = results[1].Interface().(error)
-		}
-		return results[0].Bool(), err
+	// Use default condition functions from implemented package
+	ltFunc := implemented.DefaultConditionsFuncs.Lt
+	if ltFunc == nil {
+		t.Fatalf("Lt function not found in DefaultConditionsFuncs")
 	}
 
 	tests := []struct {
@@ -382,7 +302,7 @@ func TestLtConditionFunc(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ltFuncTyped(ctx, tt.left, tt.right)
+			got, err := ltFunc(ctx, tt.left, tt.right)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
