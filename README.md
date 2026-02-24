@@ -1,6 +1,6 @@
 # pbac-guardian
 
-Current version: 0.3.7
+Current version: 0.4.1
 
 [English](#english) | [Русский](#русский)
 
