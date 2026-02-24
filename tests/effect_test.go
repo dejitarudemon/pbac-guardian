@@ -9,7 +9,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -27,10 +27,10 @@ func TestEffectIsValid(t *testing.T) {
 		effect base.Effect
 		want   bool
 	}{
-		{"valid allow", base.Effect_ALLOW, true},        // Valid allow effect
-		{"valid deny", base.Effect_DENY, true},          // Valid deny effect
+		{"valid allow", base.Effect_ALLOW, true},          // Valid allow effect
+		{"valid deny", base.Effect_DENY, true},            // Valid deny effect
 		{"invalid effect", base.Effect("invalid"), false}, // Invalid effect
-		{"empty effect", base.Effect(""), false},        // Empty string
+		{"empty effect", base.Effect(""), false},          // Empty string
 	}
 
 	for _, tt := range tests {
@@ -42,4 +42,3 @@ func TestEffectIsValid(t *testing.T) {
 		})
 	}
 }
-

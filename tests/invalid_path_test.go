@@ -10,8 +10,8 @@ import (
 	"context"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	guardian "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -35,7 +35,7 @@ func TestEvaluateInvalidFieldPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestEvaluateInvalidNestedPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestEvaluateInvalidTargetPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -124,4 +124,3 @@ func TestEvaluateInvalidTargetPath(t *testing.T) {
 		t.Errorf("expected error for invalid target field path, got nil")
 	}
 }
-

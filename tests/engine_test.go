@@ -1,11 +1,11 @@
 /*
-Package tests contains tests for the noctis-guard library.
+Package tests contains tests for the pbac-guardian library.
 
 Tests check the functionality of creating an engine from policies and files,
 as well as policy evaluation for various access scenarios.
 
 This file is in the tests directory for test organization.
-Tests import the noctisguard package as regular library users.
+Tests import the guardian package as regular library users.
 */
 package tests
 
@@ -16,8 +16,8 @@ import (
 	"testing"
 	"time"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	guardian "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -29,30 +29,30 @@ objects that are checked against access policies.
 
 // User represents a system user with fields tagged for access
 type User struct {
-	Name string `noctis-guard:"name"` // User name
-	Role string `noctis-guard:"role"` // User role (admin, user, guest, etc.)
-	Age  int    `noctis-guard:"age"`  // User age
+	Name string `pbac-guardian:"name"` // User name
+	Role string `pbac-guardian:"role"` // User role (admin, user, guest, etc.)
+	Age  int    `pbac-guardian:"age"`  // User age
 }
 
 // Document represents a document with owner and type information
 type Document struct {
-	Owner string   `noctis-guard:"owner"` // Document owner
-	Type  string   `noctis-guard:"type"`  // Document type (public, private, etc.)
-	Tags  []string `noctis-guard:"tags"`  // Document tags
+	Owner string   `pbac-guardian:"owner"` // Document owner
+	Type  string   `pbac-guardian:"type"`  // Document type (public, private, etc.)
+	Tags  []string `pbac-guardian:"tags"`  // Document tags
 }
 
 // NestedUser represents a nested user structure for testing nested paths
 type NestedUser struct {
-	User User `noctis-guard:"user"` // Nested user
+	User User `pbac-guardian:"user"` // Nested user
 }
 
 // NestedDocument represents a nested document structure for testing nested paths
 type NestedDocument struct {
-	Doc Document `noctis-guard:"doc"` // Nested document
+	Doc Document `pbac-guardian:"doc"` // Nested document
 }
 
 /*
-TestNewNoctisFromPolices tests engine creation from a list of policies.
+TestNewGuardianFromPolices tests engine creation from a list of policies.
 
 The test checks:
   - Engine creation with valid policies
@@ -61,7 +61,7 @@ The test checks:
   - Path validation in conditions (format "entity:field")
   - Engine creation with empty policy list (should succeed)
 */
-func TestNewNoctisFromPolices(t *testing.T) {
+func TestNewGuardianFromPolices(t *testing.T) {
 	tests := []struct {
 		name     string
 		policies []base.Policy
@@ -152,7 +152,7 @@ func TestNewNoctisFromPolices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := noctisguard.NewNoctisFromPolices(nil, tt.policies)
+			engine, err := guardian.NewGuardianFromPolices(nil, tt.policies)
 			if tt.wantErr {
 				// Expect error
 				if err == nil {
@@ -172,14 +172,14 @@ func TestNewNoctisFromPolices(t *testing.T) {
 }
 
 /*
-TestNewNoctisFromFile tests engine creation from a JSON file.
+TestNewGuardianFromFile tests engine creation from a JSON file.
 
 The test checks:
   - Successful reading and parsing of valid JSON file with policies
   - Error handling when file is missing
-  - Correctness of engine creation from file (similar to NewNoctisFromPolices)
+  - Correctness of engine creation from file (similar to NewGuardianFromPolices)
 */
-func TestNewNoctisFromFile(t *testing.T) {
+func TestNewGuardianFromFile(t *testing.T) {
 	// Create temporary file with valid policies for testing
 	validPolicies := []base.Policy{
 		{
@@ -266,7 +266,7 @@ func TestNewNoctisFromFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := noctisguard.NewNoctisFromFile(nil, tt.path)
+			engine, err := guardian.NewGuardianFromFile(nil, tt.path)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -332,7 +332,7 @@ func TestEvaluate(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -442,7 +442,7 @@ func TestEvaluateWithContextCancellation(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -482,7 +482,7 @@ func TestEvaluateWithTimeout(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -530,7 +530,7 @@ func TestEvaluateNestedStructures(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}

@@ -1,6 +1,6 @@
-# noctis-guard
+# pbac-guardian
 
-Current version: 0.4.0
+Current version: 0.4.1
 
 [English](#english) | [Русский](#русский)
 
@@ -11,7 +11,7 @@ Current version: 0.4.0
 
 ## Overview
 
-`noctis-guard` is a lightweight, policy-based access control (PBAC) library for Go. It allows you to define access policies declaratively and check structures against these policies using a flexible system of conditions and effects.
+`pbac-guardian` is a lightweight, policy-based access control (PBAC) library for Go. It allows you to define access policies declaratively and check structures against these policies using a flexible system of conditions and effects.
 
 ## Features
 
@@ -27,26 +27,26 @@ Current version: 0.4.0
 ## Installation
 
 ```bash
-go get github.com/dejitarudemon/noctis-guard
+go get github.com/dejitarudemon/pbac-guardian
 ```
 
 ## Quick Start
 
 ### 1. Define Your Structures
 
-Tag your struct fields with `noctis-guard` tags:
+Tag your struct fields with `pbac-guardian` tags:
 
 ```go
 type User struct {
-    Name string `noctis-guard:"name"`
-    Role string `noctis-guard:"role"`
-    Age  int    `noctis-guard:"age"`
+    Name string `pbac-guardian:"name"`
+    Role string `pbac-guardian:"role"`
+    Age  int    `pbac-guardian:"age"`
 }
 
 type Document struct {
-    Owner string   `noctis-guard:"owner"`
-    Type  string   `noctis-guard:"type"`
-    Tags  []string `noctis-guard:"tags"`
+    Owner string   `pbac-guardian:"owner"`
+    Type  string   `pbac-guardian:"type"`
+    Tags  []string `pbac-guardian:"tags"`
 }
 ```
 
@@ -54,8 +54,8 @@ type Document struct {
 
 ```go
 import (
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 policies := []base.Policy{
@@ -87,15 +87,15 @@ policies := []base.Policy{
 ```go
 import (
     "context"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 // Create cache instance (optional - pass nil to disable caching)
 casher := implemented.NewDefaultCasher()
 
 // Create engine
-engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+engine, err := guardian.NewGuardianFromPolices(casher, policies)
 if err != nil {
     panic(err)
 }
@@ -133,17 +133,17 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 type User struct {
-    Name string `noctis-guard:"name"`
-    Role string `noctis-guard:"role"`
+    Name string `pbac-guardian:"name"`
+    Role string `pbac-guardian:"role"`
 }
 
 type Document struct {
-    Owner string `noctis-guard:"owner"`
+    Owner string `pbac-guardian:"owner"`
 }
 
 func main() {
@@ -162,7 +162,7 @@ func main() {
     }
 
     // Create engine (nil casher disables caching)
-    engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+    engine, err := guardian.NewGuardianFromPolices(nil, policies)
     if err != nil {
         panic(err)
     }
@@ -216,12 +216,12 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/pbac-guardian"
 )
 
 func main() {
     // Load policies from file (nil casher disables caching)
-    engine, err := noctisguard.NewNoctisFromFile(nil, "policies.json")
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json")
     if err != nil {
         panic(err)
     }
@@ -327,9 +327,9 @@ This tutorial shows how to enable the optional L1 cache for improved performance
 ```go
 import (
     "context"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
-    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 func main() {
@@ -346,7 +346,7 @@ func main() {
 
     // Enable caching for better performance with repeated field access
     casher := implemented.NewDefaultCasher()
-    engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+    engine, err := guardian.NewGuardianFromPolices(casher, policies)
     if err != nil {
         panic(err)
     }
@@ -416,15 +416,15 @@ func (u User) Compare(other any) (int, bool) {
 
 ## API Reference
 
-### Noctis Engine
+### Guardian Engine
 
-#### `NewNoctisFromPolices(casher base.Casher, policies []base.Policy) (*Noctis, error)`
+#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy) (*Guardian, error)`
 
-Creates a new Noctis instance from a list of policies. The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
+Creates a new Guardian instance from a list of policies. The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
 
-#### `NewNoctisFromFile(casher base.Casher, path string) (*Noctis, error)`
+#### `NewGuardianFromFile(casher base.Casher, path string) (*Guardian, error)`
 
-Creates a new Noctis instance from a JSON file. The `casher` parameter is optional - pass `nil` to disable caching.
+Creates a new Guardian instance from a JSON file. The `casher` parameter is optional - pass `nil` to disable caching.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 
@@ -472,7 +472,7 @@ The library provides typed errors:
 
 ## Обзор
 
-`noctis-guard` — это легковесная библиотека для контроля доступа на основе политик (PBAC) для Go. Она позволяет декларативно определять политики доступа и проверять структуры на соответствие этим политикам с использованием гибкой системы условий и эффектов.
+`pbac-guardian` — это легковесная библиотека для контроля доступа на основе политик (PBAC) для Go. Она позволяет декларативно определять политики доступа и проверять структуры на соответствие этим политикам с использованием гибкой системы условий и эффектов.
 
 ## Возможности
 
@@ -488,26 +488,26 @@ The library provides typed errors:
 ## Установка
 
 ```bash
-go get github.com/dejitarudemon/noctis-guard
+go get github.com/dejitarudemon/pbac-guardian
 ```
 
 ## Быстрый старт
 
 ### 1. Определите свои структуры
 
-Помечайте поля структур тегами `noctis-guard`:
+Помечайте поля структур тегами `pbac-guardian`:
 
 ```go
 type User struct {
-    Name string `noctis-guard:"name"`
-    Role string `noctis-guard:"role"`
-    Age  int    `noctis-guard:"age"`
+    Name string `pbac-guardian:"name"`
+    Role string `pbac-guardian:"role"`
+    Age  int    `pbac-guardian:"age"`
 }
 
 type Document struct {
-    Owner string   `noctis-guard:"owner"`
-    Type  string   `noctis-guard:"type"`
-    Tags  []string `noctis-guard:"tags"`
+    Owner string   `pbac-guardian:"owner"`
+    Type  string   `pbac-guardian:"type"`
+    Tags  []string `pbac-guardian:"tags"`
 }
 ```
 
@@ -515,8 +515,8 @@ type Document struct {
 
 ```go
 import (
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 policies := []base.Policy{
@@ -548,15 +548,15 @@ policies := []base.Policy{
 ```go
 import (
     "context"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 // Создание экземпляра кеша (опционально - передайте nil для отключения кеширования)
 casher := implemented.NewDefaultCasher()
 
 // Создание движка
-engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+engine, err := guardian.NewGuardianFromPolices(casher, policies)
 if err != nil {
     panic(err)
 }
@@ -594,17 +594,17 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 type User struct {
-    Name string `noctis-guard:"name"`
-    Role string `noctis-guard:"role"`
+    Name string `pbac-guardian:"name"`
+    Role string `pbac-guardian:"role"`
 }
 
 type Document struct {
-    Owner string `noctis-guard:"owner"`
+    Owner string `pbac-guardian:"owner"`
 }
 
 func main() {
@@ -623,7 +623,7 @@ func main() {
     }
 
     // Создание движка (nil casher отключает кеширование)
-    engine, err := noctisguard.NewNoctisFromPolices(nil, policies)
+    engine, err := guardian.NewGuardianFromPolices(nil, policies)
     if err != nil {
         panic(err)
     }
@@ -677,12 +677,12 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/dejitarudemon/noctis-guard"
+    "github.com/dejitarudemon/pbac-guardian"
 )
 
 func main() {
     // Загрузка политик из файла (nil casher отключает кеширование)
-    engine, err := noctisguard.NewNoctisFromFile(nil, "policies.json")
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json")
     if err != nil {
         panic(err)
     }
@@ -788,9 +788,9 @@ func main() {
 ```go
 import (
     "context"
-    "github.com/dejitarudemon/noctis-guard"
-    "github.com/dejitarudemon/noctis-guard/internal/base"
-    "github.com/dejitarudemon/noctis-guard/internal/implemented"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 func main() {
@@ -807,7 +807,7 @@ func main() {
 
     // Включить кеширование для лучшей производительности при повторном доступе к полям
     casher := implemented.NewDefaultCasher()
-    engine, err := noctisguard.NewNoctisFromPolices(casher, policies)
+    engine, err := guardian.NewGuardianFromPolices(casher, policies)
     if err != nil {
         panic(err)
     }
@@ -877,15 +877,15 @@ func (u User) Compare(other any) (int, bool) {
 
 ## Справочник API
 
-### Движок Noctis
+### Движок Guardian
 
-#### `NewNoctisFromPolices(casher base.Casher, policies []base.Policy) (*Noctis, error)`
+#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy) (*Guardian, error)`
 
-Создает новый экземпляр Noctis из списка политик. Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
+Создает новый экземпляр Guardian из списка политик. Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
 
-#### `NewNoctisFromFile(casher base.Casher, path string) (*Noctis, error)`
+#### `NewGuardianFromFile(casher base.Casher, path string) (*Guardian, error)`
 
-Создает новый экземпляр Noctis из JSON файла. Параметр `casher` опционален - передайте `nil` для отключения кеширования.
+Создает новый экземпляр Guardian из JSON файла. Параметр `casher` опционален - передайте `nil` для отключения кеширования.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 

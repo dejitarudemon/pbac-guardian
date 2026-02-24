@@ -10,7 +10,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
 /*
@@ -159,4 +159,3 @@ func TestErrNotComparableStruct(t *testing.T) {
 		t.Errorf("expected error message %q, got %q", expectedMsg, base.ErrNotComparableStruct.Error())
 	}
 }
-

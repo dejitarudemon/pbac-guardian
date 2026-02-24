@@ -35,10 +35,10 @@ Fields:
 Example usage:
 
 	type User struct {
-		Name string   `noctis-guard:"name"`
-		Role string   `noctis-guard:"role"`
-		Age  int      `noctis-guard:"age"`
-		Tags []string `noctis-guard:"tags"`
+		Name string   `pbac-guardian:"name"`
+		Role string   `pbac-guardian:"role"`
+		Age  int      `pbac-guardian:"age"`
+		Tags []string `pbac-guardian:"tags"`
 	}
 
 	// Equality check with literal

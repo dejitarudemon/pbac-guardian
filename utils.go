@@ -1,9 +1,9 @@
-package noctisguard
+package guardian
 
 import (
 	"slices"
 
-	"github.com/dejitarudemon/noctis-guard/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
 	"github.com/google/uuid"
 )
 

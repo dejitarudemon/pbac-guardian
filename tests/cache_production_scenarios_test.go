@@ -12,9 +12,9 @@ import (
 	"context"
 	"testing"
 
-	noctisguard "github.com/dejitarudemon/noctis-guard"
-	"github.com/dejitarudemon/noctis-guard/internal/base"
-	"github.com/dejitarudemon/noctis-guard/internal/implemented"
+	guardian "github.com/dejitarudemon/pbac-guardian"
+	"github.com/dejitarudemon/pbac-guardian/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 // Helper to create policies with repeated field access
@@ -26,7 +26,7 @@ func createPoliciesWithFieldAccess(action string, field string, count int, acces
 	// To simulate 'accessCount' accesses, we need to create more policies
 	totalPolicies := count * accessCount
 	policies := make([]base.Policy, totalPolicies)
-	
+
 	for i := 0; i < totalPolicies; i++ {
 		conditions := make(map[string]base.Condition)
 		// Each policy accesses the field once, but we create multiple policies
@@ -94,7 +94,7 @@ func BenchmarkProductionScenario_20Policies_3Accesses(b *testing.B) {
 	policies := createMultipleActions(actions, 2, 3) // 10 actions × 2 policies = 20 policies
 
 	casher := implemented.NewDefaultCasher()
-	engine, _ := noctisguard.NewNoctisFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -111,7 +111,7 @@ func BenchmarkProductionScenario_20Policies_3Accesses_NoCache(b *testing.B) {
 		"doc:read", "doc:write", "doc:delete", "doc:update", "doc:create"}
 	policies := createMultipleActions(actions, 2, 3)
 
-	engine, _ := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -133,7 +133,7 @@ func BenchmarkProductionScenario_30Policies_5Accesses(b *testing.B) {
 	policies := createMultipleActions(actions, 3, 5) // 10 actions × 3 policies = 30 policies
 
 	casher := implemented.NewDefaultCasher()
-	engine, _ := noctisguard.NewNoctisFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -150,7 +150,7 @@ func BenchmarkProductionScenario_30Policies_5Accesses_NoCache(b *testing.B) {
 		"doc:read", "doc:write", "doc:delete", "doc:update", "doc:create"}
 	policies := createMultipleActions(actions, 3, 5)
 
-	engine, _ := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -172,7 +172,7 @@ func BenchmarkProductionScenario_30Policies_10Accesses(b *testing.B) {
 	policies := createMultipleActions(actions, 3, 10) // 10 actions × 3 policies = 30 policies, 10 accesses each
 
 	casher := implemented.NewDefaultCasher()
-	engine, _ := noctisguard.NewNoctisFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -189,7 +189,7 @@ func BenchmarkProductionScenario_30Policies_10Accesses_NoCache(b *testing.B) {
 		"doc:read", "doc:write", "doc:delete", "doc:update", "doc:create"}
 	policies := createMultipleActions(actions, 3, 10)
 
-	engine, _ := noctisguard.NewNoctisFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -262,7 +262,7 @@ func BenchmarkProductionScenario_MixedFields(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, _ := noctisguard.NewNoctisFromPolices(casher, allPolicies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, allPolicies)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -328,7 +328,7 @@ func BenchmarkProductionScenario_MixedFields_NoCache(b *testing.B) {
 		}
 	}
 
-	engine, _ := noctisguard.NewNoctisFromPolices(nil, allPolicies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, allPolicies)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -339,4 +339,3 @@ func BenchmarkProductionScenario_MixedFields_NoCache(b *testing.B) {
 		_, _ = engine.Evaluate(ctx, source, target, action)
 	}
 }
-
