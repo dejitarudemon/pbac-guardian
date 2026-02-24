@@ -31,16 +31,6 @@ const (
 	MIN_ACTION_PARTS = 2
 )
 
-var (
-	// map of functions for conditions
-	CONDITION_TO_FUNC = map[string]ConditionFunc{
-		"Contains": containsConditionFunc,
-		"Eq":       eqConditionFunc,
-		"Neq":      neqConditionFunc,
-		"Lt":       ltConditionFunc,
-	}
-)
-
 /*
 Policy represents a single access policy with a set of conditions.
 
@@ -107,10 +97,11 @@ Example usage:
 	}
 */
 type Policy struct {
-	Name       string               `json:"name"`
-	Action     string               `json:"action"`
-	Effect     Effect               `json:"effect"`
-	Conditions map[string]Condition `json:"conditions"`
+	Name          string                `json:"name"`
+	Action        string                `json:"action"`
+	Effect        Effect                `json:"effect"`
+	Conditions    map[string]Condition  `json:"conditions"`
+	ConditionsMap *ConditionFuncsConfig `json:"-"`
 }
 
 /*
@@ -381,7 +372,7 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 				return false, ErrCancelled
 			default:
 				if !c.Field(i).IsZero() {
-					if f, ok := CONDITION_TO_FUNC[t.Field(i).Name]; ok {
+					if f := p.ConditionsMap.Select(t.Field(i).Name); f != nil {
 
 						right := c.Field(i).Interface()
 
