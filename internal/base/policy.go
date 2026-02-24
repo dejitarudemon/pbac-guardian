@@ -33,7 +33,7 @@ const (
 
 var (
 	// map of functions for conditions
-	CONDITION_TO_FUNC = map[string]conditionFunc{
+	CONDITION_TO_FUNC = map[string]ConditionFunc{
 		"Contains": containsConditionFunc,
 		"Eq":       eqConditionFunc,
 		"Neq":      neqConditionFunc,

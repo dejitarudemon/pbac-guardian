@@ -81,7 +81,7 @@ type Condition struct {
 }
 
 /*
-conditionFunc represents a function for checking a condition between two values.
+ConditionFunc represents a function for checking a condition between two values.
 
 Functions of this type are used to check conditions in policies. Argument order
 matters for Contains and Lt operations (left and right are not interchangeable).
@@ -98,7 +98,7 @@ Returns:
   - bool - comparison result (true if condition is met, false otherwise)
   - err - comparison execution error (nil if comparison successful, ErrCancelled on context cancellation)
 */
-type conditionFunc func(ctx context.Context, left, right any) (bool, error)
+type ConditionFunc func(ctx context.Context, left, right any) (bool, error)
 
 /*
 containsConditionFunc checks if value left is in list right.
