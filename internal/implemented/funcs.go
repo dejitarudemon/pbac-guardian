@@ -10,6 +10,15 @@ import (
 
 const SUPPORTED_LT_PRIMITIVES = "int|uint|float|string"
 
+var (
+	DefaultConditionsFuncs = base.ConditionFuncsConfig{
+		Contains: ContainsConditionFunc,
+		Eq:       EqConditionFunc,
+		Neq:      NeqConditionFunc,
+		Lt:       LtConditionFunc,
+	}
+)
+
 /*
 ContainsConditionFunc checks if value left is in list right.
 
