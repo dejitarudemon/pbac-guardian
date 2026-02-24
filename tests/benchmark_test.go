@@ -2,10 +2,14 @@
 Package tests contains benchmark tests for measuring library performance.
 
 Benchmarks check performance of main operations:
-  - Engine creation from policies
+  - Engine creation from policies (with and without cache)
   - Policy evaluation for various scenarios
-  - Working with various condition types
+  - Working with various condition types (Eq, Neq, Lt, Contains)
   - Handling nested structures
+  - Cache performance comparison (with cache vs without cache)
+
+The benchmarks help identify performance bottlenecks and measure
+the impact of caching on overall evaluation speed.
 */
 package tests
 
@@ -55,7 +59,7 @@ func BenchmarkNewGuardianFromPolices(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := guardian.NewGuardianFromPolices(nil, policies)
+		_, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 		if err != nil {
 			b.Fatalf("failed to create engine: %v", err)
 		}
@@ -79,7 +83,7 @@ func BenchmarkEvaluateSimple(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -124,7 +128,7 @@ func BenchmarkEvaluateMultipleConditions(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -161,7 +165,7 @@ func BenchmarkEvaluateContains(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -198,7 +202,7 @@ func BenchmarkEvaluateLt(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -236,7 +240,7 @@ func BenchmarkEvaluateNestedStructures(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -305,7 +309,7 @@ func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -343,7 +347,7 @@ func BenchmarkEvaluateFieldComparison(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -379,7 +383,7 @@ func BenchmarkEvaluateDenyPolicy(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -424,7 +428,7 @@ func BenchmarkEvaluateLargeSlice(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -460,7 +464,7 @@ func BenchmarkEvaluateNoMatch(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -514,7 +518,7 @@ func BenchmarkEvaluateWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -568,7 +572,7 @@ func BenchmarkEvaluateWithoutCache(b *testing.B) {
 	}
 
 	// Use nil casher to disable caching
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -636,7 +640,7 @@ func BenchmarkEvaluateMultiplePoliciesWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -673,7 +677,7 @@ func BenchmarkEvaluateNestedStructuresWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}

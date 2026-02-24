@@ -10,7 +10,8 @@ package base
 import "slices"
 
 var (
-	// List of available policy effects
+	// AVALIABLE_EFFECTS is a list of all valid policy effect values.
+	// Used internally for validation of effect values in policies.
 	AVALIABLE_EFFECTS = []Effect{
 		Effect_ALLOW, // allow
 		Effect_DENY,  // deny

@@ -1,6 +1,6 @@
 # pbac-guardian
 
-Current version: 0.4.1
+Current version: 0.4.2
 
 [English](#english) | [Русский](#русский)
 
@@ -95,7 +95,7 @@ import (
 casher := implemented.NewDefaultCasher()
 
 // Create engine
-engine, err := guardian.NewGuardianFromPolices(casher, policies)
+engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
 if err != nil {
     panic(err)
 }
@@ -161,8 +161,8 @@ func main() {
         },
     }
 
-    // Create engine (nil casher disables caching)
-    engine, err := guardian.NewGuardianFromPolices(nil, policies)
+    // Create engine (nil casher disables caching, nil funcConfig uses defaults)
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
     if err != nil {
         panic(err)
     }
@@ -220,8 +220,8 @@ import (
 )
 
 func main() {
-    // Load policies from file (nil casher disables caching)
-    engine, err := guardian.NewGuardianFromFile(nil, "policies.json")
+    // Load policies from file (nil casher disables caching, nil funcConfig uses defaults)
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json", nil)
     if err != nil {
         panic(err)
     }
@@ -346,7 +346,7 @@ func main() {
 
     // Enable caching for better performance with repeated field access
     casher := implemented.NewDefaultCasher()
-    engine, err := guardian.NewGuardianFromPolices(casher, policies)
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
     if err != nil {
         panic(err)
     }
@@ -389,7 +389,84 @@ The cache provides significant performance improvements in production scenarios:
 
 *Benchmarks conducted with 10+ actions and 20-30 policies per evaluation. Cache becomes beneficial at 3+ field accesses within a single action evaluation.*
 
-### Tutorial 7: Custom Types with Comparable Interface
+### Tutorial 7: Custom Condition Functions
+
+This tutorial shows how to customize condition functions using the `funcConfig` parameter.
+
+```go
+import (
+    "context"
+    "strings"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
+)
+
+func main() {
+    // Create custom condition function
+    customEqFunc := func(ctx context.Context, left, right any) (bool, error) {
+        // Custom logic: case-insensitive string comparison
+        if ctx.Err() != nil {
+            return false, base.ErrCancelled
+        }
+        leftStr, ok1 := left.(string)
+        rightStr, ok2 := right.(string)
+        if !ok1 || !ok2 {
+            return false, base.NewErrInvalidType("string", left)
+        }
+        return strings.EqualFold(leftStr, rightStr), nil
+    }
+
+    // Create custom configuration
+    customConfig := &base.ConditionFuncsConfig{
+        Contains: implemented.DefaultConditionsFuncs.Contains,
+        Eq:       customEqFunc, // Use custom function
+        Neq:      implemented.DefaultConditionsFuncs.Neq,
+        Lt:       implemented.DefaultConditionsFuncs.Lt,
+    }
+
+    policies := []base.Policy{
+        {
+            Name:   "case-insensitive-admin",
+            Action: "user:read:document",
+            Effect: base.Effect_ALLOW,
+            Conditions: map[string]base.Condition{
+                "source:role": {Eq: "ADMIN"}, // Will match "admin", "Admin", "ADMIN", etc.
+            },
+        },
+    }
+
+    // Create engine with custom condition functions
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, customConfig)
+    if err != nil {
+        panic(err)
+    }
+
+    ctx := context.Background()
+    user := User{Name: "alice", Role: "admin"} // lowercase "admin"
+    doc := Document{Owner: "alice", Type: "public"}
+
+    // Custom function will match case-insensitively
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("Access allowed: %v\n", allowed) // true (case-insensitive match)
+}
+```
+
+**When to use custom functions:**
+- Need special comparison logic (case-insensitive, fuzzy matching, etc.)
+- Integration with external validation services
+- Custom business rules for condition evaluation
+
+**When to use defaults (pass nil):**
+- Standard equality, inequality, less-than, and contains operations
+- Most common use cases
+- When performance is critical (default functions are optimized)
+
+### Tutorial 8: Custom Types with Comparable Interface
 
 For custom types that need special comparison logic, implement the `Comparable` interface.
 
@@ -418,13 +495,17 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Guardian Engine
 
-#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy) (*Guardian, error)`
+#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy, funcConfig *base.ConditionFuncsConfig) (*Guardian, error)`
 
-Creates a new Guardian instance from a list of policies. The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
+Creates a new Guardian instance from a list of policies. 
+- The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
+- The `funcConfig` parameter is optional - pass `nil` to use default condition functions, or provide a custom `ConditionFuncsConfig` to customize condition evaluation logic.
 
-#### `NewGuardianFromFile(casher base.Casher, path string) (*Guardian, error)`
+#### `NewGuardianFromFile(casher base.Casher, path string, funcConfig *base.ConditionFuncsConfig) (*Guardian, error)`
 
-Creates a new Guardian instance from a JSON file. The `casher` parameter is optional - pass `nil` to disable caching.
+Creates a new Guardian instance from a JSON file.
+- The `casher` parameter is optional - pass `nil` to disable caching.
+- The `funcConfig` parameter is optional - pass `nil` to use default condition functions, or provide a custom `ConditionFuncsConfig` to customize condition evaluation logic.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 
@@ -556,7 +637,7 @@ import (
 casher := implemented.NewDefaultCasher()
 
 // Создание движка
-engine, err := guardian.NewGuardianFromPolices(casher, policies)
+engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
 if err != nil {
     panic(err)
 }
@@ -622,8 +703,8 @@ func main() {
         },
     }
 
-    // Создание движка (nil casher отключает кеширование)
-    engine, err := guardian.NewGuardianFromPolices(nil, policies)
+    // Создание движка (nil casher отключает кеширование, nil funcConfig использует значения по умолчанию)
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
     if err != nil {
         panic(err)
     }
@@ -681,8 +762,8 @@ import (
 )
 
 func main() {
-    // Загрузка политик из файла (nil casher отключает кеширование)
-    engine, err := guardian.NewGuardianFromFile(nil, "policies.json")
+    // Загрузка политик из файла (nil casher отключает кеширование, nil funcConfig использует значения по умолчанию)
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json", nil)
     if err != nil {
         panic(err)
     }
@@ -807,7 +888,7 @@ func main() {
 
     // Включить кеширование для лучшей производительности при повторном доступе к полям
     casher := implemented.NewDefaultCasher()
-    engine, err := guardian.NewGuardianFromPolices(casher, policies)
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
     if err != nil {
         panic(err)
     }
@@ -850,7 +931,84 @@ func main() {
 
 *Бенчмарки проведены с 10+ действиями и 20-30 политиками на оценку. Кеш становится выгодным при 3+ обращениях к полю в рамках одной оценки действия.*
 
-### Туториал 7: Кастомные типы с интерфейсом Comparable
+### Туториал 7: Кастомные функции условий
+
+Этот туториал показывает, как кастомизировать функции условий с помощью параметра `funcConfig`.
+
+```go
+import (
+    "context"
+    "strings"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
+)
+
+func main() {
+    // Создание кастомной функции условия
+    customEqFunc := func(ctx context.Context, left, right any) (bool, error) {
+        // Кастомная логика: сравнение строк без учета регистра
+        if ctx.Err() != nil {
+            return false, base.ErrCancelled
+        }
+        leftStr, ok1 := left.(string)
+        rightStr, ok2 := right.(string)
+        if !ok1 || !ok2 {
+            return false, base.NewErrInvalidType("string", left)
+        }
+        return strings.EqualFold(leftStr, rightStr), nil
+    }
+
+    // Создание кастомной конфигурации
+    customConfig := &base.ConditionFuncsConfig{
+        Contains: implemented.DefaultConditionsFuncs.Contains,
+        Eq:       customEqFunc, // Использовать кастомную функцию
+        Neq:      implemented.DefaultConditionsFuncs.Neq,
+        Lt:       implemented.DefaultConditionsFuncs.Lt,
+    }
+
+    policies := []base.Policy{
+        {
+            Name:   "case-insensitive-admin",
+            Action: "user:read:document",
+            Effect: base.Effect_ALLOW,
+            Conditions: map[string]base.Condition{
+                "source:role": {Eq: "ADMIN"}, // Будет совпадать с "admin", "Admin", "ADMIN" и т.д.
+            },
+        },
+    }
+
+    // Создание движка с кастомными функциями условий
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, customConfig)
+    if err != nil {
+        panic(err)
+    }
+
+    ctx := context.Background()
+    user := User{Name: "alice", Role: "admin"} // строчные буквы "admin"
+    doc := Document{Owner: "alice", Type: "public"}
+
+    // Кастомная функция будет совпадать без учета регистра
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("Доступ разрешен: %v\n", allowed) // true (совпадение без учета регистра)
+}
+```
+
+**Когда использовать кастомные функции:**
+- Нужна специальная логика сравнения (без учета регистра, нечеткое совпадение и т.д.)
+- Интеграция с внешними сервисами валидации
+- Кастомные бизнес-правила для оценки условий
+
+**Когда использовать значения по умолчанию (передать nil):**
+- Стандартные операции равенства, неравенства, меньше и содержит
+- Большинство распространенных случаев использования
+- Когда производительность критична (функции по умолчанию оптимизированы)
+
+### Туториал 8: Кастомные типы с интерфейсом Comparable
 
 Для кастомных типов, требующих специальной логики сравнения, реализуйте интерфейс `Comparable`.
 
@@ -879,13 +1037,17 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Движок Guardian
 
-#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy) (*Guardian, error)`
+#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy, funcConfig *base.ConditionFuncsConfig) (*Guardian, error)`
 
-Создает новый экземпляр Guardian из списка политик. Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
+Создает новый экземпляр Guardian из списка политик.
+- Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
+- Параметр `funcConfig` опционален - передайте `nil` для использования функций условий по умолчанию, или предоставьте кастомный `ConditionFuncsConfig` для кастомизации логики оценки условий.
 
-#### `NewGuardianFromFile(casher base.Casher, path string) (*Guardian, error)`
+#### `NewGuardianFromFile(casher base.Casher, path string, funcConfig *base.ConditionFuncsConfig) (*Guardian, error)`
 
-Создает новый экземпляр Guardian из JSON файла. Параметр `casher` опционален - передайте `nil` для отключения кеширования.
+Создает новый экземпляр Guardian из JSON файла.
+- Параметр `casher` опционален - передайте `nil` для отключения кеширования.
+- Параметр `funcConfig` опционален - передайте `nil` для использования функций условий по умолчанию, или предоставьте кастомный `ConditionFuncsConfig` для кастомизации логики оценки условий.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 

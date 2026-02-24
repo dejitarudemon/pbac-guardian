@@ -28,7 +28,8 @@ const (
 )
 
 var (
-	// List of valid entities
+	// AVALIABLE_ENTITIES is a list of all valid entity values.
+	// Used internally for validation of entity values in paths.
 	AVALIABLE_ENTITIES = []Entity{
 		Entity_SOURCE,
 		Entity_TARGET,

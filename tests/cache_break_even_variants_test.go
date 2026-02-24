@@ -2,7 +2,11 @@
 Package tests contains benchmarks to test break-even point with different numbers of field accesses.
 
 These benchmarks test scenarios with 1, 2, 3, 4, and 5 policies accessing the same field
-to determine when cache becomes beneficial.
+to determine when cache becomes beneficial. The benchmarks compare performance with cache
+enabled (DefaultCasher) versus without cache (nil casher) to measure the break-even point.
+
+Results show that cache becomes beneficial when the same field is accessed 3+ times
+within a single action evaluation.
 */
 package tests
 
@@ -34,7 +38,7 @@ func createPoliciesWithRepeatedField(field string, count int) []base.Policy {
 func BenchmarkEvaluate1PolicyWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 1)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -47,7 +51,7 @@ func BenchmarkEvaluate1PolicyWithCache(b *testing.B) {
 
 func BenchmarkEvaluate1PolicyWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 1)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -61,7 +65,7 @@ func BenchmarkEvaluate1PolicyWithoutCache(b *testing.B) {
 func BenchmarkEvaluate2PoliciesWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 2)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -74,7 +78,7 @@ func BenchmarkEvaluate2PoliciesWithCache(b *testing.B) {
 
 func BenchmarkEvaluate2PoliciesWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 2)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -88,7 +92,7 @@ func BenchmarkEvaluate2PoliciesWithoutCache(b *testing.B) {
 func BenchmarkEvaluate3PoliciesWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 3)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -101,7 +105,7 @@ func BenchmarkEvaluate3PoliciesWithCache(b *testing.B) {
 
 func BenchmarkEvaluate3PoliciesWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 3)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -115,7 +119,7 @@ func BenchmarkEvaluate3PoliciesWithoutCache(b *testing.B) {
 func BenchmarkEvaluate4PoliciesWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 4)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -128,7 +132,7 @@ func BenchmarkEvaluate4PoliciesWithCache(b *testing.B) {
 
 func BenchmarkEvaluate4PoliciesWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 4)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -142,7 +146,7 @@ func BenchmarkEvaluate4PoliciesWithoutCache(b *testing.B) {
 func BenchmarkEvaluate5PoliciesWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 5)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies)
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -155,7 +159,7 @@ func BenchmarkEvaluate5PoliciesWithCache(b *testing.B) {
 
 func BenchmarkEvaluate5PoliciesWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 5)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies)
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}

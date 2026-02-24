@@ -3,7 +3,11 @@ Package tests contains tests for public methods of Policy structure in base pack
 
 Tests check only exported methods:
   - Evaluate - policy evaluation for given source, target and action
+    (requires ConditionsMap to be set with condition functions)
   - IsValid - policy validation
+
+The tests verify that Policy methods work correctly with various data types,
+handle multiple conditions, and properly validate policy structure.
 */
 package tests
 
@@ -12,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 /*
@@ -165,6 +170,10 @@ func TestPolicyEvaluate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Set default condition functions config for policy
+			if tt.policy.ConditionsMap == nil {
+				tt.policy.ConditionsMap = &implemented.DefaultConditionsFuncs
+			}
 			// Use nil casher and empty sessionID for direct Policy.Evaluate tests
 			got, err := tt.policy.Evaluate(ctx, tt.source, tt.target, tt.action, nil, "")
 			if tt.wantErr {

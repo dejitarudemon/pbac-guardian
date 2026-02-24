@@ -3,6 +3,11 @@ Package tests contains tests for comparison conditions in policies.
 
 Tests check the work of various conditions (Contains, Eq, Neq, Lt) through
 the public API of the library, which allows improving coverage of internal condition functions.
+The tests verify that conditions work correctly with:
+  - Different data types (strings, integers, slices)
+  - Field comparisons between source and target structures
+  - Multiple conditions combined in a single policy (logical AND)
+  - Edge cases (nil values, empty slices, incompatible types)
 */
 package tests
 
@@ -133,7 +138,7 @@ func TestContainsCondition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
@@ -294,7 +299,7 @@ func TestLtCondition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
@@ -402,7 +407,7 @@ func TestEqConditionExtended(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
@@ -514,7 +519,7 @@ func TestMultipleConditionsCombined(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}

@@ -3,6 +3,8 @@ Package tests contains tests for public API of base package.
 
 Tests check Effect value validation and correctness of working
 with ALLOW and DENY effects through public IsValid method.
+The tests verify that only Effect_ALLOW and Effect_DENY are
+considered valid effect values.
 */
 package tests
 

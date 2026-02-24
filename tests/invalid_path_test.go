@@ -2,7 +2,11 @@
 Package tests contains tests for handling invalid field paths.
 
 Tests check that the library correctly handles errors for invalid paths
-to fields in policy conditions.
+to fields in policy conditions. The tests verify that ErrInvalidPath is
+returned when:
+  - Field path does not exist in source or target structure
+  - Path format is invalid (missing entity or field name)
+  - Nested path references non-existent nested structure
 */
 package tests
 
@@ -35,7 +39,7 @@ func TestEvaluateInvalidFieldPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -72,7 +76,7 @@ func TestEvaluateInvalidNestedPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -109,7 +113,7 @@ func TestEvaluateInvalidTargetPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}

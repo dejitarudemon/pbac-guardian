@@ -18,11 +18,15 @@ This file contains custom errors for the engine base
 
 var (
 	// ErrNotComparableStruct represents an error that occurs when the left argument
-	// is a structure but does not implement the Compare() method
+	// is a structure but does not implement the Compare() method from base.Comparable interface.
+	// This error is returned by LtConditionFunc when trying to compare structures
+	// that don't implement custom comparison logic.
 	ErrNotComparableStruct = errors.New("left argument is a struct, but it doesn't implement Comapre() method")
 
 	// ErrCancelled represents an error that occurs when an operation is cancelled through context.Context.
 	// Used to interrupt long-running condition checking operations when context is cancelled.
+	// This error is returned by condition functions and policy evaluation methods when
+	// context.Context signals cancellation (via ctx.Done()).
 	ErrCancelled = errors.New("cancelled by context")
 )
 

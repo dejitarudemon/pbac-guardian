@@ -162,7 +162,7 @@ func BenchmarkEvaluateWithRepeatedFields(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -227,7 +227,7 @@ func BenchmarkEvaluateWithoutCacheRepeatedFields(b *testing.B) {
 	}
 
 	// No cache
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}

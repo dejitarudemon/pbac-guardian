@@ -1,3 +1,64 @@
+## v 0.4.2
+
+### Русский
+
+**Добавлено:**
+
+- Параметр `funcConfig` в `NewGuardianFromPolices` и `NewGuardianFromFile` для кастомизации функций условий
+- Новые тесты для проверки кастомных функций условий (`tests/funcconfig_test.go`)
+- Тесты для `ConditionFuncsConfig.Select` метода (`tests/config_test.go`)
+- Тесты для изоляции сессий и работы кеша (`tests/session_test.go`)
+
+**Обновлено:**
+
+- Все godoc-комментарии в основном коде обновлены и актуализированы
+- Все godoc-комментарии в тестах обновлены и актуализированы
+- Все тесты обновлены для поддержки нового параметра `funcConfig`
+- Комментарии в тестах обновлены для отражения использования `DefaultConditionsFuncs`
+
+**Исправлено:**
+
+- Все вызовы `NewGuardianFromPolices` и `NewGuardianFromFile` в тестах обновлены с добавлением параметра `funcConfig`
+- Тесты `condition_functions_test.go` обновлены для использования `DefaultConditionsFuncs` напрямую
+- Тесты `policy_test.go` обновлены для установки `ConditionsMap` перед вызовом `Evaluate`
+
+**Документация:**
+
+- Обновлены все godoc-комментарии для отражения текущего API
+- Добавлена информация о параметре `funcConfig` во все соответствующие комментарии
+- Обновлены описания функций условий и их использования
+
+---
+
+### English
+
+**Added:**
+
+- `funcConfig` parameter in `NewGuardianFromPolices` and `NewGuardianFromFile` for customizing condition functions
+- New tests for custom condition functions (`tests/funcconfig_test.go`)
+- Tests for `ConditionFuncsConfig.Select` method (`tests/config_test.go`)
+- Tests for session isolation and cache behavior (`tests/session_test.go`)
+
+**Updated:**
+
+- All godoc comments in main code updated and modernized
+- All godoc comments in tests updated and modernized
+- All tests updated to support new `funcConfig` parameter
+- Test comments updated to reflect use of `DefaultConditionsFuncs`
+
+**Fixed:**
+
+- All calls to `NewGuardianFromPolices` and `NewGuardianFromFile` in tests updated with `funcConfig` parameter
+- `condition_functions_test.go` tests updated to use `DefaultConditionsFuncs` directly
+- `policy_test.go` tests updated to set `ConditionsMap` before calling `Evaluate`
+
+**Documentation:**
+
+- All godoc comments updated to reflect current API
+- Added information about `funcConfig` parameter to all relevant comments
+- Updated descriptions of condition functions and their usage
+
+
 ## v 0.4.1
 
 ### Русский

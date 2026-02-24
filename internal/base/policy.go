@@ -31,16 +31,6 @@ const (
 	MIN_ACTION_PARTS = 2
 )
 
-var (
-	// map of functions for conditions
-	CONDITION_TO_FUNC = map[string]conditionFunc{
-		"Contains": containsConditionFunc,
-		"Eq":       eqConditionFunc,
-		"Neq":      neqConditionFunc,
-		"Lt":       ltConditionFunc,
-	}
-)
-
 /*
 Policy represents a single access policy with a set of conditions.
 
@@ -107,10 +97,11 @@ Example usage:
 	}
 */
 type Policy struct {
-	Name       string               `json:"name"`
-	Action     string               `json:"action"`
-	Effect     Effect               `json:"effect"`
-	Conditions map[string]Condition `json:"conditions"`
+	Name          string                `json:"name"`
+	Action        string                `json:"action"`
+	Effect        Effect                `json:"effect"`
+	Conditions    map[string]Condition  `json:"conditions"`
+	ConditionsMap *ConditionFuncsConfig `json:"-"`
 }
 
 /*
@@ -176,9 +167,10 @@ func (p *Policy) parsePath(path string) (*Entity, []string, error) {
 /*
 getValue finds a field in a structure by path and returns its value.
 
-The function recursively traverses the path using "pbac-guardian" tags to find
+The function recursively traverses the path using TAG_KEY ("pbac-guardian") tags to find
 fields. The field must be exported (capitalized) and have a tag with the
-corresponding name.
+corresponding name. The function supports nested structures by recursively
+calling itself for each path segment.
 
 Parameters:
   - entity - entity (structure or pointer to structure) to search for field
@@ -193,6 +185,7 @@ Possible errors:
   - ErrInvalidPath - occurs if:
   - field not found (no tag with corresponding name)
   - field is unexported (not accessible via CanInterface())
+  - entity is nil pointer
 */
 func (p *Policy) getValue(entity any, path []string) (any, error) {
 	v := reflect.ValueOf(entity)
@@ -381,7 +374,7 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 				return false, ErrCancelled
 			default:
 				if !c.Field(i).IsZero() {
-					if f, ok := CONDITION_TO_FUNC[t.Field(i).Name]; ok {
+					if f := p.ConditionsMap.Select(t.Field(i).Name); f != nil {
 
 						right := c.Field(i).Interface()
 
@@ -412,21 +405,23 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 /*
 IsValid checks the validity of the policy.
 
-The function checks:
-  1. Action format - must be at least 2 parts separated by ":"
-  2. Absence of empty parts in action
-  3. Validity of all paths in conditions (via parsePath)
+The function performs comprehensive validation:
+ 1. Action format - must be at least 2 parts separated by ":" (entity:action:extra...)
+ 2. Absence of empty parts in action (no empty strings between separators)
+ 3. Validity of all paths in conditions (via parsePath) - each condition key must be a valid path
+
+This method should be called before using the policy in the engine to ensure
+all required fields are properly formatted and paths are valid.
 
 Returns:
   - error - validity error if policy is invalid, nil if policy is valid
 
 Possible errors:
   - ErrInvalidPath - occurs if:
-    * action contains less than 2 parts (minimum entity and action)
-    * action contains empty parts
-    * paths in conditions are invalid (see parsePath)
+  - action contains less than 2 parts (minimum entity and action)
+  - action contains empty parts
+  - paths in conditions are invalid (see parsePath for details)
 */
-
 func (p *Policy) IsValid() error {
 	actions := strings.Split(p.Action, PATH_SEP)
 	if len(actions) < MIN_ACTION_PARTS {
