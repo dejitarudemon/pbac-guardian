@@ -14,9 +14,11 @@ The function performs the following checks:
  1. Check for duplicate policy names
  2. Validate each policy through Policy.IsValid()
  3. Group policies by actions for fast access
+ 4. Attach condition functions configuration to each policy
 
 Parameters:
   - polices - list of policies to export and group
+  - funcConfig - configuration for condition functions to attach to policies
 
 Returns:
   - map[string][]base.Policy - map of policies where:
@@ -61,10 +63,11 @@ generateNewSesstionID generates a unique identifier for an evaluation session.
 The function creates a new UUID string that serves as a session identifier.
 This sessionID is used to scope the L1 cache for a single policy application,
 allowing multiple concurrent evaluations to use the same cache instance without
-interference.
+interference. Each evaluation session gets its own cache scope, ensuring thread-safety
+and preventing cache pollution between different evaluations.
 
 Returns:
-  - string - unique session identifier (UUID string)
+  - string - unique session identifier (UUID v4 string)
 */
 func generateNewSesstionID() string {
 	return uuid.NewString()

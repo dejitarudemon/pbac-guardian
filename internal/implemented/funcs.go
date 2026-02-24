@@ -1,3 +1,11 @@
+/*
+Package implemented provides default implementations of condition functions
+and cache mechanisms for the policy evaluation engine.
+
+The package contains:
+  - Default condition functions (Contains, Eq, Neq, Lt) for policy evaluation
+  - DefaultCasher implementation for L1 caching
+*/
 package implemented
 
 import (
@@ -8,8 +16,21 @@ import (
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
+// SUPPORTED_LT_PRIMITIVES is a constant describing supported primitive types for Lt comparison.
 const SUPPORTED_LT_PRIMITIVES = "int|uint|float|string"
 
+/*
+DefaultConditionsFuncs provides default implementations of condition functions.
+
+This configuration is used by default when nil is passed as funcConfig parameter
+to NewGuardianFromPolices or NewGuardianFromFile. It contains standard implementations
+of all condition types: Contains, Eq, Neq, and Lt.
+
+The default functions support:
+  - Custom types implementing base.Comparable interface
+  - Primitive types (int, uint, float, string and their variants)
+  - Context cancellation for long-running operations
+*/
 var (
 	DefaultConditionsFuncs = base.ConditionFuncsConfig{
 		Contains: ContainsConditionFunc,

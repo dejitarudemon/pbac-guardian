@@ -12,10 +12,6 @@ import (
 )
 
 /*
-This file contains various conditions for policies
-*/
-
-/*
 Condition represents a set of rules for comparing values in policies.
 
 A condition can contain one or more fields. If multiple fields are specified,

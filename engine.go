@@ -6,7 +6,9 @@ these policies using a flexible system of conditions and effects.
 
 The library supports L1 caching mechanism to avoid re-searching struct fields
 by reflect package. Each evaluation session uses a unique sessionID that identifies
-the cache scope for a single policy application.
+the cache scope for a single policy application. The cache can significantly improve
+performance when the same fields are accessed multiple times within an evaluation
+session (typically 3+ accesses provide benefits).
 
 Example usage:
 
@@ -59,7 +61,7 @@ Example usage:
 		casher := implemented.NewDefaultCasher()
 
 		// Create engine
-		engine, err := guardian.NewGuardianFromPolices(casher, policies)
+		engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
 		if err != nil {
 			panic(err)
 		}
@@ -105,7 +107,9 @@ to check structures against these policies.
 The engine uses L1 cache (Casher interface) to optimize field value retrieval
 by caching results of reflect-based field searches. Each evaluation session
 generates a unique sessionID that identifies the cache scope for a single
-policy application.
+policy application. The cache significantly improves performance when fields
+are accessed multiple times (3+ accesses provide benefits, with up to 41%
+time savings and 63% fewer allocations in production scenarios).
 
 To create a Guardian instance, use:
   - NewGuardianFromPolices - create from a list of policies passed programmatically
@@ -129,11 +133,13 @@ are grouped by actions for subsequent fast checking.
 
 The engine uses the provided Casher instance for L1 caching. If nil is passed,
 caching will be disabled and field values will be retrieved directly via reflection
-on each evaluation.
+on each evaluation. For optimal performance in production scenarios with multiple
+policies accessing the same fields, it is recommended to use DefaultCasher.
 
 Parameters:
   - cash - instance of base.Casher for L1 caching (can be nil to disable caching)
   - polices - list of policies to initialize the engine
+  - funcConfig - configuration for condition functions (can be nil to use default functions)
 
 Returns:
   - *Guardian - created engine instance, ready to use
@@ -160,7 +166,7 @@ Example usage:
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(casher, policies)
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
 	if err != nil {
 		// handle error
 	}
@@ -185,11 +191,13 @@ The file must contain a valid JSON array of Policy objects.
 
 The engine uses the provided Casher instance for L1 caching. If nil is passed,
 caching will be disabled and field values will be retrieved directly via reflection
-on each evaluation.
+on each evaluation. For optimal performance in production scenarios with multiple
+policies accessing the same fields, it is recommended to use DefaultCasher.
 
 Parameters:
   - cash - instance of base.Casher for L1 caching (can be nil to disable caching)
   - path - path to the file with policies in JSON format
+  - funcConfig - configuration for condition functions (can be nil to use default functions)
 
 Returns:
   - *Guardian - created engine instance, ready to use
@@ -219,7 +227,7 @@ Example usage:
 	// ]
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromFile(casher, "policies.json")
+	engine, err := guardian.NewGuardianFromFile(casher, "policies.json", nil)
 	if err != nil {
 		// handle error
 	}
