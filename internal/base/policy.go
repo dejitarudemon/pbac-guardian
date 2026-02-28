@@ -97,12 +97,12 @@ Example usage:
 	}
 */
 type Policy struct {
-	Name          string                `json:"name"`
-	Action        string                `json:"action"`
-	Effect        Effect                `json:"effect"`
-	Conditions    map[string]Condition  `json:"conditions"`
-	ConditionsMap *ConditionFuncsConfig `json:"-"`
-	Cash          Casher                `json:"-"`
+	Name          string               `json:"name"`
+	Action        string               `json:"action"`
+	Effect        Effect               `json:"effect"`
+	Conditions    map[string]Condition `json:"conditions"`
+	ConditionsMap *ConditionsMap       `json:"-"`
+	Cash          Casher               `json:"-"`
 }
 
 /*

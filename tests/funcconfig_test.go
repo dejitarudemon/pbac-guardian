@@ -30,11 +30,11 @@ func TestCustomConditionFuncsConfig(t *testing.T) {
 	}
 
 	// Create custom funcConfig with custom Eq function
-	customConfig := &base.ConditionFuncsConfig{
-		Contains: implemented.DefaultConditionsFuncs.Contains,
+	customConfig := &base.ConditionsMap{
+		Contains: implemented.DefaultConditionsMap.Contains,
 		Eq:       customEqFunc, // Custom function
-		Neq:      implemented.DefaultConditionsFuncs.Neq,
-		Lt:       implemented.DefaultConditionsFuncs.Lt,
+		Neq:      implemented.DefaultConditionsMap.Neq,
+		Lt:       implemented.DefaultConditionsMap.Lt,
 	}
 
 	policies := []base.Policy{
@@ -72,7 +72,7 @@ func TestCustomConditionFuncsConfig(t *testing.T) {
 TestNilFuncConfigUsesDefaults tests that nil funcConfig uses default functions.
 
 The test checks that when nil is passed as funcConfig, the engine uses
-default condition functions from implemented.DefaultConditionsFuncs.
+default condition functions from implemented.DefaultConditionsMap.
 */
 func TestNilFuncConfigUsesDefaults(t *testing.T) {
 	policies := []base.Policy{
@@ -129,11 +129,11 @@ func TestCustomContainsFunc(t *testing.T) {
 		return true, nil
 	}
 
-	customConfig := &base.ConditionFuncsConfig{
+	customConfig := &base.ConditionsMap{
 		Contains: customContainsFunc,
-		Eq:       implemented.DefaultConditionsFuncs.Eq,
-		Neq:      implemented.DefaultConditionsFuncs.Neq,
-		Lt:       implemented.DefaultConditionsFuncs.Lt,
+		Eq:       implemented.DefaultConditionsMap.Eq,
+		Neq:      implemented.DefaultConditionsMap.Neq,
+		Lt:       implemented.DefaultConditionsMap.Lt,
 	}
 
 	policies := []base.Policy{
@@ -180,10 +180,10 @@ func TestCustomLtFunc(t *testing.T) {
 		return true, nil
 	}
 
-	customConfig := &base.ConditionFuncsConfig{
-		Contains: implemented.DefaultConditionsFuncs.Contains,
-		Eq:       implemented.DefaultConditionsFuncs.Eq,
-		Neq:      implemented.DefaultConditionsFuncs.Neq,
+	customConfig := &base.ConditionsMap{
+		Contains: implemented.DefaultConditionsMap.Contains,
+		Eq:       implemented.DefaultConditionsMap.Eq,
+		Neq:      implemented.DefaultConditionsMap.Neq,
 		Lt:       customLtFunc,
 	}
 
@@ -254,11 +254,11 @@ func TestNewGuardianFromFileWithFuncConfig(t *testing.T) {
 		return true, nil
 	}
 
-	customConfig := &base.ConditionFuncsConfig{
-		Contains: implemented.DefaultConditionsFuncs.Contains,
+	customConfig := &base.ConditionsMap{
+		Contains: implemented.DefaultConditionsMap.Contains,
 		Eq:       customEqFunc,
-		Neq:      implemented.DefaultConditionsFuncs.Neq,
-		Lt:       implemented.DefaultConditionsFuncs.Lt,
+		Neq:      implemented.DefaultConditionsMap.Neq,
+		Lt:       implemented.DefaultConditionsMap.Lt,
 	}
 
 	// Create engine from file with custom funcConfig
@@ -280,4 +280,3 @@ func TestNewGuardianFromFileWithFuncConfig(t *testing.T) {
 		t.Errorf("expected allowed=true with custom funcConfig, got false")
 	}
 }
-

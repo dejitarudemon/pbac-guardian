@@ -1,7 +1,7 @@
 package base
 
 /*
-ConditionFuncsConfig provides configuration for condition functions used in policy evaluation.
+ConditionsMap provides configuration for condition functions used in policy evaluation.
 
 This structure allows customizing the behavior of condition checks (Contains, Eq, Neq, Lt)
 by providing custom implementations. If nil is passed to NewGuardianFromPolices or
@@ -14,7 +14,7 @@ Fields:
   - Neq - function for inequality comparison
   - Lt - function for less-than comparison
 */
-type ConditionFuncsConfig struct {
+type ConditionsMap struct {
 	Contains ConditionFunc
 	Eq       ConditionFunc
 	Neq      ConditionFunc
@@ -33,7 +33,7 @@ Parameters:
 Returns:
   - ConditionFunc - condition function if found, nil otherwise
 */
-func (c ConditionFuncsConfig) Select(key string) ConditionFunc {
+func (c ConditionsMap) Select(key string) ConditionFunc {
 	switch key {
 	case "Contains":
 		return c.Contains

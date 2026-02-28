@@ -172,7 +172,7 @@ func TestPolicyEvaluate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Set default condition functions config for policy
 			if tt.policy.ConditionsMap == nil {
-				tt.policy.ConditionsMap = &implemented.DefaultConditionsFuncs
+				tt.policy.ConditionsMap = &implemented.DefaultConditionsMap
 			}
 			// Set nil casher for direct Policy.Evaluate tests (cache is now stored in policy)
 			tt.policy.Cash = nil

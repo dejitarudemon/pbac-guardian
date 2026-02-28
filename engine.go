@@ -170,9 +170,9 @@ Example usage:
 		// handle error
 	}
 */
-func NewGuardianFromPolices(cash base.Casher, polices []base.Policy, funcConfig *base.ConditionFuncsConfig) (*Guardian, error) {
+func NewGuardianFromPolices(cash base.Casher, polices []base.Policy, funcConfig *base.ConditionsMap) (*Guardian, error) {
 	if funcConfig == nil {
-		funcConfig = &implemented.DefaultConditionsFuncs
+		funcConfig = &implemented.DefaultConditionsMap
 	}
 	mapped, err := export(polices, *funcConfig, cash)
 	if err != nil {
@@ -231,7 +231,7 @@ Example usage:
 		// handle error
 	}
 */
-func NewGuardianFromFile(cash base.Casher, path string, funcConfig *base.ConditionFuncsConfig) (*Guardian, error) {
+func NewGuardianFromFile(cash base.Casher, path string, funcConfig *base.ConditionsMap) (*Guardian, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModeAppend)
 	if err != nil {
 		return nil, NewErrExport(err)
