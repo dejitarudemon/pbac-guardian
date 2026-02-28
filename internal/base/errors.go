@@ -28,6 +28,12 @@ var (
 	// This error is returned by condition functions and policy evaluation methods when
 	// context.Context signals cancellation (via ctx.Done()).
 	ErrCancelled = errors.New("cancelled by context")
+
+	// ErrNilContext represents an error that occurs when a nil context is passed to a function
+	// that requires a valid context.Context. This error is returned by policy evaluation methods
+	// and condition functions when ctx parameter is nil instead of a valid context instance.
+	// All methods that accept context.Context should validate it is not nil before use.
+	ErrNilContext = errors.New("context is nil")
 )
 
 /*

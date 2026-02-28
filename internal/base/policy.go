@@ -351,7 +351,7 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 		return false, NewErrInexpectedBehavior("Policy.Evaluate()", "policy is nil")
 	}
 	if ctx == nil {
-		return false, fmt.Errorf("context is nil")
+		return false, ErrNilContext
 	}
 
 	if p.Action != action {
@@ -392,6 +392,10 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 						}
 
 						match = match && m
+
+						if !match {
+							return false, nil
+						}
 					} else {
 						return false, NewErrInexpectedBehavior("Policy.Evaluate()", fmt.Sprintf("condition func for %v doesn't exist", t.Field(i).Name))
 					}
