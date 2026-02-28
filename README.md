@@ -1,8 +1,8 @@
 # pbac-guardian
 
-Current version: 0.4.2
+Current version: 0.4.3
 
-[English](#english) | [Русский](#русский)
+[English](#english) | [Русский](#russian)
 
 ---
 
@@ -21,7 +21,7 @@ Current version: 0.4.2
 - **Context Support**: Built-in support for cancellation and timeouts via `context.Context`
 - **Optional L1 Caching**: Optimized cache mechanism for improved performance with repeated field access
 - **Thread-Safe**: Fully concurrent-safe implementation
-- **No Dependencies**: Uses only the standard Go library
+- **Minimal Dependencies**: Uses only one external dependency (`github.com/google/uuid` for session ID generation)
 - **Type Safety**: Typed constants and validation
 
 ## Installation
@@ -94,8 +94,12 @@ import (
 // Create cache instance (optional - pass nil to disable caching)
 casher := implemented.NewDefaultCasher()
 
-// Create engine
-engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+    // Create engine with default config
+    config := base.Config{
+        ConditionsMap:        nil, // use default condition functions
+        CashDisableThreShold: 3,   // disable cache for fields accessed < 3 times
+    }
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 if err != nil {
     panic(err)
 }
@@ -161,8 +165,9 @@ func main() {
         },
     }
 
-    // Create engine (nil casher disables caching, nil funcConfig uses defaults)
-    engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+    // Create engine with default config (nil casher disables caching)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
     if err != nil {
         panic(err)
     }
@@ -220,8 +225,9 @@ import (
 )
 
 func main() {
-    // Load policies from file (nil casher disables caching, nil funcConfig uses defaults)
-    engine, err := guardian.NewGuardianFromFile(nil, "policies.json", nil)
+    // Load policies from file with default config (nil casher disables caching)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json", config)
     if err != nil {
         panic(err)
     }
@@ -346,7 +352,8 @@ func main() {
 
     // Enable caching for better performance with repeated field access
     casher := implemented.NewDefaultCasher()
-    engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
     if err != nil {
         panic(err)
     }
@@ -391,7 +398,7 @@ The cache provides significant performance improvements in production scenarios:
 
 ### Tutorial 7: Custom Condition Functions
 
-This tutorial shows how to customize condition functions using the `funcConfig` parameter.
+This tutorial shows how to customize condition functions using the `config` parameter.
 
 ```go
 import (
@@ -417,12 +424,18 @@ func main() {
         return strings.EqualFold(leftStr, rightStr), nil
     }
 
-    // Create custom configuration
-    customConfig := &base.ConditionFuncsConfig{
-        Contains: implemented.DefaultConditionsFuncs.Contains,
+    // Create custom ConditionsMap
+    customConditionsMap := &base.ConditionsMap{
+        Contains: implemented.DefaultConditionsMap.Contains,
         Eq:       customEqFunc, // Use custom function
-        Neq:      implemented.DefaultConditionsFuncs.Neq,
-        Lt:       implemented.DefaultConditionsFuncs.Lt,
+        Neq:      implemented.DefaultConditionsMap.Neq,
+        Lt:       implemented.DefaultConditionsMap.Lt,
+    }
+
+    // Create config with custom ConditionsMap
+    config := base.Config{
+        ConditionsMap:        customConditionsMap,
+        CashDisableThreShold: 3,
     }
 
     policies := []base.Policy{
@@ -437,7 +450,7 @@ func main() {
     }
 
     // Create engine with custom condition functions
-    engine, err := guardian.NewGuardianFromPolices(nil, policies, customConfig)
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
     if err != nil {
         panic(err)
     }
@@ -495,17 +508,17 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Guardian Engine
 
-#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy, funcConfig *base.ConditionFuncsConfig) (*Guardian, error)`
+#### `NewGuardianFromPolices(casher cashing.Casher, policies []base.Policy, config base.Config) (*Guardian, error)`
 
 Creates a new Guardian instance from a list of policies. 
 - The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
-- The `funcConfig` parameter is optional - pass `nil` to use default condition functions, or provide a custom `ConditionFuncsConfig` to customize condition evaluation logic.
+- The `config` parameter contains condition functions map and cache disable threshold. If `config.ConditionsMap` is `nil`, default condition functions will be used.
 
-#### `NewGuardianFromFile(casher base.Casher, path string, funcConfig *base.ConditionFuncsConfig) (*Guardian, error)`
+#### `NewGuardianFromFile(casher cashing.Casher, path string, config base.Config) (*Guardian, error)`
 
 Creates a new Guardian instance from a JSON file.
 - The `casher` parameter is optional - pass `nil` to disable caching.
-- The `funcConfig` parameter is optional - pass `nil` to use default condition functions, or provide a custom `ConditionFuncsConfig` to customize condition evaluation logic.
+- The `config` parameter contains condition functions map and cache disable threshold. If `config.ConditionsMap` is `nil`, default condition functions will be used.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 
@@ -548,7 +561,7 @@ The library provides typed errors:
 
 ---
 
-<a name="русский"></a>
+<a name="russian"></a>
 # Русский
 
 ## Обзор
@@ -563,7 +576,7 @@ The library provides typed errors:
 - **Поддержка контекста**: Встроенная поддержка отмены и таймаутов через `context.Context`
 - **Опциональное L1-кеширование**: Оптимизированный механизм кеша для улучшения производительности при повторном доступе к полям
 - **Потокобезопасность**: Полностью потокобезопасная реализация
-- **Без зависимостей**: Использует только стандартную библиотеку Go
+- **Минимальные зависимости**: Использует только одну внешнюю зависимость (`github.com/google/uuid` для генерации session ID)
 - **Безопасность типов**: Типизированные константы и валидация
 
 ## Установка
@@ -703,8 +716,9 @@ func main() {
         },
     }
 
-    // Создание движка (nil casher отключает кеширование, nil funcConfig использует значения по умолчанию)
-    engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+    // Создание движка с конфигурацией по умолчанию (nil casher отключает кеширование)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
     if err != nil {
         panic(err)
     }
@@ -762,8 +776,9 @@ import (
 )
 
 func main() {
-    // Загрузка политик из файла (nil casher отключает кеширование, nil funcConfig использует значения по умолчанию)
-    engine, err := guardian.NewGuardianFromFile(nil, "policies.json", nil)
+    // Загрузка политик из файла с конфигурацией по умолчанию (nil casher отключает кеширование)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json", config)
     if err != nil {
         panic(err)
     }
@@ -888,7 +903,8 @@ func main() {
 
     // Включить кеширование для лучшей производительности при повторном доступе к полям
     casher := implemented.NewDefaultCasher()
-    engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
     if err != nil {
         panic(err)
     }
@@ -933,7 +949,7 @@ func main() {
 
 ### Туториал 7: Кастомные функции условий
 
-Этот туториал показывает, как кастомизировать функции условий с помощью параметра `funcConfig`.
+Этот туториал показывает, как кастомизировать функции условий с помощью параметра `config`.
 
 ```go
 import (
@@ -959,12 +975,18 @@ func main() {
         return strings.EqualFold(leftStr, rightStr), nil
     }
 
-    // Создание кастомной конфигурации
-    customConfig := &base.ConditionFuncsConfig{
-        Contains: implemented.DefaultConditionsFuncs.Contains,
+    // Создание кастомной ConditionsMap
+    customConditionsMap := &base.ConditionsMap{
+        Contains: implemented.DefaultConditionsMap.Contains,
         Eq:       customEqFunc, // Использовать кастомную функцию
-        Neq:      implemented.DefaultConditionsFuncs.Neq,
-        Lt:       implemented.DefaultConditionsFuncs.Lt,
+        Neq:      implemented.DefaultConditionsMap.Neq,
+        Lt:       implemented.DefaultConditionsMap.Lt,
+    }
+
+    // Создание config с кастомной ConditionsMap
+    config := base.Config{
+        ConditionsMap:        customConditionsMap,
+        CashDisableThreShold: 3,
     }
 
     policies := []base.Policy{
@@ -979,7 +1001,7 @@ func main() {
     }
 
     // Создание движка с кастомными функциями условий
-    engine, err := guardian.NewGuardianFromPolices(nil, policies, customConfig)
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
     if err != nil {
         panic(err)
     }
@@ -1037,17 +1059,17 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Движок Guardian
 
-#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy, funcConfig *base.ConditionFuncsConfig) (*Guardian, error)`
+#### `NewGuardianFromPolices(casher cashing.Casher, policies []base.Policy, config base.Config) (*Guardian, error)`
 
 Создает новый экземпляр Guardian из списка политик.
 - Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
-- Параметр `funcConfig` опционален - передайте `nil` для использования функций условий по умолчанию, или предоставьте кастомный `ConditionFuncsConfig` для кастомизации логики оценки условий.
+- Параметр `config` содержит карту функций условий и порог отключения кеша. Если `config.ConditionsMap` равен `nil`, будут использованы функции условий по умолчанию.
 
-#### `NewGuardianFromFile(casher base.Casher, path string, funcConfig *base.ConditionFuncsConfig) (*Guardian, error)`
+#### `NewGuardianFromFile(casher cashing.Casher, path string, config base.Config) (*Guardian, error)`
 
 Создает новый экземпляр Guardian из JSON файла.
 - Параметр `casher` опционален - передайте `nil` для отключения кеширования.
-- Параметр `funcConfig` опционален - передайте `nil` для использования функций условий по умолчанию, или предоставьте кастомный `ConditionFuncsConfig` для кастомизации логики оценки условий.
+- Параметр `config` содержит карту функций условий и порог отключения кеша. Если `config.ConditionsMap` равен `nil`, будут использованы функции условий по умолчанию.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 

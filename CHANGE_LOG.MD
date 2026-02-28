@@ -2,17 +2,26 @@
 
 ### Русский
 
+**Добавлено:**
+
+- Структура `base.Config` для конфигурации движка (условия и порог отключения кеша)
+- `CashTree` для отслеживания частоты доступа к полям и отключения кеша для редко используемых полей
+- Параметр `config` в `NewGuardianFromPolices` и `NewGuardianFromFile` вместо `funcConfig`
+
 **Изменено:**
 
 - Изменена сигнатура метода `Policy.Evaluate`: удален параметр `cash`, кеш теперь хранится в поле `Cash` структуры `Policy`
 - Кеш автоматически устанавливается в политику при экспорте через функцию `export()` в `utils.go`
 - Упрощена архитектура: кеш передается в политику один раз при создании движка, а не при каждом вызове `Evaluate`
 - Переименован тип `ConditionFuncsConfig` в `ConditionsMap` для более точного отражения назначения
+- Оптимизирована проверка дубликатов в `export()`: используется `map` вместо `slices.Contains` для O(1) lookup
 
 **Обновлено:**
 
 - Все тесты обновлены для новой сигнатуры `Policy.Evaluate` (удален параметр `cash`)
+- Все тесты обновлены для использования `base.Config` вместо прямого `ConditionsMap`
 - Тесты `policy_test.go` обновлены для установки поля `Cash` в структуре `Policy` перед вызовом `Evaluate`
+- Все godoc комментарии обновлены и приведены в порядок
 
 **Исправлено:**
 
@@ -22,17 +31,26 @@
 
 ### English
 
+**Added:**
+
+- `base.Config` structure for engine configuration (condition functions and cache disable threshold)
+- `CashTree` for tracking field access frequency and disabling cache for rarely accessed fields
+- `config` parameter in `NewGuardianFromPolices` and `NewGuardianFromFile` instead of `funcConfig`
+
 **Changed:**
 
 - Changed `Policy.Evaluate` method signature: removed `cash` parameter, cache is now stored in `Cash` field of `Policy` struct
 - Cache is automatically set in policy during export via `export()` function in `utils.go`
 - Simplified architecture: cache is passed to policy once during engine creation, not on every `Evaluate` call
 - Renamed `ConditionFuncsConfig` type to `ConditionsMap` for better clarity of purpose
+- Optimized duplicate check in `export()`: uses `map` instead of `slices.Contains` for O(1) lookup
 
 **Updated:**
 
 - All tests updated for new `Policy.Evaluate` signature (removed `cash` parameter)
+- All tests updated to use `base.Config` instead of direct `ConditionsMap`
 - `policy_test.go` tests updated to set `Cash` field in `Policy` struct before calling `Evaluate`
+- All godoc comments updated and cleaned up
 
 **Fixed:**
 
