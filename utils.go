@@ -1,8 +1,6 @@
 package guardian
 
 import (
-	"slices"
-
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
 	"github.com/google/uuid"
 )
@@ -32,14 +30,14 @@ Possible errors:
 */
 func export(polices []base.Policy, funcConfig base.ConditionsMap, cash base.Casher) (map[string][]base.Policy, error) {
 	mappedPolices := make(map[string][]base.Policy)
-	usedNames := make([]string, 0, len(polices))
+	usedNames := make(map[string]struct{}, len(polices))
 
 	for _, policy := range polices {
-		if slices.Contains(usedNames, policy.Name) {
+		if _, ok := usedNames[policy.Name]; ok {
 			return nil, NewErrDuplicateName(policy.Name)
 		}
 
-		usedNames = append(usedNames, policy.Name)
+		usedNames[policy.Name] = struct{}{}
 
 		if err := policy.IsValid(); err != nil {
 			return nil, err
