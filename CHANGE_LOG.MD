@@ -1,3 +1,42 @@
+## v 0.4.3
+
+### Русский
+
+**Изменено:**
+
+- Изменена сигнатура метода `Policy.Evaluate`: удален параметр `cash`, кеш теперь хранится в поле `Cash` структуры `Policy`
+- Кеш автоматически устанавливается в политику при экспорте через функцию `export()` в `utils.go`
+- Упрощена архитектура: кеш передается в политику один раз при создании движка, а не при каждом вызове `Evaluate`
+
+**Обновлено:**
+
+- Все тесты обновлены для новой сигнатуры `Policy.Evaluate` (удален параметр `cash`)
+- Тесты `policy_test.go` обновлены для установки поля `Cash` в структуре `Policy` перед вызовом `Evaluate`
+
+**Исправлено:**
+
+- Исправлены вызовы `Policy.Evaluate` в тестах для соответствия новой сигнатуре
+
+---
+
+### English
+
+**Changed:**
+
+- Changed `Policy.Evaluate` method signature: removed `cash` parameter, cache is now stored in `Cash` field of `Policy` struct
+- Cache is automatically set in policy during export via `export()` function in `utils.go`
+- Simplified architecture: cache is passed to policy once during engine creation, not on every `Evaluate` call
+
+**Updated:**
+
+- All tests updated for new `Policy.Evaluate` signature (removed `cash` parameter)
+- `policy_test.go` tests updated to set `Cash` field in `Policy` struct before calling `Evaluate`
+
+**Fixed:**
+
+- Fixed `Policy.Evaluate` calls in tests to match new signature
+
+
 ## v 0.4.2
 
 ### Русский
