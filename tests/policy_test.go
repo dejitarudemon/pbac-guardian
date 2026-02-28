@@ -174,8 +174,10 @@ func TestPolicyEvaluate(t *testing.T) {
 			if tt.policy.ConditionsMap == nil {
 				tt.policy.ConditionsMap = &implemented.DefaultConditionsFuncs
 			}
-			// Use nil casher and empty sessionID for direct Policy.Evaluate tests
-			got, err := tt.policy.Evaluate(ctx, tt.source, tt.target, tt.action, nil, "")
+			// Set nil casher for direct Policy.Evaluate tests (cache is now stored in policy)
+			tt.policy.Cash = nil
+			// Use empty sessionID for direct Policy.Evaluate tests
+			got, err := tt.policy.Evaluate(ctx, tt.source, tt.target, tt.action, "")
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
