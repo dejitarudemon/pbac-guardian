@@ -2,7 +2,8 @@
 Package tests contains tests for custom condition functions configuration.
 
 Tests check the functionality of providing custom condition functions
-through the funcConfig parameter in NewGuardianFromPolices and NewGuardianFromFile.
+through the config parameter in NewGuardianFromPolices and NewGuardianFromFile.
+The config parameter is of type base.Config and contains ConditionsMap.
 */
 package tests
 
@@ -19,7 +20,7 @@ import (
 /*
 TestCustomConditionFuncsConfig tests engine creation with custom condition functions.
 
-The test checks that custom condition functions can be provided through funcConfig
+The test checks that custom condition functions can be provided through config
 parameter, and they are used instead of default functions during policy evaluation.
 */
 func TestCustomConditionFuncsConfig(t *testing.T) {
@@ -29,12 +30,18 @@ func TestCustomConditionFuncsConfig(t *testing.T) {
 		return true, nil
 	}
 
-	// Create custom funcConfig with custom Eq function
-	customConfig := &base.ConditionsMap{
+	// Create custom ConditionsMap with custom Eq function
+	customConditionsMap := &base.ConditionsMap{
 		Contains: implemented.DefaultConditionsMap.Contains,
 		Eq:       customEqFunc, // Custom function
 		Neq:      implemented.DefaultConditionsMap.Neq,
 		Lt:       implemented.DefaultConditionsMap.Lt,
+	}
+
+	// Create config with custom ConditionsMap
+	config := base.Config{
+		ConditionsMap:        customConditionsMap,
+		CashDisableThreShold: 3,
 	}
 
 	policies := []base.Policy{
@@ -48,8 +55,8 @@ func TestCustomConditionFuncsConfig(t *testing.T) {
 		},
 	}
 
-	// Create engine with custom funcConfig
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, customConfig)
+	// Create engine with custom config
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -69,9 +76,9 @@ func TestCustomConditionFuncsConfig(t *testing.T) {
 }
 
 /*
-TestNilFuncConfigUsesDefaults tests that nil funcConfig uses default functions.
+TestNilFuncConfigUsesDefaults tests that nil ConditionsMap in config uses default functions.
 
-The test checks that when nil is passed as funcConfig, the engine uses
+The test checks that when nil is passed in config.ConditionsMap, the engine uses
 default condition functions from implemented.DefaultConditionsMap.
 */
 func TestNilFuncConfigUsesDefaults(t *testing.T) {
@@ -86,8 +93,14 @@ func TestNilFuncConfigUsesDefaults(t *testing.T) {
 		},
 	}
 
-	// Create engine with nil funcConfig (should use defaults)
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	// Create config with nil ConditionsMap (should use defaults)
+	config := base.Config{
+		ConditionsMap:        nil, // use defaults
+		CashDisableThreShold: 3,
+	}
+
+	// Create engine with config containing nil ConditionsMap
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -129,11 +142,16 @@ func TestCustomContainsFunc(t *testing.T) {
 		return true, nil
 	}
 
-	customConfig := &base.ConditionsMap{
+	customConditionsMap := &base.ConditionsMap{
 		Contains: customContainsFunc,
 		Eq:       implemented.DefaultConditionsMap.Eq,
 		Neq:      implemented.DefaultConditionsMap.Neq,
 		Lt:       implemented.DefaultConditionsMap.Lt,
+	}
+
+	config := base.Config{
+		ConditionsMap:        customConditionsMap,
+		CashDisableThreShold: 3,
 	}
 
 	policies := []base.Policy{
@@ -149,7 +167,7 @@ func TestCustomContainsFunc(t *testing.T) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, customConfig)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -180,11 +198,16 @@ func TestCustomLtFunc(t *testing.T) {
 		return true, nil
 	}
 
-	customConfig := &base.ConditionsMap{
+	customConditionsMap := &base.ConditionsMap{
 		Contains: implemented.DefaultConditionsMap.Contains,
 		Eq:       implemented.DefaultConditionsMap.Eq,
 		Neq:      implemented.DefaultConditionsMap.Neq,
 		Lt:       customLtFunc,
+	}
+
+	config := base.Config{
+		ConditionsMap:        customConditionsMap,
+		CashDisableThreShold: 3,
 	}
 
 	policies := []base.Policy{
@@ -198,7 +221,7 @@ func TestCustomLtFunc(t *testing.T) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, customConfig)
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -218,9 +241,9 @@ func TestCustomLtFunc(t *testing.T) {
 }
 
 /*
-TestNewGuardianFromFileWithFuncConfig tests engine creation from file with custom funcConfig.
+TestNewGuardianFromFileWithFuncConfig tests engine creation from file with custom config.
 
-The test checks that NewGuardianFromFile accepts funcConfig parameter
+The test checks that NewGuardianFromFile accepts config parameter
 and uses it when creating the engine.
 */
 func TestNewGuardianFromFileWithFuncConfig(t *testing.T) {
@@ -249,20 +272,27 @@ func TestNewGuardianFromFileWithFuncConfig(t *testing.T) {
 		t.Fatalf("failed to close temp file: %v", err)
 	}
 
-	// Create custom funcConfig
+	// Create custom condition function
 	customEqFunc := func(ctx context.Context, left, right any) (bool, error) {
 		return true, nil
 	}
 
-	customConfig := &base.ConditionsMap{
+	// Create custom ConditionsMap
+	customConditionsMap := &base.ConditionsMap{
 		Contains: implemented.DefaultConditionsMap.Contains,
 		Eq:       customEqFunc,
 		Neq:      implemented.DefaultConditionsMap.Neq,
 		Lt:       implemented.DefaultConditionsMap.Lt,
 	}
 
-	// Create engine from file with custom funcConfig
-	engine, err := guardian.NewGuardianFromFile(nil, tmpFile.Name(), customConfig)
+	// Create config with custom ConditionsMap
+	config := base.Config{
+		ConditionsMap:        customConditionsMap,
+		CashDisableThreShold: 3,
+	}
+
+	// Create engine from file with custom config
+	engine, err := guardian.NewGuardianFromFile(nil, tmpFile.Name(), config)
 	if err != nil {
 		t.Fatalf("failed to create engine from file: %v", err)
 	}

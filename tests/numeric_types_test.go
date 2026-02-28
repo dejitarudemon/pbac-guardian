@@ -311,7 +311,8 @@ func TestLtNumericTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, config)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}

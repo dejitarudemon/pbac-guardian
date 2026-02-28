@@ -118,10 +118,8 @@ To create a Guardian instance, use:
 
 Fields:
   - polices - stores policies organized by actions (action -> []Policy)
-  - cash - L1 cache instance for storing field values (can be nil to disable caching)
 */
 type Guardian struct {
-	// хранит политики, разделенные по действиям (action)
 	polices map[string][]base.Policy
 }
 
@@ -136,10 +134,15 @@ caching will be disabled and field values will be retrieved directly via reflect
 on each evaluation. For optimal performance in production scenarios with multiple
 policies accessing the same fields, it is recommended to use DefaultCasher.
 
+The config parameter allows customizing condition functions and cache behavior.
+If config.ConditionsMap is nil, default condition functions will be used.
+The cache tree tracks field access counts and can disable caching for fields
+that are accessed less than the threshold number of times.
+
 Parameters:
-  - cash - instance of base.Casher for L1 caching (can be nil to disable caching)
+  - cash - instance of cashing.Casher for L1 caching (can be nil to disable caching)
   - polices - list of policies to initialize the engine
-  - funcConfig - configuration for condition functions (can be nil to use default functions)
+  - config - configuration containing condition functions map and cache disable threshold
 
 Returns:
   - *Guardian - created engine instance, ready to use
@@ -152,7 +155,10 @@ Possible errors:
 
 Example usage:
 
-	import "github.com/dejitarudemon/pbac-guardian/internal/implemented"
+	import (
+		"github.com/dejitarudemon/pbac-guardian/internal/implemented"
+		"github.com/dejitarudemon/pbac-guardian/internal/base"
+	)
 
 	casher := implemented.NewDefaultCasher()
 	policies := []base.Policy{
@@ -166,16 +172,23 @@ Example usage:
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{
+		ConditionsMap:        nil, // use defaults
+		CashDisableThreShold: 3,   // disable cache for fields accessed less than 3 times
+	}
+
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		// handle error
 	}
 */
-func NewGuardianFromPolices(cash cashing.Casher, polices []base.Policy, funcConfig *base.ConditionsMap) (*Guardian, error) {
-	if funcConfig == nil {
-		funcConfig = &implemented.DefaultConditionsMap
+func NewGuardianFromPolices(cash cashing.Casher, polices []base.Policy, config base.Config) (*Guardian, error) {
+	if config.ConditionsMap == nil {
+		config.ConditionsMap = &implemented.DefaultConditionsMap
 	}
-	mapped, err := export(polices, *funcConfig, cash)
+	cashTree := cashing.NewCashTree(config.CashDisableThreShold)
+
+	mapped, err := export(polices, cash, config, cashTree)
 	if err != nil {
 		return nil, NewErrExport(err)
 	}
@@ -194,10 +207,13 @@ caching will be disabled and field values will be retrieved directly via reflect
 on each evaluation. For optimal performance in production scenarios with multiple
 policies accessing the same fields, it is recommended to use DefaultCasher.
 
+The config parameter allows customizing condition functions and cache behavior.
+If config.ConditionsMap is nil, default condition functions will be used.
+
 Parameters:
-  - cash - instance of base.Casher for L1 caching (can be nil to disable caching)
+  - cash - instance of cashing.Casher for L1 caching (can be nil to disable caching)
   - path - path to the file with policies in JSON format
-  - funcConfig - configuration for condition functions (can be nil to use default functions)
+  - config - configuration containing condition functions map and cache disable threshold
 
 Returns:
   - *Guardian - created engine instance, ready to use
@@ -212,7 +228,10 @@ Possible errors:
 
 Example usage:
 
-	import "github.com/dejitarudemon/pbac-guardian/internal/implemented"
+	import (
+		"github.com/dejitarudemon/pbac-guardian/internal/implemented"
+		"github.com/dejitarudemon/pbac-guardian/internal/base"
+	)
 
 	// File policies.json:
 	// [
@@ -227,12 +246,16 @@ Example usage:
 	// ]
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromFile(casher, "policies.json", nil)
+	config := base.Config{
+		ConditionsMap:        nil, // use defaults
+		CashDisableThreShold: 3,
+	}
+	engine, err := guardian.NewGuardianFromFile(casher, "policies.json", config)
 	if err != nil {
 		// handle error
 	}
 */
-func NewGuardianFromFile(cash cashing.Casher, path string, funcConfig *base.ConditionsMap) (*Guardian, error) {
+func NewGuardianFromFile(cash cashing.Casher, path string, config base.Config) (*Guardian, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModeAppend)
 	if err != nil {
 		return nil, NewErrExport(err)
@@ -249,7 +272,7 @@ func NewGuardianFromFile(cash cashing.Casher, path string, funcConfig *base.Cond
 		return nil, NewErrExport(err)
 	}
 
-	return NewGuardianFromPolices(cash, polices, funcConfig)
+	return NewGuardianFromPolices(cash, polices, config)
 }
 
 /*

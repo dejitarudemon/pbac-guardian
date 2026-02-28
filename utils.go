@@ -10,14 +10,16 @@ import (
 export converts a list of policies into a map organized by actions.
 
 The function performs the following checks:
- 1. Check for duplicate policy names
+ 1. Check for duplicate policy names (using map for O(1) lookup)
  2. Validate each policy through Policy.IsValid()
  3. Group policies by actions for fast access
- 4. Attach condition functions configuration to each policy
+ 4. Attach condition functions configuration, cache instance, and cache tree to each policy
 
 Parameters:
   - polices - list of policies to export and group
-  - funcConfig - configuration for condition functions to attach to policies
+  - cash - L1 cache instance for storing field values (can be nil to disable caching)
+  - config - configuration containing condition functions map and cache disable threshold
+  - tree - cache tree for tracking field access counts and disabling cache for rarely accessed fields
 
 Returns:
   - map[string][]base.Policy - map of policies where:
@@ -29,7 +31,7 @@ Possible errors:
   - ErrDuplicateName - policy name is already used by another policy in the list
   - errors from base.Policy.IsValid() - ErrInvalidPath when path in policy conditions is invalid
 */
-func export(polices []base.Policy, funcConfig base.ConditionsMap, cash cashing.Casher) (map[string][]base.Policy, error) {
+func export(polices []base.Policy, cash cashing.Casher, config base.Config, tree cashing.CashTree) (map[string][]base.Policy, error) {
 	mappedPolices := make(map[string][]base.Policy)
 	usedNames := make(map[string]struct{}, len(polices))
 
@@ -44,12 +46,15 @@ func export(polices []base.Policy, funcConfig base.ConditionsMap, cash cashing.C
 			return nil, err
 		}
 
-		policy.ConditionsMap = &funcConfig
+		policy.ConditionsMap = config.ConditionsMap
 		policy.Cash = cash
+		policy.CashTree = tree
 
 		if _, ok := mappedPolices[policy.Action]; !ok {
 			mappedPolices[policy.Action] = make([]base.Policy, 0, 1)
 		}
+
+		policy.AddInformationToCashTree()
 
 		mappedPolices[policy.Action] = append(mappedPolices[policy.Action], policy)
 	}

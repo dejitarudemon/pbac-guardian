@@ -8,7 +8,7 @@ as well as policy evaluation for various access scenarios. The tests verify:
   - Policy evaluation with different condition types
   - Context cancellation and timeout handling
   - Nested structure support
-  - Custom condition functions configuration (funcConfig parameter)
+  - Custom condition functions configuration (config parameter with ConditionsMap)
 
 This file is in the tests directory for test organization.
 Tests import the guardian package as regular library users.
@@ -158,7 +158,8 @@ func TestNewGuardianFromPolices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, tt.policies, nil)
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, tt.policies, config)
 			if tt.wantErr {
 				// Expect error
 				if err == nil {
@@ -272,7 +273,8 @@ func TestNewGuardianFromFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromFile(nil, tt.path, nil)
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromFile(nil, tt.path, config)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -338,7 +340,8 @@ func TestEvaluate(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -448,7 +451,8 @@ func TestEvaluateWithContextCancellation(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -488,7 +492,8 @@ func TestEvaluateWithTimeout(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -536,7 +541,8 @@ func TestEvaluateNestedStructures(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}

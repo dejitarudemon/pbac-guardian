@@ -105,6 +105,38 @@ type Policy struct {
 	Conditions    map[string]Condition `json:"conditions"`
 	ConditionsMap *ConditionsMap       `json:"-"`
 	Cash          cashing.Casher       `json:"-"`
+	CashTree      cashing.CashTree     `json:"-"`
+}
+
+/*
+AddInformationToCashTree records all field paths used in policy conditions to the cache tree.
+
+The function scans all conditions in the policy and adds field paths (both left and right sides)
+to the CashTree for tracking access counts. This allows the cache tree to determine which
+fields should be cached based on access frequency.
+
+This method is called automatically during policy export in the export() function.
+*/
+func (p *Policy) AddInformationToCashTree() {
+	for left, condition := range p.Conditions {
+		if p.isPath(left) {
+			p.CashTree.Add(p.Action, left)
+		}
+
+		c := reflect.ValueOf(condition)
+
+		for i := range c.NumField() {
+			field := c.Field(i)
+			if !field.IsZero() {
+				right := field.Interface()
+
+				if r, ok := right.(string); ok && p.isPath(r) {
+					p.CashTree.Add(p.Action, r)
+				}
+			}
+
+		}
+	}
 }
 
 /*
@@ -119,8 +151,11 @@ Parameters:
 Returns:
   - bool - true if path contains separator ":" and is a path, false otherwise
 */
-func (p *Policy) isPath(path string) bool {
-	return strings.Contains(path, PATH_SEP)
+func (p *Policy) isPath(path any) bool {
+	if str, ok := path.(string); ok {
+		return strings.Contains(str, PATH_SEP)
+	}
+	return false
 }
 
 /*
@@ -249,13 +284,16 @@ If the value is found in cache, it is returned immediately. After retrieving
 a value via reflection, it is stored in cache for subsequent use within the
 same evaluation session.
 
+Cache behavior is controlled by CashTree attached to the policy, which tracks
+field access counts and disables caching for rarely accessed fields to optimize
+memory usage.
+
 Parameters:
   - ctx - context for operation cancellation and timeout control
   - source - first structure to search for fields (used for paths "source:...")
   - target - second structure to search for fields (used for paths "target:...")
   - path - path to field (e.g., "source:name") or literal value (e.g., "admin")
   - mustBePath - flag indicating whether path must be a path (true) or can be a literal (false)
-  - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
@@ -278,7 +316,7 @@ func (p *Policy) get(ctx context.Context, source, target any, path string, mustB
 	}
 
 	// Если кеш не отключен, ищем в нем по id сессии и ключу (пути до искомого поля)
-	if p.Cash != nil {
+	if p.Cash != nil && !p.CashTree.IsDisabled(p.Action, path) {
 		value, err := p.Cash.Get(ctx, sessionID, path)
 		if err == nil && value != nil {
 			return value, nil
@@ -305,7 +343,7 @@ func (p *Policy) get(ctx context.Context, source, target any, path string, mustB
 		return nil, err
 	}
 
-	if p.Cash != nil {
+	if p.Cash != nil && !p.CashTree.IsDisabled(p.Action, path) {
 		p.Cash.Set(ctx, sessionID, path, value)
 	}
 
@@ -327,12 +365,15 @@ optimize performance. The cache is scoped by sessionID, which is unique for each
 evaluation session. This allows reusing field values within the same evaluation
 without repeated reflection-based searches.
 
+The cache behavior is controlled by the CashTree attached to the policy, which
+tracks field access counts and can disable caching for fields that are accessed
+less frequently than the configured threshold.
+
 Parameters:
   - ctx - context for operation cancellation and timeout control
   - source - first structure to check (usually the action source)
   - target - second structure to check (usually the action target)
   - action - action in format "entity:action:extra..." to check
-  - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
@@ -342,11 +383,12 @@ Returns:
   - error - execution error if a problem occurred during condition checking
 
 Possible errors:
+  - ErrNilContext - context parameter is nil
   - ErrCancelled - operation was cancelled through context.Context
   - ErrInvalidPath - path parsing error or field search error in structure
   - ErrInvalidType - type error when getting field value (structure is not of that type)
   - ErrUncomparable - cannot compare values in condition (incompatible types)
-  - ErrInexpectedBehavior - internal error: condition function not found in CONDITION_TO_FUNC
+  - ErrInexpectedBehavior - internal error: condition function not found or policy is nil
 */
 func (p *Policy) Evaluate(ctx context.Context, source, target any, action string, sessionID string) (bool, error) {
 	if p == nil {

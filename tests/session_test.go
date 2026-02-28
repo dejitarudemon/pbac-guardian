@@ -34,7 +34,8 @@ func TestSessionIsolation(t *testing.T) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -95,7 +96,8 @@ func TestCacheReuseWithinSession(t *testing.T) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -139,7 +141,8 @@ func TestCacheClearedAfterEvaluation(t *testing.T) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -189,7 +192,8 @@ func TestConcurrentEvaluationsWithCache(t *testing.T) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}

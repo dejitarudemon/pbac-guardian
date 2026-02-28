@@ -59,7 +59,8 @@ func BenchmarkNewGuardianFromPolices(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+		config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+		_, err := guardian.NewGuardianFromPolices(nil, policies, config)
 		if err != nil {
 			b.Fatalf("failed to create engine: %v", err)
 		}
@@ -83,7 +84,8 @@ func BenchmarkEvaluateSimple(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -128,7 +130,8 @@ func BenchmarkEvaluateMultipleConditions(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -165,7 +168,8 @@ func BenchmarkEvaluateContains(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -202,7 +206,8 @@ func BenchmarkEvaluateLt(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -240,7 +245,8 @@ func BenchmarkEvaluateNestedStructures(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -309,7 +315,8 @@ func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -347,7 +354,8 @@ func BenchmarkEvaluateFieldComparison(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -383,7 +391,8 @@ func BenchmarkEvaluateDenyPolicy(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -428,7 +437,8 @@ func BenchmarkEvaluateLargeSlice(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -464,7 +474,8 @@ func BenchmarkEvaluateNoMatch(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -518,7 +529,8 @@ func BenchmarkEvaluateWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -572,7 +584,8 @@ func BenchmarkEvaluateWithoutCache(b *testing.B) {
 	}
 
 	// Use nil casher to disable caching
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -640,7 +653,8 @@ func BenchmarkEvaluateMultiplePoliciesWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -677,7 +691,8 @@ func BenchmarkEvaluateNestedStructuresWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}

@@ -38,7 +38,8 @@ func createPoliciesWithRepeatedField(field string, count int) []base.Policy {
 func BenchmarkEvaluate1PolicyWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 1)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -51,7 +52,8 @@ func BenchmarkEvaluate1PolicyWithCache(b *testing.B) {
 
 func BenchmarkEvaluate1PolicyWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 1)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -65,7 +67,8 @@ func BenchmarkEvaluate1PolicyWithoutCache(b *testing.B) {
 func BenchmarkEvaluate2PoliciesWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 2)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -78,7 +81,8 @@ func BenchmarkEvaluate2PoliciesWithCache(b *testing.B) {
 
 func BenchmarkEvaluate2PoliciesWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 2)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -92,7 +96,8 @@ func BenchmarkEvaluate2PoliciesWithoutCache(b *testing.B) {
 func BenchmarkEvaluate3PoliciesWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 3)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -105,7 +110,8 @@ func BenchmarkEvaluate3PoliciesWithCache(b *testing.B) {
 
 func BenchmarkEvaluate3PoliciesWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 3)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -119,7 +125,8 @@ func BenchmarkEvaluate3PoliciesWithoutCache(b *testing.B) {
 func BenchmarkEvaluate4PoliciesWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 4)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -132,7 +139,8 @@ func BenchmarkEvaluate4PoliciesWithCache(b *testing.B) {
 
 func BenchmarkEvaluate4PoliciesWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 4)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -146,7 +154,8 @@ func BenchmarkEvaluate4PoliciesWithoutCache(b *testing.B) {
 func BenchmarkEvaluate5PoliciesWithCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 5)
 	casher := implemented.NewDefaultCasher()
-	engine, _ := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(casher, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}
@@ -159,7 +168,8 @@ func BenchmarkEvaluate5PoliciesWithCache(b *testing.B) {
 
 func BenchmarkEvaluate5PoliciesWithoutCache(b *testing.B) {
 	policies := createPoliciesWithRepeatedField("source:role", 5)
-	engine, _ := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, _ := guardian.NewGuardianFromPolices(nil, policies, config)
 	ctx := context.Background()
 	source := User{Name: "admin", Role: "admin"}
 	target := Document{Owner: "alice", Type: "public"}

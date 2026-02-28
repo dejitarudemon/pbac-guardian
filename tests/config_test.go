@@ -18,6 +18,8 @@ TestConditionFuncsConfigSelect tests the Select method of ConditionsMap.
 
 The test checks that Select correctly returns condition functions by their names
 and returns nil for unknown function names.
+
+Note: This test uses ConditionsMap directly, not Config structure.
 */
 func TestConditionFuncsConfigSelect(t *testing.T) {
 	config := implemented.DefaultConditionsMap

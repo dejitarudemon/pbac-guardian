@@ -39,7 +39,8 @@ func TestEvaluateInvalidFieldPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -76,7 +77,8 @@ func TestEvaluateInvalidNestedPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -113,7 +115,8 @@ func TestEvaluateInvalidTargetPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
