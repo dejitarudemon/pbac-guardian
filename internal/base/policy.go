@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/dejitarudemon/pbac-guardian/internal/cashing"
 )
 
 // tag key used for struct field tagging
@@ -102,7 +104,7 @@ type Policy struct {
 	Effect        Effect               `json:"effect"`
 	Conditions    map[string]Condition `json:"conditions"`
 	ConditionsMap *ConditionsMap       `json:"-"`
-	Cash          Casher               `json:"-"`
+	Cash          cashing.Casher       `json:"-"`
 }
 
 /*

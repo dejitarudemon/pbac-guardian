@@ -95,6 +95,7 @@ import (
 	"os"
 
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/cashing"
 	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
@@ -170,7 +171,7 @@ Example usage:
 		// handle error
 	}
 */
-func NewGuardianFromPolices(cash base.Casher, polices []base.Policy, funcConfig *base.ConditionsMap) (*Guardian, error) {
+func NewGuardianFromPolices(cash cashing.Casher, polices []base.Policy, funcConfig *base.ConditionsMap) (*Guardian, error) {
 	if funcConfig == nil {
 		funcConfig = &implemented.DefaultConditionsMap
 	}
@@ -231,7 +232,7 @@ Example usage:
 		// handle error
 	}
 */
-func NewGuardianFromFile(cash base.Casher, path string, funcConfig *base.ConditionsMap) (*Guardian, error) {
+func NewGuardianFromFile(cash cashing.Casher, path string, funcConfig *base.ConditionsMap) (*Guardian, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModeAppend)
 	if err != nil {
 		return nil, NewErrExport(err)

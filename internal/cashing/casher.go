@@ -4,7 +4,7 @@ conditions, effects, and entities in the access control system.
 
 This file contains the Casher interface for L1 caching in the policy evaluation engine.
 */
-package base
+package cashing
 
 import "context"
 
