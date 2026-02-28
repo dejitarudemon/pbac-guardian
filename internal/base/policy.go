@@ -102,6 +102,7 @@ type Policy struct {
 	Effect        Effect                `json:"effect"`
 	Conditions    map[string]Condition  `json:"conditions"`
 	ConditionsMap *ConditionFuncsConfig `json:"-"`
+	Cash          Casher                `json:"-"`
 }
 
 /*
@@ -266,7 +267,7 @@ Possible errors:
   - field search error (see getValue)
   - ErrInvalidType - entity is not a structure or pointer to structure (see getValue)
 */
-func (p *Policy) get(ctx context.Context, source, target any, path string, mustBePath bool, cash Casher, sessionID string) (any, error) {
+func (p *Policy) get(ctx context.Context, source, target any, path string, mustBePath bool, sessionID string) (any, error) {
 	if !p.isPath(path) {
 		if mustBePath {
 			return nil, NewErrInvalidPath(path, "must be a path, but it's literal value")
@@ -275,8 +276,8 @@ func (p *Policy) get(ctx context.Context, source, target any, path string, mustB
 	}
 
 	// Если кеш не отключен, ищем в нем по id сессии и ключу (пути до искомого поля)
-	if cash != nil {
-		value, err := cash.Get(ctx, sessionID, path)
+	if p.Cash != nil {
+		value, err := p.Cash.Get(ctx, sessionID, path)
 		if err == nil && value != nil {
 			return value, nil
 		}
@@ -302,8 +303,8 @@ func (p *Policy) get(ctx context.Context, source, target any, path string, mustB
 		return nil, err
 	}
 
-	if cash != nil {
-		cash.Set(ctx, sessionID, path, value)
+	if p.Cash != nil {
+		p.Cash.Set(ctx, sessionID, path, value)
 	}
 
 	return value, nil
@@ -345,7 +346,7 @@ Possible errors:
   - ErrUncomparable - cannot compare values in condition (incompatible types)
   - ErrInexpectedBehavior - internal error: condition function not found in CONDITION_TO_FUNC
 */
-func (p *Policy) Evaluate(ctx context.Context, source, target any, action string, cash Casher, sessionID string) (bool, error) {
+func (p *Policy) Evaluate(ctx context.Context, source, target any, action string, sessionID string) (bool, error) {
 	if p == nil {
 		return false, NewErrInexpectedBehavior("Policy.Evaluate()", "policy is nil")
 	}
@@ -361,7 +362,7 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 	t := reflect.TypeFor[Condition]()
 
 	for field, condition := range p.Conditions {
-		left, err := p.get(ctx, source, target, field, true, cash, sessionID)
+		left, err := p.get(ctx, source, target, field, true, sessionID)
 		if err != nil {
 			return false, err
 		}
@@ -379,7 +380,7 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 						right := c.Field(i).Interface()
 
 						if r, ok := right.(string); ok {
-							right, err = p.get(ctx, source, target, r, false, cash, sessionID)
+							right, err = p.get(ctx, source, target, r, false, sessionID)
 							if err != nil {
 								return false, err
 							}
