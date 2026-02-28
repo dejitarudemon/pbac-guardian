@@ -30,7 +30,7 @@ Possible errors:
   - ErrDuplicateName - policy name is already used by another policy in the list
   - errors from base.Policy.IsValid() - ErrInvalidPath when path in policy conditions is invalid
 */
-func export(polices []base.Policy, funcConfig base.ConditionFuncsConfig) (map[string][]base.Policy, error) {
+func export(polices []base.Policy, funcConfig base.ConditionFuncsConfig, cash base.Casher) (map[string][]base.Policy, error) {
 	mappedPolices := make(map[string][]base.Policy)
 	usedNames := make([]string, 0, len(polices))
 
@@ -46,6 +46,7 @@ func export(polices []base.Policy, funcConfig base.ConditionFuncsConfig) (map[st
 		}
 
 		policy.ConditionsMap = &funcConfig
+		policy.Cash = cash
 
 		if _, ok := mappedPolices[policy.Action]; !ok {
 			mappedPolices[policy.Action] = make([]base.Policy, 0, 1)

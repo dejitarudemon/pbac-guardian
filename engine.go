@@ -122,7 +122,6 @@ Fields:
 type Guardian struct {
 	// хранит политики, разделенные по действиям (action)
 	polices map[string][]base.Policy
-	cash    base.Casher
 }
 
 /*
@@ -175,12 +174,12 @@ func NewGuardianFromPolices(cash base.Casher, polices []base.Policy, funcConfig 
 	if funcConfig == nil {
 		funcConfig = &implemented.DefaultConditionsFuncs
 	}
-	mapped, err := export(polices, *funcConfig)
+	mapped, err := export(polices, *funcConfig, cash)
 	if err != nil {
 		return nil, NewErrExport(err)
 	}
 
-	return &Guardian{polices: mapped, cash: cash}, nil
+	return &Guardian{polices: mapped}, nil
 }
 
 /*
@@ -354,7 +353,7 @@ func (n *Guardian) Evaluate(ctx context.Context, source, target any, action stri
 	sessionID := generateNewSesstionID()
 
 	for _, policy := range polices {
-		ok, err := policy.Evaluate(ctx, source, target, action, n.cash, sessionID)
+		ok, err := policy.Evaluate(ctx, source, target, action, sessionID)
 		if err != nil {
 			return false, NewErrEvaluate(err)
 		}
