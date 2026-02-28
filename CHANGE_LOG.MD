@@ -7,6 +7,7 @@
 - Изменена сигнатура метода `Policy.Evaluate`: удален параметр `cash`, кеш теперь хранится в поле `Cash` структуры `Policy`
 - Кеш автоматически устанавливается в политику при экспорте через функцию `export()` в `utils.go`
 - Упрощена архитектура: кеш передается в политику один раз при создании движка, а не при каждом вызове `Evaluate`
+- Переименован тип `ConditionFuncsConfig` в `ConditionsMap` для более точного отражения назначения
 
 **Обновлено:**
 
@@ -26,6 +27,7 @@
 - Changed `Policy.Evaluate` method signature: removed `cash` parameter, cache is now stored in `Cash` field of `Policy` struct
 - Cache is automatically set in policy during export via `export()` function in `utils.go`
 - Simplified architecture: cache is passed to policy once during engine creation, not on every `Evaluate` call
+- Renamed `ConditionFuncsConfig` type to `ConditionsMap` for better clarity of purpose
 
 **Updated:**
 
