@@ -8,7 +8,10 @@ entities (source/target) and interfaces for custom comparison.
 package base
 
 /*
-This file contains interfaces for comparison operations
+Package base provides basic types and functions for working with policies,
+conditions, effects, and entities in the access control system.
+
+This file contains the Comparable interface for custom comparison operations.
 */
 
 /*

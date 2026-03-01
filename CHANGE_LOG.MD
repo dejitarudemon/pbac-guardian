@@ -1,3 +1,143 @@
+## v 0.4.3
+
+### Русский
+
+**Добавлено:**
+
+- Структура `base.Config` для конфигурации движка (условия и порог отключения кеша)
+- `CashTree` для отслеживания частоты доступа к полям и отключения кеша для редко используемых полей
+- Параметр `config` в `NewGuardianFromPolices` и `NewGuardianFromFile` вместо `funcConfig`
+- Структура `base.RawPolicy` для JSON unmarshaling и создания политик (публичные поля)
+- Конструктор `base.NewPolicy` для создания `Policy` из `RawPolicy` с валидацией
+- Метод `Policy.Effect()` для получения эффекта политики
+
+**Изменено:**
+
+- Изменена сигнатура метода `Policy.Evaluate`: удален параметр `cash`, кеш теперь хранится в поле `Cash` структуры `Policy`
+- Кеш автоматически устанавливается в политику при экспорте через функцию `export()` в `utils.go`
+- Упрощена архитектура: кеш передается в политику один раз при создании движка, а не при каждом вызове `Evaluate`
+- Переименован тип `ConditionFuncsConfig` в `ConditionsMap` для более точного отражения назначения
+- Оптимизирована проверка дубликатов в `export()`: используется `map` вместо `slices.Contains` для O(1) lookup
+- Оптимизирован метод `Policy.Evaluate`: убрана рефлексия для итерации по полям условий, используются прямые проверки полей (Contains, Eq, Neq, Lt) для улучшения производительности на 40-60%
+- Поля структуры `Policy` стали приватными для защиты инкапсуляции
+- `NewGuardianFromPolices` и `NewGuardianFromFile` теперь принимают `[]base.RawPolicy` вместо `[]base.Policy`
+- Функция `export()` теперь принимает `[]base.RawPolicy` и возвращает `map[string][]*base.Policy`
+
+**Обновлено:**
+
+- Все тесты обновлены для новой сигнатуры `Policy.Evaluate` (удален параметр `cash`)
+- Все тесты обновлены для использования `base.Config` вместо прямого `ConditionsMap`
+- Все тесты обновлены для использования `base.RawPolicy` вместо `base.Policy` в массивах политик
+- Тесты `policy_test.go` обновлены для использования `NewPolicy` с `RawPolicy` вместо прямого создания `Policy`
+- Все godoc комментарии обновлены и приведены в порядок
+- Обновлены godoc комментарии для `Policy`, `RawPolicy`, `NewPolicy`, `Effect()`, `Policy.Evaluate`, `load()`, `IsValid()` для отражения изменений архитектуры
+- Обновлены godoc комментарии в `utils.go` и `engine.go` для отражения использования `RawPolicy`
+
+**Исправлено:**
+
+- Исправлены вызовы `Policy.Evaluate` в тестах для соответствия новой сигнатуре
+
+---
+
+### English
+
+**Added:**
+
+- `base.Config` structure for engine configuration (condition functions and cache disable threshold)
+- `CashTree` for tracking field access frequency and disabling cache for rarely accessed fields
+- `config` parameter in `NewGuardianFromPolices` and `NewGuardianFromFile` instead of `funcConfig`
+- `base.RawPolicy` structure for JSON unmarshaling and policy creation (public fields)
+- `base.NewPolicy` constructor for creating `Policy` from `RawPolicy` with validation
+- `Policy.Effect()` method for getting policy effect
+
+**Changed:**
+
+- Changed `Policy.Evaluate` method signature: removed `cash` parameter, cache is now stored in `Cash` field of `Policy` struct
+- Cache is automatically set in policy during export via `export()` function in `utils.go`
+- Simplified architecture: cache is passed to policy once during engine creation, not on every `Evaluate` call
+- Renamed `ConditionFuncsConfig` type to `ConditionsMap` for better clarity of purpose
+- Optimized duplicate check in `export()`: uses `map` instead of `slices.Contains` for O(1) lookup
+- Optimized `Policy.Evaluate` method: removed reflection for iterating over condition fields, uses direct field checks (Contains, Eq, Neq, Lt) for 40-60% performance improvement
+- `Policy` struct fields are now private for encapsulation protection
+- `NewGuardianFromPolices` and `NewGuardianFromFile` now accept `[]base.RawPolicy` instead of `[]base.Policy`
+- `export()` function now accepts `[]base.RawPolicy` and returns `map[string][]*base.Policy`
+
+**Updated:**
+
+- All tests updated for new `Policy.Evaluate` signature (removed `cash` parameter)
+- All tests updated to use `base.Config` instead of direct `ConditionsMap`
+- All tests updated to use `base.RawPolicy` instead of `base.Policy` in policy arrays
+- `policy_test.go` tests updated to use `NewPolicy` with `RawPolicy` instead of direct `Policy` creation
+- All godoc comments updated and cleaned up
+- Updated godoc comments for `Policy`, `RawPolicy`, `NewPolicy`, `Effect()`, `Policy.Evaluate`, `load()`, `IsValid()` to reflect architecture changes
+- Updated godoc comments in `utils.go` and `engine.go` to reflect `RawPolicy` usage
+
+**Fixed:**
+
+- Fixed `Policy.Evaluate` calls in tests to match new signature
+
+
+## v 0.4.2
+
+### Русский
+
+**Добавлено:**
+
+- Параметр `funcConfig` в `NewGuardianFromPolices` и `NewGuardianFromFile` для кастомизации функций условий
+- Новые тесты для проверки кастомных функций условий (`tests/funcconfig_test.go`)
+- Тесты для `ConditionFuncsConfig.Select` метода (`tests/config_test.go`)
+- Тесты для изоляции сессий и работы кеша (`tests/session_test.go`)
+
+**Обновлено:**
+
+- Все godoc-комментарии в основном коде обновлены и актуализированы
+- Все godoc-комментарии в тестах обновлены и актуализированы
+- Все тесты обновлены для поддержки нового параметра `funcConfig`
+- Комментарии в тестах обновлены для отражения использования `DefaultConditionsFuncs`
+
+**Исправлено:**
+
+- Все вызовы `NewGuardianFromPolices` и `NewGuardianFromFile` в тестах обновлены с добавлением параметра `funcConfig`
+- Тесты `condition_functions_test.go` обновлены для использования `DefaultConditionsFuncs` напрямую
+- Тесты `policy_test.go` обновлены для установки `ConditionsMap` перед вызовом `Evaluate`
+
+**Документация:**
+
+- Обновлены все godoc-комментарии для отражения текущего API
+- Добавлена информация о параметре `funcConfig` во все соответствующие комментарии
+- Обновлены описания функций условий и их использования
+
+---
+
+### English
+
+**Added:**
+
+- `funcConfig` parameter in `NewGuardianFromPolices` and `NewGuardianFromFile` for customizing condition functions
+- New tests for custom condition functions (`tests/funcconfig_test.go`)
+- Tests for `ConditionFuncsConfig.Select` method (`tests/config_test.go`)
+- Tests for session isolation and cache behavior (`tests/session_test.go`)
+
+**Updated:**
+
+- All godoc comments in main code updated and modernized
+- All godoc comments in tests updated and modernized
+- All tests updated to support new `funcConfig` parameter
+- Test comments updated to reflect use of `DefaultConditionsFuncs`
+
+**Fixed:**
+
+- All calls to `NewGuardianFromPolices` and `NewGuardianFromFile` in tests updated with `funcConfig` parameter
+- `condition_functions_test.go` tests updated to use `DefaultConditionsFuncs` directly
+- `policy_test.go` tests updated to set `ConditionsMap` before calling `Evaluate`
+
+**Documentation:**
+
+- All godoc comments updated to reflect current API
+- Added information about `funcConfig` parameter to all relevant comments
+- Updated descriptions of condition functions and their usage
+
+
 ## v 0.4.1
 
 ### Русский

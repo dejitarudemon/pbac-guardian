@@ -3,7 +3,11 @@ Package tests contains tests for public methods of Policy structure in base pack
 
 Tests check only exported methods:
   - Evaluate - policy evaluation for given source, target and action
+    (requires ConditionsMap to be set with condition functions)
   - IsValid - policy validation
+
+The tests verify that Policy methods work correctly with various data types,
+handle multiple conditions, and properly validate policy structure.
 */
 package tests
 
@@ -12,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
 /*
@@ -50,7 +55,7 @@ func TestPolicyEvaluate(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		policy  base.Policy
+		raw     base.RawPolicy
 		source  any
 		target  any
 		action  string
@@ -60,7 +65,7 @@ func TestPolicyEvaluate(t *testing.T) {
 		{
 			name: "matching action and condition",
 			// Test checks successful policy evaluation when action matches and condition is met
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -77,7 +82,7 @@ func TestPolicyEvaluate(t *testing.T) {
 		{
 			name: "non-matching action",
 			// Test checks that policy is not applied when action does not match
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -94,7 +99,7 @@ func TestPolicyEvaluate(t *testing.T) {
 		{
 			name: "non-matching condition",
 			// Test checks that policy does not pass when condition is not met
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -111,7 +116,7 @@ func TestPolicyEvaluate(t *testing.T) {
 		{
 			name: "multiple conditions - all match",
 			// Test checks that all conditions must be met (logical AND)
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -129,7 +134,7 @@ func TestPolicyEvaluate(t *testing.T) {
 		{
 			name: "multiple conditions - one fails",
 			// Test checks that if at least one condition is not met, policy does not pass
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -147,7 +152,7 @@ func TestPolicyEvaluate(t *testing.T) {
 		{
 			name: "compare fields from different structures",
 			// Test checks field comparison from different structures (source and target)
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -165,8 +170,13 @@ func TestPolicyEvaluate(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Use nil casher and empty sessionID for direct Policy.Evaluate tests
-			got, err := tt.policy.Evaluate(ctx, tt.source, tt.target, tt.action, nil, "")
+			// Create policy using NewPolicy with default conditions map and nil cache
+			policy, err := base.NewPolicy(tt.raw, &implemented.DefaultConditionsMap, nil, nil)
+			if err != nil {
+				t.Fatalf("failed to create policy: %v", err)
+			}
+			// Use empty sessionID for direct Policy.Evaluate tests
+			got, err := policy.Evaluate(ctx, tt.source, tt.target, tt.action, "")
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -195,13 +205,13 @@ The test checks:
 func TestPolicyIsValid(t *testing.T) {
 	tests := []struct {
 		name    string
-		policy  base.Policy
+		raw     base.RawPolicy
 		wantErr bool
 	}{
 		{
 			name: "valid policy",
 			// Test checks valid policy with all correct parameters
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -214,7 +224,7 @@ func TestPolicyIsValid(t *testing.T) {
 		{
 			name: "invalid action - too short",
 			// Test checks action validation with insufficient number of parts
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "read", // Only one part, need minimum 2
 				Effect: base.Effect_ALLOW,
@@ -227,7 +237,7 @@ func TestPolicyIsValid(t *testing.T) {
 		{
 			name: "invalid action - empty part",
 			// Test checks action validation with empty part
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "user::read", // Empty part between separators
 				Effect: base.Effect_ALLOW,
@@ -240,7 +250,7 @@ func TestPolicyIsValid(t *testing.T) {
 		{
 			name: "invalid path in conditions",
 			// Test checks path validation in policy conditions
-			policy: base.Policy{
+			raw: base.RawPolicy{
 				Name:   "test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -254,7 +264,8 @@ func TestPolicyIsValid(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.policy.IsValid()
+			// NewPolicy calls IsValid internally, so we test validation through it
+			_, err := base.NewPolicy(tt.raw, &implemented.DefaultConditionsMap, nil, nil)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")

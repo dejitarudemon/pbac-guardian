@@ -1,8 +1,8 @@
 # pbac-guardian
 
-Current version: 0.4.1
+Current version: 0.4.3
 
-[English](#english) | [Русский](#русский)
+[English](#english) | [Русский](#russian)
 
 ---
 
@@ -21,7 +21,7 @@ Current version: 0.4.1
 - **Context Support**: Built-in support for cancellation and timeouts via `context.Context`
 - **Optional L1 Caching**: Optimized cache mechanism for improved performance with repeated field access
 - **Thread-Safe**: Fully concurrent-safe implementation
-- **No Dependencies**: Uses only the standard Go library
+- **Minimal Dependencies**: Uses only one external dependency (`github.com/google/uuid` for session ID generation)
 - **Type Safety**: Typed constants and validation
 
 ## Installation
@@ -58,7 +58,7 @@ import (
     "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "admin-read",
         Action: "user:read:document",
@@ -94,8 +94,12 @@ import (
 // Create cache instance (optional - pass nil to disable caching)
 casher := implemented.NewDefaultCasher()
 
-// Create engine
-engine, err := guardian.NewGuardianFromPolices(casher, policies)
+    // Create engine with default config
+    config := base.Config{
+        ConditionsMap:        nil, // use default condition functions
+        CashDisableThreShold: 3,   // disable cache for fields accessed < 3 times
+    }
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 if err != nil {
     panic(err)
 }
@@ -148,7 +152,7 @@ type Document struct {
 
 func main() {
     // Define policies
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "admin-access",
             Action: "user:read:document",
@@ -161,8 +165,9 @@ func main() {
         },
     }
 
-    // Create engine (nil casher disables caching)
-    engine, err := guardian.NewGuardianFromPolices(nil, policies)
+    // Create engine with default config (nil casher disables caching)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
     if err != nil {
         panic(err)
     }
@@ -220,8 +225,9 @@ import (
 )
 
 func main() {
-    // Load policies from file (nil casher disables caching)
-    engine, err := guardian.NewGuardianFromFile(nil, "policies.json")
+    // Load policies from file with default config (nil casher disables caching)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json", config)
     if err != nil {
         panic(err)
     }
@@ -244,7 +250,7 @@ func main() {
 This tutorial shows how to combine multiple conditions in a single policy.
 
 ```go
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "age-restricted-read",
         Action: "user:read:document",
@@ -266,7 +272,7 @@ policies := []base.Policy{
 DENY policies have priority. If a DENY policy's conditions are met, access is denied even if ALLOW policies pass.
 
 ```go
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "block-minors",
         Action: "user:read:document",
@@ -333,7 +339,7 @@ import (
 )
 
 func main() {
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "admin-read",
             Action: "user:read:document",
@@ -346,7 +352,8 @@ func main() {
 
     // Enable caching for better performance with repeated field access
     casher := implemented.NewDefaultCasher()
-    engine, err := guardian.NewGuardianFromPolices(casher, policies)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
     if err != nil {
         panic(err)
     }
@@ -389,7 +396,90 @@ The cache provides significant performance improvements in production scenarios:
 
 *Benchmarks conducted with 10+ actions and 20-30 policies per evaluation. Cache becomes beneficial at 3+ field accesses within a single action evaluation.*
 
-### Tutorial 7: Custom Types with Comparable Interface
+### Tutorial 7: Custom Condition Functions
+
+This tutorial shows how to customize condition functions using the `config` parameter.
+
+```go
+import (
+    "context"
+    "strings"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
+)
+
+func main() {
+    // Create custom condition function
+    customEqFunc := func(ctx context.Context, left, right any) (bool, error) {
+        // Custom logic: case-insensitive string comparison
+        if ctx.Err() != nil {
+            return false, base.ErrCancelled
+        }
+        leftStr, ok1 := left.(string)
+        rightStr, ok2 := right.(string)
+        if !ok1 || !ok2 {
+            return false, base.NewErrInvalidType("string", left)
+        }
+        return strings.EqualFold(leftStr, rightStr), nil
+    }
+
+    // Create custom ConditionsMap
+    customConditionsMap := &base.ConditionsMap{
+        Contains: implemented.DefaultConditionsMap.Contains,
+        Eq:       customEqFunc, // Use custom function
+        Neq:      implemented.DefaultConditionsMap.Neq,
+        Lt:       implemented.DefaultConditionsMap.Lt,
+    }
+
+    // Create config with custom ConditionsMap
+    config := base.Config{
+        ConditionsMap:        customConditionsMap,
+        CashDisableThreShold: 3,
+    }
+
+    policies := []base.RawPolicy{
+        {
+            Name:   "case-insensitive-admin",
+            Action: "user:read:document",
+            Effect: base.Effect_ALLOW,
+            Conditions: map[string]base.Condition{
+                "source:role": {Eq: "ADMIN"}, // Will match "admin", "Admin", "ADMIN", etc.
+            },
+        },
+    }
+
+    // Create engine with custom condition functions
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
+    if err != nil {
+        panic(err)
+    }
+
+    ctx := context.Background()
+    user := User{Name: "alice", Role: "admin"} // lowercase "admin"
+    doc := Document{Owner: "alice", Type: "public"}
+
+    // Custom function will match case-insensitively
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("Access allowed: %v\n", allowed) // true (case-insensitive match)
+}
+```
+
+**When to use custom functions:**
+- Need special comparison logic (case-insensitive, fuzzy matching, etc.)
+- Integration with external validation services
+- Custom business rules for condition evaluation
+
+**When to use defaults (pass nil):**
+- Standard equality, inequality, less-than, and contains operations
+- Most common use cases
+- When performance is critical (default functions are optimized)
+
+### Tutorial 8: Custom Types with Comparable Interface
 
 For custom types that need special comparison logic, implement the `Comparable` interface.
 
@@ -418,28 +508,46 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Guardian Engine
 
-#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy) (*Guardian, error)`
+#### `NewGuardianFromPolices(casher cashing.Casher, policies []base.RawPolicy, config base.Config) (*Guardian, error)`
 
-Creates a new Guardian instance from a list of policies. The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
+Creates a new Guardian instance from a list of policies. 
+- The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
+- The `policies` parameter accepts an array of `[]base.RawPolicy` (structures with public fields for JSON unmarshaling)
+- The `config` parameter contains condition functions map and cache disable threshold. If `config.ConditionsMap` is `nil`, default condition functions will be used.
 
-#### `NewGuardianFromFile(casher base.Casher, path string) (*Guardian, error)`
+#### `NewGuardianFromFile(casher cashing.Casher, path string, config base.Config) (*Guardian, error)`
 
-Creates a new Guardian instance from a JSON file. The `casher` parameter is optional - pass `nil` to disable caching.
+Creates a new Guardian instance from a JSON file.
+- The `casher` parameter is optional - pass `nil` to disable caching.
+- The `config` parameter contains condition functions map and cache disable threshold. If `config.ConditionsMap` is `nil`, default condition functions will be used.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 
 Evaluates access for the given action. Returns `true` if access is allowed, `false` otherwise. Each evaluation uses a unique session ID for cache isolation.
 
-### Policy Structure
+### Policy Structures
+
+#### RawPolicy
+
+`RawPolicy` is used for JSON unmarshaling and creating policies programmatically. It contains public fields that can be serialized/deserialized.
 
 ```go
-type Policy struct {
+type RawPolicy struct {
     Name       string               `json:"name"`
     Action     string               `json:"action"`
     Effect     Effect               `json:"effect"`
     Conditions map[string]Condition `json:"conditions"`
 }
 ```
+
+#### Policy
+
+`Policy` is an internal structure with private fields. Policy instances are created automatically by the Guardian engine from `RawPolicy` structures using `NewPolicy` constructor. You should not create `Policy` instances directly.
+
+Public methods:
+- `Evaluate(ctx context.Context, source, target any, action string, sessionID string) (bool, error)` - applies the policy
+- `IsValid() error` - validates the policy
+- `Effect() Effect` - returns the policy effect
 
 ### Condition Types
 
@@ -467,7 +575,7 @@ The library provides typed errors:
 
 ---
 
-<a name="русский"></a>
+<a name="russian"></a>
 # Русский
 
 ## Обзор
@@ -482,7 +590,7 @@ The library provides typed errors:
 - **Поддержка контекста**: Встроенная поддержка отмены и таймаутов через `context.Context`
 - **Опциональное L1-кеширование**: Оптимизированный механизм кеша для улучшения производительности при повторном доступе к полям
 - **Потокобезопасность**: Полностью потокобезопасная реализация
-- **Без зависимостей**: Использует только стандартную библиотеку Go
+- **Минимальные зависимости**: Использует только одну внешнюю зависимость (`github.com/google/uuid` для генерации session ID)
 - **Безопасность типов**: Типизированные константы и валидация
 
 ## Установка
@@ -519,7 +627,7 @@ import (
     "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "admin-read",
         Action: "user:read:document",
@@ -555,8 +663,12 @@ import (
 // Создание экземпляра кеша (опционально - передайте nil для отключения кеширования)
 casher := implemented.NewDefaultCasher()
 
-// Создание движка
-engine, err := guardian.NewGuardianFromPolices(casher, policies)
+    // Создание движка с конфигурацией по умолчанию
+    config := base.Config{
+        ConditionsMap:        nil, // использовать функции условий по умолчанию
+        CashDisableThreShold: 3,   // отключить кеш для полей, к которым обращаются < 3 раз
+    }
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 if err != nil {
     panic(err)
 }
@@ -609,7 +721,7 @@ type Document struct {
 
 func main() {
     // Определение политик
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "admin-access",
             Action: "user:read:document",
@@ -622,8 +734,9 @@ func main() {
         },
     }
 
-    // Создание движка (nil casher отключает кеширование)
-    engine, err := guardian.NewGuardianFromPolices(nil, policies)
+    // Создание движка с конфигурацией по умолчанию (nil casher отключает кеширование)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
     if err != nil {
         panic(err)
     }
@@ -681,8 +794,9 @@ import (
 )
 
 func main() {
-    // Загрузка политик из файла (nil casher отключает кеширование)
-    engine, err := guardian.NewGuardianFromFile(nil, "policies.json")
+    // Загрузка политик из файла с конфигурацией по умолчанию (nil casher отключает кеширование)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromFile(nil, "policies.json", config)
     if err != nil {
         panic(err)
     }
@@ -705,7 +819,7 @@ func main() {
 Этот туториал показывает, как комбинировать несколько условий в одной политике.
 
 ```go
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "age-restricted-read",
         Action: "user:read:document",
@@ -727,7 +841,7 @@ policies := []base.Policy{
 Политики DENY имеют приоритет. Если условия политики DENY выполнены, доступ запрещается, даже если политики ALLOW прошли проверку.
 
 ```go
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "block-minors",
         Action: "user:read:document",
@@ -794,7 +908,7 @@ import (
 )
 
 func main() {
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "admin-read",
             Action: "user:read:document",
@@ -807,7 +921,8 @@ func main() {
 
     // Включить кеширование для лучшей производительности при повторном доступе к полям
     casher := implemented.NewDefaultCasher()
-    engine, err := guardian.NewGuardianFromPolices(casher, policies)
+    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
     if err != nil {
         panic(err)
     }
@@ -850,7 +965,90 @@ func main() {
 
 *Бенчмарки проведены с 10+ действиями и 20-30 политиками на оценку. Кеш становится выгодным при 3+ обращениях к полю в рамках одной оценки действия.*
 
-### Туториал 7: Кастомные типы с интерфейсом Comparable
+### Туториал 7: Кастомные функции условий
+
+Этот туториал показывает, как кастомизировать функции условий с помощью параметра `config`.
+
+```go
+import (
+    "context"
+    "strings"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+    "github.com/dejitarudemon/pbac-guardian/internal/implemented"
+)
+
+func main() {
+    // Создание кастомной функции условия
+    customEqFunc := func(ctx context.Context, left, right any) (bool, error) {
+        // Кастомная логика: сравнение строк без учета регистра
+        if ctx.Err() != nil {
+            return false, base.ErrCancelled
+        }
+        leftStr, ok1 := left.(string)
+        rightStr, ok2 := right.(string)
+        if !ok1 || !ok2 {
+            return false, base.NewErrInvalidType("string", left)
+        }
+        return strings.EqualFold(leftStr, rightStr), nil
+    }
+
+    // Создание кастомной ConditionsMap
+    customConditionsMap := &base.ConditionsMap{
+        Contains: implemented.DefaultConditionsMap.Contains,
+        Eq:       customEqFunc, // Использовать кастомную функцию
+        Neq:      implemented.DefaultConditionsMap.Neq,
+        Lt:       implemented.DefaultConditionsMap.Lt,
+    }
+
+    // Создание config с кастомной ConditionsMap
+    config := base.Config{
+        ConditionsMap:        customConditionsMap,
+        CashDisableThreShold: 3,
+    }
+
+    policies := []base.RawPolicy{
+        {
+            Name:   "case-insensitive-admin",
+            Action: "user:read:document",
+            Effect: base.Effect_ALLOW,
+            Conditions: map[string]base.Condition{
+                "source:role": {Eq: "ADMIN"}, // Будет совпадать с "admin", "Admin", "ADMIN" и т.д.
+            },
+        },
+    }
+
+    // Создание движка с кастомными функциями условий
+    engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
+    if err != nil {
+        panic(err)
+    }
+
+    ctx := context.Background()
+    user := User{Name: "alice", Role: "admin"} // строчные буквы "admin"
+    doc := Document{Owner: "alice", Type: "public"}
+
+    // Кастомная функция будет совпадать без учета регистра
+    allowed, err := engine.Evaluate(ctx, user, doc, "user:read:document")
+    if err != nil {
+        panic(err)
+    }
+
+    fmt.Printf("Доступ разрешен: %v\n", allowed) // true (совпадение без учета регистра)
+}
+```
+
+**Когда использовать кастомные функции:**
+- Нужна специальная логика сравнения (без учета регистра, нечеткое совпадение и т.д.)
+- Интеграция с внешними сервисами валидации
+- Кастомные бизнес-правила для оценки условий
+
+**Когда использовать значения по умолчанию (передать nil):**
+- Стандартные операции равенства, неравенства, меньше и содержит
+- Большинство распространенных случаев использования
+- Когда производительность критична (функции по умолчанию оптимизированы)
+
+### Туториал 8: Кастомные типы с интерфейсом Comparable
 
 Для кастомных типов, требующих специальной логики сравнения, реализуйте интерфейс `Comparable`.
 
@@ -879,28 +1077,46 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Движок Guardian
 
-#### `NewGuardianFromPolices(casher base.Casher, policies []base.Policy) (*Guardian, error)`
+#### `NewGuardianFromPolices(casher cashing.Casher, policies []base.RawPolicy, config base.Config) (*Guardian, error)`
 
-Создает новый экземпляр Guardian из списка политик. Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
+Создает новый экземпляр Guardian из списка политик.
+- Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
+- Параметр `policies` принимает массив `[]base.RawPolicy` (структуры с публичными полями для JSON unmarshaling)
+- Параметр `config` содержит карту функций условий и порог отключения кеша. Если `config.ConditionsMap` равен `nil`, будут использованы функции условий по умолчанию.
 
-#### `NewGuardianFromFile(casher base.Casher, path string) (*Guardian, error)`
+#### `NewGuardianFromFile(casher cashing.Casher, path string, config base.Config) (*Guardian, error)`
 
-Создает новый экземпляр Guardian из JSON файла. Параметр `casher` опционален - передайте `nil` для отключения кеширования.
+Создает новый экземпляр Guardian из JSON файла.
+- Параметр `casher` опционален - передайте `nil` для отключения кеширования.
+- Параметр `config` содержит карту функций условий и порог отключения кеша. Если `config.ConditionsMap` равен `nil`, будут использованы функции условий по умолчанию.
 
 #### `Evaluate(ctx context.Context, source, target any, action string) (bool, error)`
 
 Оценивает доступ для указанного действия. Возвращает `true`, если доступ разрешен, `false` в противном случае. Каждая оценка использует уникальный идентификатор сессии для изоляции кеша.
 
-### Структура Policy
+### Структуры Policy
+
+#### RawPolicy
+
+`RawPolicy` используется для JSON unmarshaling и программного создания политик. Содержит публичные поля, которые могут быть сериализованы/десериализованы.
 
 ```go
-type Policy struct {
+type RawPolicy struct {
     Name       string               `json:"name"`
     Action     string               `json:"action"`
     Effect     Effect               `json:"effect"`
     Conditions map[string]Condition `json:"conditions"`
 }
 ```
+
+#### Policy
+
+`Policy` - это внутренняя структура с приватными полями. Экземпляры `Policy` создаются автоматически движком Guardian из структур `RawPolicy` с помощью конструктора `NewPolicy`. Не следует создавать экземпляры `Policy` напрямую.
+
+Публичные методы:
+- `Evaluate(ctx context.Context, source, target any, action string, sessionID string) (bool, error)` - применяет политику
+- `IsValid() error` - валидирует политику
+- `Effect() Effect` - возвращает эффект политики
 
 ### Типы условий
 

@@ -2,10 +2,14 @@
 Package tests contains benchmark tests for measuring library performance.
 
 Benchmarks check performance of main operations:
-  - Engine creation from policies
+  - Engine creation from policies (with and without cache)
   - Policy evaluation for various scenarios
-  - Working with various condition types
+  - Working with various condition types (Eq, Neq, Lt, Contains)
   - Handling nested structures
+  - Cache performance comparison (with cache vs without cache)
+
+The benchmarks help identify performance bottlenecks and measure
+the impact of caching on overall evaluation speed.
 */
 package tests
 
@@ -25,7 +29,7 @@ The benchmark checks time of engine creation with various number of policies.
 */
 func BenchmarkNewGuardianFromPolices(b *testing.B) {
 	// Create set of policies for testing
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "admin-read",
 			Action: "user:read:document",
@@ -55,7 +59,8 @@ func BenchmarkNewGuardianFromPolices(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := guardian.NewGuardianFromPolices(nil, policies)
+		config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+		_, err := guardian.NewGuardianFromPolices(nil, policies, config)
 		if err != nil {
 			b.Fatalf("failed to create engine: %v", err)
 		}
@@ -68,7 +73,7 @@ BenchmarkEvaluateSimple measures performance of simple policy evaluation.
 The benchmark checks time of policy evaluation with simple conditions (Eq).
 */
 func BenchmarkEvaluateSimple(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "admin-read",
 			Action: "user:read:document",
@@ -79,7 +84,8 @@ func BenchmarkEvaluateSimple(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -104,7 +110,7 @@ with multiple conditions.
 The benchmark checks time of policy evaluation with combination of various conditions.
 */
 func BenchmarkEvaluateMultipleConditions(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "complex-policy",
 			Action: "user:read:document",
@@ -124,7 +130,8 @@ func BenchmarkEvaluateMultipleConditions(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -148,7 +155,7 @@ BenchmarkEvaluateContains measures performance of Contains condition.
 The benchmark checks time of searching value in list through Contains condition.
 */
 func BenchmarkEvaluateContains(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "contains-policy",
 			Action: "user:read",
@@ -161,7 +168,8 @@ func BenchmarkEvaluateContains(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -185,7 +193,7 @@ BenchmarkEvaluateLt measures performance of Lt (less than) condition.
 The benchmark checks time of value comparison through Lt condition.
 */
 func BenchmarkEvaluateLt(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "lt-policy",
 			Action: "user:read",
@@ -198,7 +206,8 @@ func BenchmarkEvaluateLt(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -223,7 +232,7 @@ with nested structures.
 The benchmark checks time of getting values from nested structures.
 */
 func BenchmarkEvaluateNestedStructures(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "nested-policy",
 			Action: "user:read",
@@ -236,7 +245,8 @@ func BenchmarkEvaluateNestedStructures(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -261,7 +271,7 @@ multiple policies for one action.
 The benchmark checks time of evaluation when multiple policies are defined for action.
 */
 func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "policy-1",
 			Action: "user:read:document",
@@ -305,7 +315,8 @@ func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -330,7 +341,7 @@ fields from different structures.
 The benchmark checks time of comparing fields from source and target structures.
 */
 func BenchmarkEvaluateFieldComparison(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "field-comparison",
 			Action: "user:read:document",
@@ -343,7 +354,8 @@ func BenchmarkEvaluateFieldComparison(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -367,7 +379,7 @@ BenchmarkEvaluateDenyPolicy measures performance of policies with DENY effect.
 The benchmark checks time of evaluating policies that deny access.
 */
 func BenchmarkEvaluateDenyPolicy(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "deny-policy",
 			Action: "user:read:document",
@@ -379,7 +391,8 @@ func BenchmarkEvaluateDenyPolicy(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -411,7 +424,7 @@ func BenchmarkEvaluateLargeSlice(b *testing.B) {
 	}
 	largeRoleList[500] = "admin" // Search value in middle of list
 
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "large-slice-policy",
 			Action: "user:read",
@@ -424,7 +437,8 @@ func BenchmarkEvaluateLargeSlice(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -449,7 +463,7 @@ when policies do not match action.
 The benchmark checks time of evaluation when there are no suitable policies for action.
 */
 func BenchmarkEvaluateNoMatch(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "other-action",
 			Action: "user:write:document",
@@ -460,7 +474,8 @@ func BenchmarkEvaluateNoMatch(b *testing.B) {
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -485,7 +500,7 @@ The benchmark compares evaluation performance with cache vs without cache to mea
 the performance improvement from caching field values.
 */
 func BenchmarkEvaluateWithCache(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "admin-read",
 			Action: "user:read:document",
@@ -514,7 +529,8 @@ func BenchmarkEvaluateWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -539,7 +555,7 @@ This benchmark is used for comparison with BenchmarkEvaluateWithCache to measure
 the performance improvement from caching.
 */
 func BenchmarkEvaluateWithoutCache(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "admin-read",
 			Action: "user:read:document",
@@ -568,7 +584,8 @@ func BenchmarkEvaluateWithoutCache(b *testing.B) {
 	}
 
 	// Use nil casher to disable caching
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -591,7 +608,7 @@ BenchmarkEvaluateMultiplePoliciesWithCache measures performance of evaluating
 multiple policies with cache enabled.
 */
 func BenchmarkEvaluateMultiplePoliciesWithCache(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "policy-1",
 			Action: "user:read:document",
@@ -636,7 +653,8 @@ func BenchmarkEvaluateMultiplePoliciesWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -659,7 +677,7 @@ BenchmarkEvaluateNestedStructuresWithCache measures performance of working
 with nested structures with cache enabled.
 */
 func BenchmarkEvaluateNestedStructuresWithCache(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "nested-policy",
 			Action: "user:read",
@@ -673,7 +691,8 @@ func BenchmarkEvaluateNestedStructuresWithCache(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}

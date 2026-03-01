@@ -1,9 +1,14 @@
 /*
 Package tests contains tests for various numeric types in comparison conditions.
 
-Tests check the work of ltPrimitives and ltConditionFunc for all supported
-numeric types (int8, int16, int32, int64, uint8, uint16, uint32, uint64, float32, float64),
-which improves coverage of ltPrimitives function from 38.9% to a higher level.
+Tests check the work of Lt condition for all supported numeric types:
+  - Signed integers: int, int8, int16, int32, int64
+  - Unsigned integers: uint, uint8, uint16, uint32, uint64
+  - Floating point: float32, float64
+  - Strings (lexicographic comparison)
+
+The tests verify that numeric comparisons work correctly across different
+type sizes and signedness, ensuring type safety and correct comparison logic.
 */
 package tests
 
@@ -90,7 +95,7 @@ func TestLtNumericTypes(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		policy  base.Policy
+		policy  base.RawPolicy
 		source  any
 		target  Document
 		action  string
@@ -100,7 +105,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - int8",
 			// Test checks Lt condition for int8 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-int8-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -117,7 +122,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - int16",
 			// Test checks Lt condition for int16 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-int16-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -134,7 +139,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - int32",
 			// Test checks Lt condition for int32 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-int32-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -151,7 +156,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - int64",
 			// Test checks Lt condition for int64 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-int64-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -168,7 +173,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - uint8",
 			// Test checks Lt condition for uint8 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-uint8-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -185,7 +190,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - uint16",
 			// Test checks Lt condition for uint16 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-uint16-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -202,7 +207,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - uint32",
 			// Test checks Lt condition for uint32 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-uint32-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -219,7 +224,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - uint64",
 			// Test checks Lt condition for uint64 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-uint64-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -236,7 +241,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - float32",
 			// Test checks Lt condition for float32 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-float32-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -253,7 +258,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - float64",
 			// Test checks Lt condition for float64 type
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-float64-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -270,7 +275,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - float64 equal",
 			// Test checks that Lt condition returns false on equality for float64
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-float64-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -287,7 +292,7 @@ func TestLtNumericTypes(t *testing.T) {
 		{
 			name: "lt - uint64 greater",
 			// Test checks that Lt condition returns false for greater value for uint64
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-uint64-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -306,7 +311,8 @@ func TestLtNumericTypes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy})
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.RawPolicy{tt.policy}, config)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}

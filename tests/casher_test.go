@@ -1,8 +1,14 @@
 /*
 Package tests contains tests for the Casher interface implementation.
 
-Tests check the functionality of DefaultCasher, including thread-safety,
-session-based caching, and proper cache operations (Set, Get, Clear).
+Tests check the functionality of DefaultCasher, including:
+  - Thread-safety for concurrent access
+  - Session-based caching with proper isolation
+  - Cache operations (Set, Get, Clear)
+  - Performance characteristics of the optimized RWMutex implementation
+
+The tests verify that DefaultCasher correctly implements the base.Casher
+interface and provides efficient caching for policy evaluation.
 */
 package tests
 

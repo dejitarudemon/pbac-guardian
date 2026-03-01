@@ -1,8 +1,14 @@
 /*
 Package tests contains tests for public error constructors of base package.
 
-Tests check error creation, their messages
-and correctness of working with errors.As() and errors.Is().
+Tests check error creation, their messages and correctness of working
+with errors.As() and errors.Is(). The tests verify:
+
+  - ErrInvalidType - type mismatch errors
+  - ErrUncomparable - incomparable value errors
+  - ErrInvalidPath - invalid field path errors
+  - ErrInexpectedBehavior - internal library errors
+  - Error message formatting with expected and received values
 */
 package tests
 

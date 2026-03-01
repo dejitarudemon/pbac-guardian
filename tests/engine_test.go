@@ -2,7 +2,13 @@
 Package tests contains tests for the pbac-guardian library.
 
 Tests check the functionality of creating an engine from policies and files,
-as well as policy evaluation for various access scenarios.
+as well as policy evaluation for various access scenarios. The tests verify:
+
+  - Engine creation with and without caching (casher parameter)
+  - Policy evaluation with different condition types
+  - Context cancellation and timeout handling
+  - Nested structure support
+  - Custom condition functions configuration (config parameter with ConditionsMap)
 
 This file is in the tests directory for test organization.
 Tests import the guardian package as regular library users.
@@ -64,7 +70,7 @@ The test checks:
 func TestNewGuardianFromPolices(t *testing.T) {
 	tests := []struct {
 		name     string
-		policies []base.Policy
+		policies []base.RawPolicy
 		wantErr  bool
 		errType  error
 	}{
@@ -72,7 +78,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "valid policies",
 			// Test checks successful engine creation with valid policies
 			// Policy has correct action format and valid paths in conditions
-			policies: []base.Policy{
+			policies: []base.RawPolicy{
 				{
 					Name:   "test-policy",
 					Action: "user:read", // Valid format: minimum 2 parts
@@ -88,7 +94,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "duplicate names",
 			// Test checks that engine is not created when policies have duplicate names
 			// Should return ErrExport error wrapping ErrDuplicateName
-			policies: []base.Policy{
+			policies: []base.RawPolicy{
 				{
 					Name:   "test-policy",
 					Action: "user:read",
@@ -112,7 +118,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "invalid action format",
 			// Test checks action format validation
 			// Action must contain minimum 2 parts separated by ":"
-			policies: []base.Policy{
+			policies: []base.RawPolicy{
 				{
 					Name:   "test-policy",
 					Action: "invalid", // Invalid format - only one part
@@ -128,7 +134,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "invalid path in conditions",
 			// Test checks path validation in conditions
 			// Path must have format "entity:field", where entity is "source" or "target"
-			policies: []base.Policy{
+			policies: []base.RawPolicy{
 				{
 					Name:   "test-policy",
 					Action: "user:read",
@@ -144,7 +150,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "empty policies",
 			// Test checks engine creation with empty policy list
 			// This should succeed - engine is created but without policies
-			policies: []base.Policy{},
+			policies: []base.RawPolicy{},
 			wantErr:  false,
 		},
 	}
@@ -152,7 +158,8 @@ func TestNewGuardianFromPolices(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, tt.policies)
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, tt.policies, config)
 			if tt.wantErr {
 				// Expect error
 				if err == nil {
@@ -181,7 +188,7 @@ The test checks:
 */
 func TestNewGuardianFromFile(t *testing.T) {
 	// Create temporary file with valid policies for testing
-	validPolicies := []base.Policy{
+	validPolicies := []base.RawPolicy{
 		{
 			Name:   "file-policy",
 			Action: "user:read",
@@ -266,7 +273,8 @@ func TestNewGuardianFromFile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromFile(nil, tt.path)
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromFile(nil, tt.path, config)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -296,7 +304,7 @@ The test checks various access scenarios:
 */
 func TestEvaluate(t *testing.T) {
 	// Create set of policies for testing various access scenarios
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name: "allow-admin",
 			// Policy allows admins to read documents
@@ -332,7 +340,8 @@ func TestEvaluate(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -428,7 +437,7 @@ This is especially important for Contains operations with large lists.
 */
 func TestEvaluateWithContextCancellation(t *testing.T) {
 	// Create policy with Contains condition that may take long for large lists
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",
@@ -442,7 +451,8 @@ func TestEvaluateWithContextCancellation(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -470,7 +480,7 @@ and is not interrupted prematurely. This is important for checking correctness
 of context handling under normal conditions.
 */
 func TestEvaluateWithTimeout(t *testing.T) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",
@@ -482,7 +492,8 @@ func TestEvaluateWithTimeout(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -516,7 +527,7 @@ This is important for working with real data structures that often
 have nested structure.
 */
 func TestEvaluateNestedStructures(t *testing.T) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "nested-policy",
 			Action: "user:read:nested",
@@ -530,7 +541,8 @@ func TestEvaluateNestedStructures(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
