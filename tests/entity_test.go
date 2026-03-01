@@ -2,8 +2,8 @@
 Package tests contains tests for public API of base package.
 
 Tests check Entity value validation and correctness of working
-with source, target, and environment entities through public IsValid method.
-The tests verify that Entity_SOURCE, Entity_TARGET, and Entity_ENV are
+with source, target, environment, and time entities through public IsValid method.
+The tests verify that Entity_SOURCE, Entity_TARGET, Entity_ENV, and Entity_TIME are
 considered valid entity values.
 */
 package tests
@@ -21,6 +21,7 @@ The test checks:
   - Validity of Entity_SOURCE ("source")
   - Validity of Entity_TARGET ("target")
   - Validity of Entity_ENV ("env")
+  - Validity of Entity_TIME ("time")
   - Invalidity of arbitrary strings
   - Invalidity of empty string
 */
@@ -33,6 +34,7 @@ func TestEntityIsValid(t *testing.T) {
 		{"valid source", base.Entity_SOURCE, true},        // Valid source entity
 		{"valid target", base.Entity_TARGET, true},        // Valid target entity
 		{"valid env", base.Entity_ENV, true},              // Valid environment entity
+		{"valid time", base.Entity_TIME, true},            // Valid time entity
 		{"invalid entity", base.Entity("invalid"), false}, // Invalid entity
 		{"empty entity", base.Entity(""), false},          // Empty string
 	}
