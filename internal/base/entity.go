@@ -19,12 +19,14 @@ that the name field should be taken from the source structure.
 Valid values:
   - Entity_SOURCE ("source") - field belongs to source structure
   - Entity_TARGET ("target") - field belongs to target structure
+  - Entity_ENV ("env") - обращение к переменным окружения
 */
 type Entity string
 
 const (
 	Entity_TARGET Entity = "target"
 	Entity_SOURCE Entity = "source"
+	Entity_ENV    Entity = "env"
 )
 
 var (
@@ -33,6 +35,7 @@ var (
 	AVALIABLE_ENTITIES = []Entity{
 		Entity_SOURCE,
 		Entity_TARGET,
+		Entity_ENV,
 	}
 )
 
