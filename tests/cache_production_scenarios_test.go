@@ -20,12 +20,12 @@ import (
 // Helper to create policies with repeated field access
 // Since map keys must be unique, we create multiple policies that all access the same field
 // This simulates the scenario where the same field is accessed multiple times across policies
-func createPoliciesWithFieldAccess(action string, field string, count int, accessCount int) []base.Policy {
+func createPoliciesWithFieldAccess(action string, field string, count int, accessCount int) []base.RawPolicy {
 	// Create 'count' policies, each accessing the field once
 	// The total number of accesses to the field will be 'count' (one per policy)
 	// To simulate 'accessCount' accesses, we need to create more policies
 	totalPolicies := count * accessCount
-	policies := make([]base.Policy, totalPolicies)
+	policies := make([]base.RawPolicy, totalPolicies)
 
 	for i := 0; i < totalPolicies; i++ {
 		conditions := make(map[string]base.Condition)
@@ -41,7 +41,7 @@ func createPoliciesWithFieldAccess(action string, field string, count int, acces
 		case 3:
 			conditions[field] = base.Condition{Neq: "banned"}
 		}
-		policies[i] = base.Policy{
+		policies[i] = base.RawPolicy{
 			Name:       "policy-" + string(rune('a'+(i%26))) + string(rune('0'+(i/26))),
 			Action:     action,
 			Effect:     base.Effect_ALLOW,
@@ -54,8 +54,8 @@ func createPoliciesWithFieldAccess(action string, field string, count int, acces
 // Helper to create multiple actions with policies
 // fieldAccessCount = how many policies per action (each policy accesses the field once)
 // This simulates the field being accessed 'fieldAccessCount' times within one action evaluation
-func createMultipleActions(actions []string, policiesPerAction int, fieldAccessCount int) []base.Policy {
-	allPolicies := make([]base.Policy, 0)
+func createMultipleActions(actions []string, policiesPerAction int, fieldAccessCount int) []base.RawPolicy {
+	allPolicies := make([]base.RawPolicy, 0)
 	for _, action := range actions {
 		// Create 'policiesPerAction' groups, each with 'fieldAccessCount' policies
 		// Total: policiesPerAction × fieldAccessCount policies per action
@@ -72,7 +72,7 @@ func createMultipleActions(actions []string, policiesPerAction int, fieldAccessC
 				case 3:
 					conditions["source:role"] = base.Condition{Neq: "banned"}
 				}
-				allPolicies = append(allPolicies, base.Policy{
+				allPolicies = append(allPolicies, base.RawPolicy{
 					Name:       "policy-" + action + "-" + string(rune('a'+group)) + string(rune('0'+access)),
 					Action:     action,
 					Effect:     base.Effect_ALLOW,
@@ -214,7 +214,7 @@ multiple fields accessed different number of times (realistic scenario).
 func BenchmarkProductionScenario_MixedFields(b *testing.B) {
 	// Create policies accessing different fields with varying access counts
 	// Each policy accesses a field once, multiple policies = multiple accesses
-	allPolicies := make([]base.Policy, 0, 30)
+	allPolicies := make([]base.RawPolicy, 0, 30)
 	actions := []string{"action0:read", "action1:read", "action2:read", "action3:read", "action4:read",
 		"action5:read", "action6:read", "action7:read", "action8:read", "action9:read"}
 
@@ -225,7 +225,7 @@ func BenchmarkProductionScenario_MixedFields(b *testing.B) {
 			conditions := map[string]base.Condition{
 				"source:role": {Eq: "admin"},
 			}
-			allPolicies = append(allPolicies, base.Policy{
+			allPolicies = append(allPolicies, base.RawPolicy{
 				Name:       "p-role-" + string(rune('0'+policyIdx)),
 				Action:     action,
 				Effect:     base.Effect_ALLOW,
@@ -239,7 +239,7 @@ func BenchmarkProductionScenario_MixedFields(b *testing.B) {
 			conditions := map[string]base.Condition{
 				"source:name": {Eq: "target:owner"},
 			}
-			allPolicies = append(allPolicies, base.Policy{
+			allPolicies = append(allPolicies, base.RawPolicy{
 				Name:       "p-name-" + string(rune('0'+policyIdx)),
 				Action:     action,
 				Effect:     base.Effect_ALLOW,
@@ -253,7 +253,7 @@ func BenchmarkProductionScenario_MixedFields(b *testing.B) {
 			conditions := map[string]base.Condition{
 				"target:type": {Eq: "public"},
 			}
-			allPolicies = append(allPolicies, base.Policy{
+			allPolicies = append(allPolicies, base.RawPolicy{
 				Name:       "p-type-" + string(rune('0'+policyIdx)),
 				Action:     action,
 				Effect:     base.Effect_ALLOW,
@@ -282,7 +282,7 @@ func BenchmarkProductionScenario_MixedFields(b *testing.B) {
 }
 
 func BenchmarkProductionScenario_MixedFields_NoCache(b *testing.B) {
-	allPolicies := make([]base.Policy, 0, 30)
+	allPolicies := make([]base.RawPolicy, 0, 30)
 	actions := []string{"action0:read", "action1:read", "action2:read", "action3:read", "action4:read",
 		"action5:read", "action6:read", "action7:read", "action8:read", "action9:read"}
 
@@ -293,7 +293,7 @@ func BenchmarkProductionScenario_MixedFields_NoCache(b *testing.B) {
 			conditions := map[string]base.Condition{
 				"source:role": {Eq: "admin"},
 			}
-			allPolicies = append(allPolicies, base.Policy{
+			allPolicies = append(allPolicies, base.RawPolicy{
 				Name:       "p-role-" + string(rune('0'+policyIdx)),
 				Action:     action,
 				Effect:     base.Effect_ALLOW,
@@ -307,7 +307,7 @@ func BenchmarkProductionScenario_MixedFields_NoCache(b *testing.B) {
 			conditions := map[string]base.Condition{
 				"source:name": {Eq: "target:owner"},
 			}
-			allPolicies = append(allPolicies, base.Policy{
+			allPolicies = append(allPolicies, base.RawPolicy{
 				Name:       "p-name-" + string(rune('0'+policyIdx)),
 				Action:     action,
 				Effect:     base.Effect_ALLOW,
@@ -321,7 +321,7 @@ func BenchmarkProductionScenario_MixedFields_NoCache(b *testing.B) {
 			conditions := map[string]base.Condition{
 				"target:type": {Eq: "public"},
 			}
-			allPolicies = append(allPolicies, base.Policy{
+			allPolicies = append(allPolicies, base.RawPolicy{
 				Name:       "p-type-" + string(rune('0'+policyIdx)),
 				Action:     action,
 				Effect:     base.Effect_ALLOW,

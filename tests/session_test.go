@@ -22,7 +22,7 @@ The test checks that each call to Evaluate generates a unique sessionID,
 ensuring that cache entries from one evaluation do not interfere with another.
 */
 func TestSessionIsolation(t *testing.T) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",
@@ -68,7 +68,7 @@ the cache is used to avoid repeated reflection-based field searches.
 */
 func TestCacheReuseWithinSession(t *testing.T) {
 	// Create multiple policies that all access the same field
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "policy-1",
 			Action: "user:read",
@@ -129,7 +129,7 @@ The test checks that cache entries are properly cleaned up after an evaluation s
 preventing memory leaks in long-running applications.
 */
 func TestCacheClearedAfterEvaluation(t *testing.T) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",
@@ -180,7 +180,7 @@ The test checks that multiple goroutines can safely use the same engine and cach
 concurrently without race conditions or cache pollution.
 */
 func TestConcurrentEvaluationsWithCache(t *testing.T) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",

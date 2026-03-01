@@ -118,7 +118,7 @@ with policies that access the same field multiple times.
 */
 func BenchmarkEvaluateWithRepeatedFields(b *testing.B) {
 	// Create policies that all access the same field (source:role)
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "policy-1",
 			Action: "user:read",
@@ -184,7 +184,7 @@ without cache when the same field is accessed multiple times.
 */
 func BenchmarkEvaluateWithoutCacheRepeatedFields(b *testing.B) {
 	// Same policies as above
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "policy-1",
 			Action: "user:read",

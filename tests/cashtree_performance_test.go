@@ -28,7 +28,7 @@ for rarely accessed fields while maintaining performance for frequently accessed
 */
 func BenchmarkCashTree_WithOptimization(b *testing.B) {
 	// Create policies with mixed access patterns
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		// Frequently accessed field: source:role (5 times)
 		{Name: "p1", Action: "user:read", Effect: base.Effect_ALLOW, Conditions: map[string]base.Condition{"source:role": {Eq: "admin"}}},
 		{Name: "p2", Action: "user:read", Effect: base.Effect_ALLOW, Conditions: map[string]base.Condition{"source:role": {Eq: "admin"}}},
@@ -73,7 +73,7 @@ This allows comparison of memory usage and performance impact.
 */
 func BenchmarkCashTree_WithoutOptimization(b *testing.B) {
 	// Create policies with mixed access patterns
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		// Frequently accessed field: source:role (5 times)
 		{Name: "p1", Action: "user:read", Effect: base.Effect_ALLOW, Conditions: map[string]base.Condition{"source:role": {Eq: "admin"}}},
 		{Name: "p2", Action: "user:read", Effect: base.Effect_ALLOW, Conditions: map[string]base.Condition{"source:role": {Eq: "admin"}}},
@@ -119,14 +119,14 @@ This benchmark tests CashTree optimization in a realistic scenario with:
 - Some fields accessed frequently, others rarely
 */
 func BenchmarkCashTree_ProductionScenario(b *testing.B) {
-	allPolicies := make([]base.Policy, 0, 30)
+	allPolicies := make([]base.RawPolicy, 0, 30)
 	actions := []string{"action0:read", "action1:read", "action2:read"}
 
 	policyIdx := 0
 	for _, action := range actions {
 		// source:role accessed 5 times per action (frequently accessed)
 		for i := 0; i < 5; i++ {
-			allPolicies = append(allPolicies, base.Policy{
+			allPolicies = append(allPolicies, base.RawPolicy{
 				Name:       "p-role-" + string(rune('0'+policyIdx)),
 				Action:     action,
 				Effect:     base.Effect_ALLOW,
@@ -136,7 +136,7 @@ func BenchmarkCashTree_ProductionScenario(b *testing.B) {
 		}
 
 		// source:name accessed 1 time per action (rarely accessed)
-		allPolicies = append(allPolicies, base.Policy{
+		allPolicies = append(allPolicies, base.RawPolicy{
 			Name:       "p-name-" + string(rune('0'+policyIdx)),
 			Action:     action,
 			Effect:     base.Effect_ALLOW,
@@ -146,7 +146,7 @@ func BenchmarkCashTree_ProductionScenario(b *testing.B) {
 
 		// target:type accessed 2 times per action (rarely accessed)
 		for i := 0; i < 2; i++ {
-			allPolicies = append(allPolicies, base.Policy{
+			allPolicies = append(allPolicies, base.RawPolicy{
 				Name:       "p-type-" + string(rune('0'+policyIdx)),
 				Action:     action,
 				Effect:     base.Effect_ALLOW,
@@ -183,4 +183,5 @@ func BenchmarkCashTree_ProductionScenario(b *testing.B) {
 		_, _ = engine.Evaluate(ctx, source, target, action)
 	}
 }
+
 

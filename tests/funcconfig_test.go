@@ -44,7 +44,7 @@ func TestCustomConditionFuncsConfig(t *testing.T) {
 		CashDisableThreShold: 3,
 	}
 
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",
@@ -82,7 +82,7 @@ The test checks that when nil is passed in config.ConditionsMap, the engine uses
 default condition functions from implemented.DefaultConditionsMap.
 */
 func TestNilFuncConfigUsesDefaults(t *testing.T) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",
@@ -154,7 +154,7 @@ func TestCustomContainsFunc(t *testing.T) {
 		CashDisableThreShold: 3,
 	}
 
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",
@@ -210,7 +210,7 @@ func TestCustomLtFunc(t *testing.T) {
 		CashDisableThreShold: 3,
 	}
 
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",

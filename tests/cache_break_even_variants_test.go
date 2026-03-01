@@ -20,10 +20,10 @@ import (
 )
 
 // Helper function to create policies that access the same field N times
-func createPoliciesWithRepeatedField(field string, count int) []base.Policy {
-	policies := make([]base.Policy, count)
+func createPoliciesWithRepeatedField(field string, count int) []base.RawPolicy {
+	policies := make([]base.RawPolicy, count)
 	for i := 0; i < count; i++ {
-		policies[i] = base.Policy{
+		policies[i] = base.RawPolicy{
 			Name:   "policy-" + string(rune('1'+i)),
 			Action: "user:read",
 			Effect: base.Effect_ALLOW,

@@ -29,7 +29,7 @@ The benchmark checks time of engine creation with various number of policies.
 */
 func BenchmarkNewGuardianFromPolices(b *testing.B) {
 	// Create set of policies for testing
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "admin-read",
 			Action: "user:read:document",
@@ -73,7 +73,7 @@ BenchmarkEvaluateSimple measures performance of simple policy evaluation.
 The benchmark checks time of policy evaluation with simple conditions (Eq).
 */
 func BenchmarkEvaluateSimple(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "admin-read",
 			Action: "user:read:document",
@@ -110,7 +110,7 @@ with multiple conditions.
 The benchmark checks time of policy evaluation with combination of various conditions.
 */
 func BenchmarkEvaluateMultipleConditions(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "complex-policy",
 			Action: "user:read:document",
@@ -155,7 +155,7 @@ BenchmarkEvaluateContains measures performance of Contains condition.
 The benchmark checks time of searching value in list through Contains condition.
 */
 func BenchmarkEvaluateContains(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "contains-policy",
 			Action: "user:read",
@@ -193,7 +193,7 @@ BenchmarkEvaluateLt measures performance of Lt (less than) condition.
 The benchmark checks time of value comparison through Lt condition.
 */
 func BenchmarkEvaluateLt(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "lt-policy",
 			Action: "user:read",
@@ -232,7 +232,7 @@ with nested structures.
 The benchmark checks time of getting values from nested structures.
 */
 func BenchmarkEvaluateNestedStructures(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "nested-policy",
 			Action: "user:read",
@@ -271,7 +271,7 @@ multiple policies for one action.
 The benchmark checks time of evaluation when multiple policies are defined for action.
 */
 func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "policy-1",
 			Action: "user:read:document",
@@ -341,7 +341,7 @@ fields from different structures.
 The benchmark checks time of comparing fields from source and target structures.
 */
 func BenchmarkEvaluateFieldComparison(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "field-comparison",
 			Action: "user:read:document",
@@ -379,7 +379,7 @@ BenchmarkEvaluateDenyPolicy measures performance of policies with DENY effect.
 The benchmark checks time of evaluating policies that deny access.
 */
 func BenchmarkEvaluateDenyPolicy(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "deny-policy",
 			Action: "user:read:document",
@@ -424,7 +424,7 @@ func BenchmarkEvaluateLargeSlice(b *testing.B) {
 	}
 	largeRoleList[500] = "admin" // Search value in middle of list
 
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "large-slice-policy",
 			Action: "user:read",
@@ -463,7 +463,7 @@ when policies do not match action.
 The benchmark checks time of evaluation when there are no suitable policies for action.
 */
 func BenchmarkEvaluateNoMatch(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "other-action",
 			Action: "user:write:document",
@@ -500,7 +500,7 @@ The benchmark compares evaluation performance with cache vs without cache to mea
 the performance improvement from caching field values.
 */
 func BenchmarkEvaluateWithCache(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "admin-read",
 			Action: "user:read:document",
@@ -555,7 +555,7 @@ This benchmark is used for comparison with BenchmarkEvaluateWithCache to measure
 the performance improvement from caching.
 */
 func BenchmarkEvaluateWithoutCache(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "admin-read",
 			Action: "user:read:document",
@@ -608,7 +608,7 @@ BenchmarkEvaluateMultiplePoliciesWithCache measures performance of evaluating
 multiple policies with cache enabled.
 */
 func BenchmarkEvaluateMultiplePoliciesWithCache(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "policy-1",
 			Action: "user:read:document",
@@ -677,7 +677,7 @@ BenchmarkEvaluateNestedStructuresWithCache measures performance of working
 with nested structures with cache enabled.
 */
 func BenchmarkEvaluateNestedStructuresWithCache(b *testing.B) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "nested-policy",
 			Action: "user:read",

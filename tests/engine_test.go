@@ -70,7 +70,7 @@ The test checks:
 func TestNewGuardianFromPolices(t *testing.T) {
 	tests := []struct {
 		name     string
-		policies []base.Policy
+		policies []base.RawPolicy
 		wantErr  bool
 		errType  error
 	}{
@@ -78,7 +78,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "valid policies",
 			// Test checks successful engine creation with valid policies
 			// Policy has correct action format and valid paths in conditions
-			policies: []base.Policy{
+			policies: []base.RawPolicy{
 				{
 					Name:   "test-policy",
 					Action: "user:read", // Valid format: minimum 2 parts
@@ -94,7 +94,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "duplicate names",
 			// Test checks that engine is not created when policies have duplicate names
 			// Should return ErrExport error wrapping ErrDuplicateName
-			policies: []base.Policy{
+			policies: []base.RawPolicy{
 				{
 					Name:   "test-policy",
 					Action: "user:read",
@@ -118,7 +118,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "invalid action format",
 			// Test checks action format validation
 			// Action must contain minimum 2 parts separated by ":"
-			policies: []base.Policy{
+			policies: []base.RawPolicy{
 				{
 					Name:   "test-policy",
 					Action: "invalid", // Invalid format - only one part
@@ -134,7 +134,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "invalid path in conditions",
 			// Test checks path validation in conditions
 			// Path must have format "entity:field", where entity is "source" or "target"
-			policies: []base.Policy{
+			policies: []base.RawPolicy{
 				{
 					Name:   "test-policy",
 					Action: "user:read",
@@ -150,7 +150,7 @@ func TestNewGuardianFromPolices(t *testing.T) {
 			name: "empty policies",
 			// Test checks engine creation with empty policy list
 			// This should succeed - engine is created but without policies
-			policies: []base.Policy{},
+			policies: []base.RawPolicy{},
 			wantErr:  false,
 		},
 	}
@@ -188,7 +188,7 @@ The test checks:
 */
 func TestNewGuardianFromFile(t *testing.T) {
 	// Create temporary file with valid policies for testing
-	validPolicies := []base.Policy{
+	validPolicies := []base.RawPolicy{
 		{
 			Name:   "file-policy",
 			Action: "user:read",
@@ -304,7 +304,7 @@ The test checks various access scenarios:
 */
 func TestEvaluate(t *testing.T) {
 	// Create set of policies for testing various access scenarios
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name: "allow-admin",
 			// Policy allows admins to read documents
@@ -437,7 +437,7 @@ This is especially important for Contains operations with large lists.
 */
 func TestEvaluateWithContextCancellation(t *testing.T) {
 	// Create policy with Contains condition that may take long for large lists
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",
@@ -480,7 +480,7 @@ and is not interrupted prematurely. This is important for checking correctness
 of context handling under normal conditions.
 */
 func TestEvaluateWithTimeout(t *testing.T) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
 			Action: "user:read",
@@ -527,7 +527,7 @@ This is important for working with real data structures that often
 have nested structure.
 */
 func TestEvaluateNestedStructures(t *testing.T) {
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "nested-policy",
 			Action: "user:read:nested",

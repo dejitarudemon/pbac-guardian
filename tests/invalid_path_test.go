@@ -27,7 +27,7 @@ that Evaluate returns an error when trying to get value of non-existent field.
 func TestEvaluateInvalidFieldPath(t *testing.T) {
 	// Create policy with invalid field path
 	// Field "nonexistent" does not exist in User structure
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "invalid-path-policy",
 			Action: "user:read",
@@ -65,7 +65,7 @@ that Evaluate returns an error when trying to get value of non-existent nested f
 func TestEvaluateInvalidNestedPath(t *testing.T) {
 	// Create policy with invalid nested path
 	// Path "source:user:nonexistent" is invalid, as field "nonexistent" does not exist
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "invalid-nested-path-policy",
 			Action: "user:read",
@@ -103,7 +103,7 @@ that Evaluate returns an error when trying to get value of non-existent field.
 func TestEvaluateInvalidTargetPath(t *testing.T) {
 	// Create policy with invalid field path in target
 	// Field "nonexistent" does not exist in Document structure
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "invalid-target-path-policy",
 			Action: "user:read",
