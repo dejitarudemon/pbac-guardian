@@ -10,8 +10,11 @@
 - Поддержка переменных окружения во всех типах условий (Eq, Neq, Contains, Lt, Gt)
 - Функция `Gt` (greater than) для проверки условия "больше" в политиках
 - Реализация `GtConditionFunc` и `gtPrimitives` для сравнения значений
+- Поддержка `time.Time` значений в условиях (Eq, Neq, Lt, Gt) без необходимости реализации `Comparable`
+- Функция `timesCompare` для сравнения `time.Time` значений
 - Комплексные тесты для работы с переменными окружения (`tests/env_test.go`)
 - Тесты для функции Gt: `TestGtCondition`, `TestGtNumericTypes`, `TestGtConditionFunc`, `TestEnvVariable_Gt`
+- Комплексные тесты для работы с `time.Time`: `TestTime_Eq`, `TestTime_Neq`, `TestTime_Lt`, `TestTime_Gt`, `TestTime_MultipleConditions`, `TestTime_Contains` (`tests/time_test.go`)
 
 **Изменено:**
 
@@ -26,6 +29,13 @@
 - `DefaultConditionsMap` теперь включает реализацию `GtConditionFunc`
 - Обновлены godoc комментарии для `Entity`, `Entity_ENV`, `loadEnv()`, `load()`, `splitPath()`, `toPath()`
 - Обновлены godoc комментарии для `Condition`, `ConditionsMap`, `Config`, `GtConditionFunc`, `gtPrimitives`
+- Обновлены godoc комментарии в `funcs.go` для явного указания поддержки `time.Time`:
+  - Пакетный комментарий обновлен с упоминанием поддержки `time.Time`
+  - `DefaultConditionsMap` обновлен с указанием поддержки `time.Time`
+  - `EqConditionFunc` обновлен с описанием логики сравнения для `time.Time`
+  - `LtConditionFunc` обновлен с указанием поддержки `time.Time`
+  - `GtConditionFunc` обновлен с указанием поддержки `time.Time`
+  - Добавлен godoc комментарий для функции `timesCompare`
 
 **Обновлено:**
 
@@ -39,6 +49,12 @@
   - Обработка ошибок при отсутствии переменных окружения
   - Кеширование переменных окружения
 - Обновлены тесты для включения поддержки функции Gt во всех соответствующих тестовых файлах
+- Добавлены тесты для всех сценариев использования `time.Time`:
+  - Сравнение `time.Time` с литералами и полями структур
+  - Использование `time.Time` в условиях Eq, Neq, Lt, Gt
+  - Комбинации `time.Time` с другими условиями
+  - Проверка диапазонов времени (Gt и Lt вместе)
+  - Использование `time.Time` в условиях Contains
 
 ---
 
@@ -52,8 +68,11 @@
 - Environment variable support in all condition types (Eq, Neq, Contains, Lt, Gt)
 - `Gt` (greater than) function for checking "greater than" condition in policies
 - Implementation of `GtConditionFunc` and `gtPrimitives` for value comparison
+- Support for `time.Time` values in conditions (Eq, Neq, Lt, Gt) without requiring `Comparable` implementation
+- `timesCompare` function for comparing `time.Time` values
 - Comprehensive tests for environment variable functionality (`tests/env_test.go`)
 - Tests for Gt function: `TestGtCondition`, `TestGtNumericTypes`, `TestGtConditionFunc`, `TestEnvVariable_Gt`
+- Comprehensive tests for `time.Time` functionality: `TestTime_Eq`, `TestTime_Neq`, `TestTime_Lt`, `TestTime_Gt`, `TestTime_MultipleConditions`, `TestTime_Contains` (`tests/time_test.go`)
 
 **Changed:**
 
@@ -68,6 +87,13 @@
 - `DefaultConditionsMap` now includes `GtConditionFunc` implementation
 - Updated godoc comments for `Entity`, `Entity_ENV`, `loadEnv()`, `load()`, `splitPath()`, `toPath()`
 - Updated godoc comments for `Condition`, `ConditionsMap`, `Config`, `GtConditionFunc`, `gtPrimitives`
+- Updated godoc comments in `funcs.go` to explicitly document `time.Time` support:
+  - Package comment updated with mention of `time.Time` support
+  - `DefaultConditionsMap` updated with `time.Time` support indication
+  - `EqConditionFunc` updated with comparison logic description for `time.Time`
+  - `LtConditionFunc` updated with `time.Time` support indication
+  - `GtConditionFunc` updated with `time.Time` support indication
+  - Added godoc comment for `timesCompare` function
 
 **Updated:**
 
@@ -81,6 +107,12 @@
   - Error handling for missing environment variables
   - Caching of environment variables
 - Updated tests to include Gt function support in all relevant test files
+- Added tests for all `time.Time` usage scenarios:
+  - Comparing `time.Time` with literals and structure fields
+  - Using `time.Time` in Eq, Neq, Lt, Gt conditions
+  - Combining `time.Time` with other conditions
+  - Checking time ranges (Gt and Lt together)
+  - Using `time.Time` in Contains conditions
 
 
 ## v 0.4.3
