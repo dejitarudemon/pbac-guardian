@@ -58,7 +58,7 @@ import (
     "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "admin-read",
         Action: "user:read:document",
@@ -152,7 +152,7 @@ type Document struct {
 
 func main() {
     // Define policies
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "admin-access",
             Action: "user:read:document",
@@ -250,7 +250,7 @@ func main() {
 This tutorial shows how to combine multiple conditions in a single policy.
 
 ```go
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "age-restricted-read",
         Action: "user:read:document",
@@ -272,7 +272,7 @@ policies := []base.Policy{
 DENY policies have priority. If a DENY policy's conditions are met, access is denied even if ALLOW policies pass.
 
 ```go
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "block-minors",
         Action: "user:read:document",
@@ -339,7 +339,7 @@ import (
 )
 
 func main() {
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "admin-read",
             Action: "user:read:document",
@@ -438,7 +438,7 @@ func main() {
         CashDisableThreShold: 3,
     }
 
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "case-insensitive-admin",
             Action: "user:read:document",
@@ -508,10 +508,11 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Guardian Engine
 
-#### `NewGuardianFromPolices(casher cashing.Casher, policies []base.Policy, config base.Config) (*Guardian, error)`
+#### `NewGuardianFromPolices(casher cashing.Casher, policies []base.RawPolicy, config base.Config) (*Guardian, error)`
 
 Creates a new Guardian instance from a list of policies. 
 - The `casher` parameter is optional - pass `nil` to disable caching, or use `implemented.NewDefaultCasher()` to enable optimized L1 caching.
+- The `policies` parameter accepts an array of `[]base.RawPolicy` (structures with public fields for JSON unmarshaling)
 - The `config` parameter contains condition functions map and cache disable threshold. If `config.ConditionsMap` is `nil`, default condition functions will be used.
 
 #### `NewGuardianFromFile(casher cashing.Casher, path string, config base.Config) (*Guardian, error)`
@@ -524,16 +525,29 @@ Creates a new Guardian instance from a JSON file.
 
 Evaluates access for the given action. Returns `true` if access is allowed, `false` otherwise. Each evaluation uses a unique session ID for cache isolation.
 
-### Policy Structure
+### Policy Structures
+
+#### RawPolicy
+
+`RawPolicy` is used for JSON unmarshaling and creating policies programmatically. It contains public fields that can be serialized/deserialized.
 
 ```go
-type Policy struct {
+type RawPolicy struct {
     Name       string               `json:"name"`
     Action     string               `json:"action"`
     Effect     Effect               `json:"effect"`
     Conditions map[string]Condition `json:"conditions"`
 }
 ```
+
+#### Policy
+
+`Policy` is an internal structure with private fields. Policy instances are created automatically by the Guardian engine from `RawPolicy` structures using `NewPolicy` constructor. You should not create `Policy` instances directly.
+
+Public methods:
+- `Evaluate(ctx context.Context, source, target any, action string, sessionID string) (bool, error)` - applies the policy
+- `IsValid() error` - validates the policy
+- `Effect() Effect` - returns the policy effect
 
 ### Condition Types
 
@@ -613,7 +627,7 @@ import (
     "github.com/dejitarudemon/pbac-guardian/internal/base"
 )
 
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "admin-read",
         Action: "user:read:document",
@@ -649,8 +663,12 @@ import (
 // Создание экземпляра кеша (опционально - передайте nil для отключения кеширования)
 casher := implemented.NewDefaultCasher()
 
-// Создание движка
-engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+    // Создание движка с конфигурацией по умолчанию
+    config := base.Config{
+        ConditionsMap:        nil, // использовать функции условий по умолчанию
+        CashDisableThreShold: 3,   // отключить кеш для полей, к которым обращаются < 3 раз
+    }
+    engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 if err != nil {
     panic(err)
 }
@@ -703,7 +721,7 @@ type Document struct {
 
 func main() {
     // Определение политик
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "admin-access",
             Action: "user:read:document",
@@ -801,7 +819,7 @@ func main() {
 Этот туториал показывает, как комбинировать несколько условий в одной политике.
 
 ```go
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "age-restricted-read",
         Action: "user:read:document",
@@ -823,7 +841,7 @@ policies := []base.Policy{
 Политики DENY имеют приоритет. Если условия политики DENY выполнены, доступ запрещается, даже если политики ALLOW прошли проверку.
 
 ```go
-policies := []base.Policy{
+policies := []base.RawPolicy{
     {
         Name:   "block-minors",
         Action: "user:read:document",
@@ -890,7 +908,7 @@ import (
 )
 
 func main() {
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "admin-read",
             Action: "user:read:document",
@@ -989,7 +1007,7 @@ func main() {
         CashDisableThreShold: 3,
     }
 
-    policies := []base.Policy{
+    policies := []base.RawPolicy{
         {
             Name:   "case-insensitive-admin",
             Action: "user:read:document",
@@ -1059,10 +1077,11 @@ func (u User) Compare(other any) (int, bool) {
 
 ### Движок Guardian
 
-#### `NewGuardianFromPolices(casher cashing.Casher, policies []base.Policy, config base.Config) (*Guardian, error)`
+#### `NewGuardianFromPolices(casher cashing.Casher, policies []base.RawPolicy, config base.Config) (*Guardian, error)`
 
 Создает новый экземпляр Guardian из списка политик.
 - Параметр `casher` опционален - передайте `nil` для отключения кеширования или используйте `implemented.NewDefaultCasher()` для включения оптимизированного L1-кеширования.
+- Параметр `policies` принимает массив `[]base.RawPolicy` (структуры с публичными полями для JSON unmarshaling)
 - Параметр `config` содержит карту функций условий и порог отключения кеша. Если `config.ConditionsMap` равен `nil`, будут использованы функции условий по умолчанию.
 
 #### `NewGuardianFromFile(casher cashing.Casher, path string, config base.Config) (*Guardian, error)`
@@ -1075,16 +1094,29 @@ func (u User) Compare(other any) (int, bool) {
 
 Оценивает доступ для указанного действия. Возвращает `true`, если доступ разрешен, `false` в противном случае. Каждая оценка использует уникальный идентификатор сессии для изоляции кеша.
 
-### Структура Policy
+### Структуры Policy
+
+#### RawPolicy
+
+`RawPolicy` используется для JSON unmarshaling и программного создания политик. Содержит публичные поля, которые могут быть сериализованы/десериализованы.
 
 ```go
-type Policy struct {
+type RawPolicy struct {
     Name       string               `json:"name"`
     Action     string               `json:"action"`
     Effect     Effect               `json:"effect"`
     Conditions map[string]Condition `json:"conditions"`
 }
 ```
+
+#### Policy
+
+`Policy` - это внутренняя структура с приватными полями. Экземпляры `Policy` создаются автоматически движком Guardian из структур `RawPolicy` с помощью конструктора `NewPolicy`. Не следует создавать экземпляры `Policy` напрямую.
+
+Публичные методы:
+- `Evaluate(ctx context.Context, source, target any, action string, sessionID string) (bool, error)` - применяет политику
+- `IsValid() error` - валидирует политику
+- `Effect() Effect` - возвращает эффект политики
 
 ### Типы условий
 
