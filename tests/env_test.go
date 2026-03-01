@@ -511,6 +511,134 @@ func TestEnvVariable_Lt(t *testing.T) {
 }
 
 /*
+TestEnvVariable_Gt tests greater-than condition with environment variables.
+
+The test checks that environment variables can be used in Gt conditions with string values.
+Note: Environment variables are always strings, so comparisons are done as string comparisons.
+*/
+func TestEnvVariable_Gt(t *testing.T) {
+	ctx := context.Background()
+
+	// Set up test environment variable with string value
+	testEnvVar := "TEST_ENV_VAR_GT"
+	testEnvValue := "m"
+	os.Setenv(testEnvVar, testEnvValue)
+	defer os.Unsetenv(testEnvVar)
+
+	tests := []struct {
+		name    string
+		policy  base.RawPolicy
+		source  any
+		target  any
+		action  string
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "env greater than literal - match",
+			// Test checks that env variable (as string) is greater than literal value
+			// String comparison "m" > "a" is true
+			policy: base.RawPolicy{
+				Name:   "gt-env-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"env:" + testEnvVar: {
+						Gt: "a", // env:TEST_ENV_VAR_GT > "a" (string comparison "m" > "a")
+					},
+				},
+			},
+			source:  User{Name: "user", Role: "user"},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "env greater than literal - no match",
+			// Test checks that env variable is not greater than literal value
+			policy: base.RawPolicy{
+				Name:   "gt-env-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"env:" + testEnvVar: {
+						Gt: "z", // env:TEST_ENV_VAR_GT > "z" (string comparison "m" > "z" is false)
+					},
+				},
+			},
+			source:  User{Name: "user", Role: "user"},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "source field greater than env - match",
+			// Test checks that source field (string) is greater than env variable (string)
+			policy: base.RawPolicy{
+				Name:   "gt-env-source-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:name": {
+						Gt: "env:" + testEnvVar, // source:name > env:TEST_ENV_VAR_GT (string comparison)
+					},
+				},
+			},
+			source:  User{Name: "zoe", Role: "user"}, // "zoe" > "m"
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "source field greater than env - no match",
+			// Test checks that source field is not greater than env variable
+			policy: base.RawPolicy{
+				Name:   "gt-env-source-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:name": {
+						Gt: "env:" + testEnvVar, // source:name > env:TEST_ENV_VAR_GT
+					},
+				},
+			},
+			source:  User{Name: "alice", Role: "user"}, // "alice" <= "m"
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    false,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.RawPolicy{tt.policy}, config)
+			if err != nil {
+				t.Fatalf("failed to create engine: %v", err)
+			}
+
+			got, err := engine.Evaluate(ctx, tt.source, tt.target, tt.action)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				if got != tt.want {
+					t.Errorf("Evaluate() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+/*
 TestEnvVariable_NotExists tests error handling when environment variable doesn't exist.
 
 The test checks that appropriate error is returned when environment variable
