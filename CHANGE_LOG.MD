@@ -1,3 +1,68 @@
+## v 0.5.0
+
+### Русский
+
+**Добавлено:**
+
+- Поддержка переменных окружения через `Entity_ENV` в политиках
+- Метод `Policy.loadEnv()` для получения значений переменных окружения
+- Возможность использования путей вида `"env:VARIABLE_NAME"` в условиях политик
+- Поддержка переменных окружения во всех типах условий (Eq, Neq, Contains, Lt)
+- Комплексные тесты для работы с переменными окружения (`tests/env_test.go`)
+
+**Изменено:**
+
+- Метод `Policy.load()` теперь поддерживает загрузку переменных окружения через `Entity_ENV`
+- Метод `Policy.splitPath()` обновлен для поддержки путей с `Entity_ENV`
+- Метод `Policy.toPath()` обновлен для распознавания путей к переменным окружения
+- Метод `Entity.IsValid()` теперь валидирует `Entity_ENV` как валидное значение
+- Обновлены godoc комментарии для `Entity`, `Entity_ENV`, `loadEnv()`, `load()`, `splitPath()`, `toPath()`
+
+**Обновлено:**
+
+- Все godoc комментарии в `entity.go` обновлены для отражения поддержки `Entity_ENV`
+- Все godoc комментарии в `policy.go` обновлены для отражения работы с переменными окружения
+- Тест `TestEntityIsValid` обновлен для проверки валидности `Entity_ENV`
+- Добавлены тесты для всех сценариев использования переменных окружения:
+  - Сравнение env переменных с литералами и полями структур
+  - Использование env переменных в условиях Contains, Eq, Neq, Lt
+  - Комбинации env переменных с другими условиями
+  - Обработка ошибок при отсутствии переменных окружения
+  - Кеширование переменных окружения
+
+---
+
+### English
+
+**Added:**
+
+- Environment variable support through `Entity_ENV` in policies
+- `Policy.loadEnv()` method for retrieving environment variable values
+- Support for paths like `"env:VARIABLE_NAME"` in policy conditions
+- Environment variable support in all condition types (Eq, Neq, Contains, Lt)
+- Comprehensive tests for environment variable functionality (`tests/env_test.go`)
+
+**Changed:**
+
+- `Policy.load()` method now supports loading environment variables through `Entity_ENV`
+- `Policy.splitPath()` method updated to support paths with `Entity_ENV`
+- `Policy.toPath()` method updated to recognize environment variable paths
+- `Entity.IsValid()` method now validates `Entity_ENV` as a valid value
+- Updated godoc comments for `Entity`, `Entity_ENV`, `loadEnv()`, `load()`, `splitPath()`, `toPath()`
+
+**Updated:**
+
+- All godoc comments in `entity.go` updated to reflect `Entity_ENV` support
+- All godoc comments in `policy.go` updated to reflect environment variable functionality
+- `TestEntityIsValid` test updated to check `Entity_ENV` validity
+- Added tests for all environment variable usage scenarios:
+  - Comparing env variables with literals and structure fields
+  - Using env variables in Contains, Eq, Neq, Lt conditions
+  - Combining env variables with other conditions
+  - Error handling for missing environment variables
+  - Caching of environment variables
+
+
 ## v 0.4.3
 
 ### Русский
