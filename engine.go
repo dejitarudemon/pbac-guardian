@@ -105,22 +105,15 @@ Guardian is the main engine of the library for checking structures against acces
 Guardian stores policies organized by actions and provides the Evaluate method
 to check structures against these policies.
 
-The engine uses L1 cache (Casher interface) to optimize field value retrieval
-by caching results of reflect-based field searches. Each evaluation session
-generates a unique sessionID that identifies the cache scope for a single
-policy application. The cache significantly improves performance when fields
-are accessed multiple times (3+ accesses provide benefits, with up to 41%
-time savings and 63% fewer allocations in production scenarios).
-
 To create a Guardian instance, use:
   - NewGuardianFromPolices - create from a list of policies passed programmatically
   - NewGuardianFromFile - create from a JSON file with policies
 
 Fields:
-  - polices - stores policies organized by actions (action -> []Policy)
+  - polices - stores policy pointers organized by actions (action -> []*Policy)
 */
 type Guardian struct {
-	polices map[string][]base.Policy
+	polices map[string][]*base.Policy
 }
 
 /*
@@ -141,7 +134,7 @@ that are accessed less than the threshold number of times.
 
 Parameters:
   - cash - instance of cashing.Casher for L1 caching (can be nil to disable caching)
-  - polices - list of policies to initialize the engine
+  - polices - list of raw policies (RawPolicy) to initialize the engine
   - config - configuration containing condition functions map and cache disable threshold
 
 Returns:
@@ -182,13 +175,13 @@ Example usage:
 		// handle error
 	}
 */
-func NewGuardianFromPolices(cash cashing.Casher, polices []base.Policy, config base.Config) (*Guardian, error) {
+func NewGuardianFromPolices(cash cashing.Casher, polices []base.RawPolicy, config base.Config) (*Guardian, error) {
 	if config.ConditionsMap == nil {
 		config.ConditionsMap = &implemented.DefaultConditionsMap
 	}
 	cashTree := cashing.NewCashTree(config.CashDisableThreShold)
 
-	mapped, err := export(polices, cash, config, cashTree)
+	mapped, err := export(polices, cash, config, &cashTree)
 	if err != nil {
 		return nil, NewErrExport(err)
 	}
@@ -200,7 +193,7 @@ func NewGuardianFromPolices(cash cashing.Casher, polices []base.Policy, config b
 NewGuardianFromFile creates a new Guardian instance from a JSON file containing an array of policies.
 
 The function reads the file, parses JSON and creates the engine similar to NewGuardianFromPolices.
-The file must contain a valid JSON array of Policy objects.
+The file must contain a valid JSON array of RawPolicy objects.
 
 The engine uses the provided Casher instance for L1 caching. If nil is passed,
 caching will be disabled and field values will be retrieved directly via reflection
@@ -233,7 +226,7 @@ Example usage:
 		"github.com/dejitarudemon/pbac-guardian/internal/base"
 	)
 
-	// File policies.json:
+	// File policies.json contains an array of RawPolicy structures:
 	// [
 	//   {
 	//     "name": "allow-admin",
@@ -266,7 +259,7 @@ func NewGuardianFromFile(cash cashing.Casher, path string, config base.Config) (
 		return nil, NewErrExport(err)
 	}
 
-	var polices []base.Policy
+	var polices []base.RawPolicy
 
 	if err := json.Unmarshal(content, &polices); err != nil {
 		return nil, NewErrExport(err)
@@ -309,14 +302,15 @@ Possible errors:
   - ErrInvalidPath - path parsing error or field not found
   - ErrInvalidType - invalid structure or field type
   - ErrUncomparable - cannot compare values in condition
-  - ErrInexpectedBehavior - internal error (condition function not found)
+  - ErrInexpectedBehavior - internal error
 
 Logic:
  1. Generate unique sessionID for this evaluation session
  2. If there are no policies for the specified action, returns (false, nil)
  3. For each policy, conditions are checked:
     - If context is cancelled, returns (false, ErrCancelled)
-    - Field values are retrieved using get() which checks cache first (if cash is not nil)
+    - Field values are retrieved using load() which checks cache first (if cash is not nil)
+    - Conditions are checked using direct field access (Contains, Eq, Neq, Lt) for optimal performance
     - If policy has DENY effect and conditions are not met, returns (false, nil)
     - If policy has ALLOW effect and conditions are met, sets allowed = true flag
  4. Returns result: (allowed, nil) or (false, error) on error
@@ -382,7 +376,7 @@ func (n *Guardian) Evaluate(ctx context.Context, source, target any, action stri
 			return false, NewErrEvaluate(err)
 		}
 
-		if policy.Effect == base.Effect_DENY {
+		if policy.Effect() == base.Effect_DENY {
 			if ok {
 				return false, err
 			}
