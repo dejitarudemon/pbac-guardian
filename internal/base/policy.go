@@ -10,26 +10,38 @@ package base
 import (
 	"context"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
 	"github.com/dejitarudemon/pbac-guardian/internal/cashing"
 )
 
-// tag key used for struct field tagging
+// TAG_KEY is the tag key used for struct field tagging.
+// Fields in structures should be tagged with `pbac-guardian:"field_name"` to be
+// accessible in policy conditions. The tag value specifies the field name used
+// in paths like "source:field_name" or "target:field_name".
 const TAG_KEY = "pbac-guardian"
 
 const (
-	// separator for path to exported field
+	// PATH_SEP is the separator used in paths to exported fields.
+	// Paths have format "entity:field1:field2..." where ":" separates parts.
+	// Example: "source:name", "target:user:email"
 	PATH_SEP = ":"
 
-	// separator inside tag
+	// TAG_SEP is the separator used inside struct field tags.
+	// Tags can have format "field_name,flag1,flag2" where "," separates parts.
+	// Currently only the first part (field name) is used.
 	TAG_SEP = ","
 
-	// minimum path size
+	// MIN_PATH_LEN is the minimum number of parts in a valid path.
+	// A path must have at least 2 parts: entity and one field name.
+	// Example: "source:name" (2 parts) is valid, "source" (1 part) is invalid.
 	MIN_PATH_LEN = 2
 
-	// minimum number of elements in action (entity and action)
+	// MIN_ACTION_PARTS is the minimum number of parts in a valid action.
+	// An action must have at least 2 parts: entity and action name.
+	// Example: "user:read" (2 parts) is valid, "read" (1 part) is invalid.
 	MIN_ACTION_PARTS = 2
 )
 
@@ -197,16 +209,19 @@ func (p *Policy) addInformationToCashTree() {
 }
 
 /*
-toPath checks if path is a path to a structure field.
+toPath checks if a value is a path to a structure field or environment variable.
 
-The path to a field must contain the PATH_SEP separator (":"), indicating that
-this is not a literal value, but a reference to a field in the source or target structure.
+A path must contain the PATH_SEP separator (":"), indicating that this is not
+a literal value, but a reference to:
+  - a field in the source or target structure (e.g., "source:name", "target:owner")
+  - an environment variable (e.g., "env:VARIABLE_NAME")
 
 Parameters:
-  - path - string to check
+  - path - value to check (can be any type, but must be a string to be a valid path)
 
 Returns:
-  - bool - true if path contains separator ":" and is a path, false otherwise
+  - string - the path string if path is a string, empty string otherwise
+  - bool - true if path is a string and contains separator ":" (is a path), false otherwise
 */
 func (p *Policy) toPath(path any) (string, bool) {
 	if str, ok := path.(string); ok {
@@ -224,20 +239,21 @@ or "target", and field1, field2... is a hierarchical path to a field in the stru
 Valid path examples:
   - "source:name" - field name in source structure
   - "target:user:email" - field email in nested user structure in target
+  - "env:VARIABLE_NAME" - environment variable VARIABLE_NAME
 
 Parameters:
-  - path - path to parse in format "entity:field1:field2..."
+  - value - path to parse in format "entity:field1:field2..." (can be any type, but must be a string to be valid)
 
 Returns:
-  - *Entity - pointer to entity (Entity_SOURCE or Entity_TARGET)
-  - []string - path to field as array of strings ["field1", "field2", ...]
+  - *Entity - pointer to entity (Entity_SOURCE, Entity_TARGET, or Entity_ENV)
+  - []string - path to field as array of strings ["field1", "field2", ...] (for Entity_ENV, contains variable name)
   - error - path parsing error
 
 Possible errors:
   - ErrInvalidPath - occurs if:
-  - path does not contain separator ":" (is not a path)
-  - path contains less than 2 parts (minimum entity and one field)
-  - first part of path is not a valid entity (not "source" and not "target")
+  - value is not a string or does not contain separator ":" (is not a path)
+  - path contains less than 2 parts (minimum entity and one field/variable name)
+  - first part of path is not a valid entity (not "source", "target", or "env")
 */
 func (p *Policy) splitPath(value any) (*Entity, []string, error) {
 	path, ok := p.toPath(value)
@@ -328,6 +344,30 @@ func (p *Policy) loadField(entity any, path []string) (any, error) {
 }
 
 /*
+loadEnv retrieves a value from environment variables.
+
+The function uses os.LookupEnv to get the value of an environment variable
+by its name. This is used when Entity_ENV is specified in a path like "env:VARIABLE_NAME".
+
+Parameters:
+  - path - name of the environment variable to retrieve
+
+Returns:
+  - any - value of the environment variable as string
+  - error - error if environment variable does not exist
+
+Possible errors:
+  - ErrInvalidPath - environment variable with the specified name does not exist
+*/
+func (p *Policy) loadEnv(path string) (any, error) {
+	if value, ok := os.LookupEnv(path); ok {
+		return value, nil
+	}
+
+	return nil, NewErrInvalidPath(path, "env doesn't exists")
+}
+
+/*
 load gets a value from a path or returns a literal value.
 
 If path is a path (contains ":"), the function parses it and extracts the value
@@ -348,8 +388,8 @@ Parameters:
   - ctx - context for operation cancellation and timeout control
   - source - first structure to search for fields (used for paths "source:...")
   - target - second structure to search for fields (used for paths "target:...")
-  - path - path to field (e.g., "source:name") or literal value (e.g., "admin")
-  - mustBePath - flag indicating whether path must be a path (true) or can be a literal (false)
+  - value - path to field (e.g., "source:name", "target:owner", "env:VAR_NAME") or literal value (e.g., "admin")
+  - mustBePath - flag indicating whether value must be a path (true) or can be a literal (false)
   - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
@@ -358,9 +398,10 @@ Returns:
 
 Possible errors:
   - ErrInvalidPath - occurs if:
-  - mustBePath=true, but path does not contain ":" (is not a path)
+  - mustBePath=true, but value does not contain ":" (is not a path)
   - path parsing error (see splitPath)
   - field search error (see loadField)
+  - environment variable does not exist (see loadEnv)
   - ErrInvalidType - entity is not a structure or pointer to structure (see loadField)
 */
 func (p *Policy) load(ctx context.Context, source, target any, value any, mustBePath bool, sessionID string) (any, error) {
@@ -392,6 +433,8 @@ func (p *Policy) load(ctx context.Context, source, target any, value any, mustBe
 		v, err = p.loadField(source, parsedPath)
 	case Entity_TARGET:
 		v, err = p.loadField(target, parsedPath)
+	case Entity_ENV:
+		v, err = p.loadEnv(parsedPath[0])
 	default:
 		err = NewErrInvalidPath(path, fmt.Sprintf("unxpected entity: %v", entity))
 	}
