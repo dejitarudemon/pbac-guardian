@@ -16,13 +16,15 @@ Condition represents a set of rules for comparing values in policies.
 
 A condition can contain one or more fields. If multiple fields are specified,
 they are checked independently of each other. Values can be either literals
-or paths to structure fields (e.g., "source:name" or "target:role").
+or paths to structure fields, environment variables, or time values
+(e.g., "source:name", "target:role", "env:VAR_NAME", "time:now").
 
 Fields:
   - Contains - checks if left value is in right list (right must be a slice)
   - Eq - checks equality of values (left == right)
   - Neq - checks inequality of values (left != right)
   - Lt - checks if left value is less than right (left < right)
+  - Gt - checks if left value is greater than right (left > right)
 
 Example usage:
 
@@ -53,16 +55,22 @@ Example usage:
 		Lt: 18, // source:age < 18
 	}
 
-	// Check if value is in list
+	// Check if value is greater
 	condition5 := Condition{
+		Gt: 18, // source:age > 18
+	}
+
+	// Check if value is in list
+	condition6 := Condition{
 		Contains: []any{"admin", "moderator"}, // source:role in ["admin", "moderator"]
 	}
 
 	// Combining conditions (all must be met)
-	condition6 := Condition{
+	condition7 := Condition{
 		Eq:       "user",           // source:role == "user"
 		Contains: []any{"read"},    // "read" in source:tags
 		Lt:       100,             // source:age < 100
+		Gt:       18,              // source:age > 18
 	}
 */
 type Condition struct {
@@ -70,13 +78,14 @@ type Condition struct {
 	Eq       any   `json:"eq,omitempty"`
 	Neq      any   `json:"neq,omitempty"`
 	Lt       any   `json:"lt,omitempty"`
+	Gt       any   `json:"gt,omitempty"`
 }
 
 /*
 ConditionFunc represents a function for checking a condition between two values.
 
 Functions of this type are used to check conditions in policies. Argument order
-matters for Contains and Lt operations (left and right are not interchangeable).
+matters for Contains, Lt, and Gt operations (left and right are not interchangeable).
 
 Functions must support cancellation through context.Context and return ErrCancelled
 when context is cancelled.
