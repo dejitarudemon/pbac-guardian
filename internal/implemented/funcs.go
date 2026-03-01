@@ -3,8 +3,13 @@ Package implemented provides default implementations of condition functions
 and cache mechanisms for the policy evaluation engine.
 
 The package contains:
-  - Default condition functions (Contains, Eq, Neq, Lt) for policy evaluation
+  - Default condition functions (Contains, Eq, Neq, Lt, Gt) for policy evaluation
   - DefaultCasher implementation for L1 caching
+
+The default condition functions support:
+  - Primitive types (int, uint, float, string and their variants)
+  - time.Time values (for Eq, Neq, Lt, Gt conditions)
+  - Custom types implementing base.Comparable interface
 */
 package implemented
 
@@ -12,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
 )
@@ -27,8 +33,9 @@ to NewGuardianFromPolices or NewGuardianFromFile. It contains standard implement
 of all condition types: Contains, Eq, Neq, Lt, and Gt.
 
 The default functions support:
-  - Custom types implementing base.Comparable interface
   - Primitive types (int, uint, float, string and their variants)
+  - time.Time values (for Eq, Neq, Lt, Gt conditions)
+  - Custom types implementing base.Comparable interface
   - Context cancellation for long-running operations
 */
 var (
@@ -87,7 +94,11 @@ func ContainsConditionFunc(ctx context.Context, left, right any) (bool, error) {
 		case <-ctx.Done():
 			return false, base.ErrCancelled
 		default:
-			if reflect.DeepEqual(left, slice.Index(i).Interface()) {
+			ok, err := EqConditionFunc(ctx, left, slice.Index(i).Interface())
+			if err != nil {
+				return false, err
+			}
+			if ok {
 				return true, nil
 			}
 		}
@@ -99,9 +110,10 @@ func ContainsConditionFunc(ctx context.Context, left, right any) (bool, error) {
 /*
 EqConditionFunc checks equality of two values.
 
-If one of the values implements the Comparable interface, the Compare() method
-is used for comparison. If Compare() returns false (comparison impossible), or
-neither value implements Comparable, reflect.DeepEqual is used.
+The function uses the following comparison logic in order:
+ 1. If one of the values implements the Comparable interface, the Compare() method is used
+ 2. If both values are time.Time, they are compared using time.Time methods
+ 3. Otherwise, reflect.DeepEqual is used
 
 Parameters:
   - ctx - context for operation cancellation and timeout control (not used, but required for compatibility)
@@ -111,6 +123,12 @@ Parameters:
 Returns:
   - bool - true if values are equal, false otherwise
   - err - execution error (always nil, function does not return errors)
+
+Supported types:
+  - Primitive types (int, uint, float, string and their variants)
+  - time.Time values
+  - Custom types implementing base.Comparable interface
+  - Any types supported by reflect.DeepEqual
 */
 func EqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	if ctx == nil {
@@ -128,6 +146,9 @@ func EqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 		if result, acceptable := r.Compare(left); acceptable {
 			return result == 0, nil
 		}
+	}
+	if result, ok := timesCompare(left, right); ok {
+		return result == 0, nil
 	}
 	return reflect.DeepEqual(left, right), nil
 }
@@ -155,9 +176,11 @@ func NeqConditionFunc(ctx context.Context, left, right any) (bool, error) {
 /*
 LtConditionFunc checks if left is less than right.
 
-If left is a structure, it must implement the Comparable interface.
-For primitive types (int, uint, float, string), comparison is done through reflect.
-Types must match for correct comparison.
+The function uses the following comparison logic:
+ 1. For primitive types (int, uint, float, string), comparison is done through reflection
+ 2. For time.Time values, comparison is done using time.Time methods (Before/After)
+ 3. For structures, the Comparable interface is used if implemented
+ 4. Types must match for correct comparison
 
 Parameters:
   - ctx - context for operation cancellation and timeout control (passed to ltPrimitives)
@@ -169,10 +192,15 @@ Returns:
   - err - execution error if comparison is impossible
 
 Possible errors:
-  - ErrNotComparableStruct - left is a structure but does not implement Comparable interface
+  - ErrNotComparableStruct - left is a structure but does not implement Comparable interface and is not time.Time
   - ErrUncomparable - cannot compare left and right (incompatible types or Compare returned false)
-  - ErrInvalidType - left or right is neither a structure nor a supported primitive
+  - ErrInvalidType - left or right is neither a structure, time.Time, nor a supported primitive
     (int, uint, float, string and their variants)
+
+Supported types:
+  - Primitive types (int, uint, float, string and their variants)
+  - time.Time values
+  - Custom types implementing base.Comparable interface
 */
 func LtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	if ctx == nil {
@@ -191,6 +219,9 @@ func LtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 
 	l, ok := left.(base.Comparable)
 	if !ok {
+		if asTimeResult, ok := timesCompare(left, right); ok {
+			return asTimeResult < 0, nil
+		}
 		return false, base.ErrNotComparableStruct
 	}
 
@@ -272,9 +303,11 @@ func ltPrimitives(left, right any) (bool, error) {
 /*
 GtConditionFunc checks if left is greater than right.
 
-If left is a structure, it must implement the Comparable interface.
-For primitive types (int, uint, float, string), comparison is done through reflect.
-Types must match for correct comparison.
+The function uses the following comparison logic:
+ 1. For primitive types (int, uint, float, string), comparison is done through reflection
+ 2. For time.Time values, comparison is done using time.Time methods (Before/After)
+ 3. For structures, the Comparable interface is used if implemented
+ 4. Types must match for correct comparison
 
 Parameters:
   - ctx - context for operation cancellation and timeout control (passed to gtPrimitives)
@@ -286,10 +319,15 @@ Returns:
   - err - execution error if comparison is impossible
 
 Possible errors:
-  - ErrNotComparableStruct - left is a structure but does not implement Comparable interface
+  - ErrNotComparableStruct - left is a structure but does not implement Comparable interface and is not time.Time
   - ErrUncomparable - cannot compare left and right (incompatible types or Compare returned false)
-  - ErrInvalidType - left or right is neither a structure nor a supported primitive
+  - ErrInvalidType - left or right is neither a structure, time.Time, nor a supported primitive
     (int, uint, float, string and their variants)
+
+Supported types:
+  - Primitive types (int, uint, float, string and their variants)
+  - time.Time values
+  - Custom types implementing base.Comparable interface
 */
 func GtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	if ctx == nil {
@@ -308,6 +346,9 @@ func GtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 
 	l, ok := left.(base.Comparable)
 	if !ok {
+		if asTimeResult, ok := timesCompare(left, right); ok {
+			return asTimeResult > 0, nil
+		}
 		return false, base.ErrNotComparableStruct
 	}
 
@@ -384,4 +425,46 @@ func gtPrimitives(left, right any) (bool, error) {
 	}
 
 	return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, v1.Kind().String())
+}
+
+/*
+timesCompare compares two time.Time values.
+
+The function is used internally by condition functions (Eq, Neq, Lt, Gt) to support
+time.Time comparisons without requiring the Comparable interface implementation.
+
+Parameters:
+  - left - first time.Time value to compare
+  - right - second time.Time value to compare
+
+Returns:
+  - int - comparison result:
+  - < 0 - left is before right
+  - = 0 - left equals right
+  - > 0 - left is after right
+  - bool - true if both values are time.Time and comparison was successful, false otherwise
+
+The function returns (0, false) if either left or right is not a time.Time value,
+allowing condition functions to fall back to other comparison methods.
+*/
+func timesCompare(left, right any) (int, bool) {
+	l, ok := left.(time.Time)
+	if !ok {
+		return 0, false
+	}
+
+	r, ok := right.(time.Time)
+	if !ok {
+		return 0, false
+	}
+
+	if l.Before(r) {
+		return -1, true
+	}
+
+	if l.After(r) {
+		return 1, true
+	}
+
+	return 0, true
 }
