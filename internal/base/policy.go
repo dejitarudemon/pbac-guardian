@@ -59,8 +59,8 @@ The Policy structure contains:
   - action - action in format "entity:action:extra1:extra2..." (e.g., "user:read:profile")
   - effect - policy effect: Effect_ALLOW (allow) or Effect_DENY (deny)
   - conditions - map of conditions. Key - path to field in format "source:field" or "target:field",
-    value - condition to check (Contains, Eq, Neq, Lt)
-  - conditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt)
+    value - condition to check (Contains, Eq, Neq, Lt, Gt)
+  - conditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt, Gt)
   - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - cashTree - cache tree for tracking field access counts and disabling cache for rarely accessed fields
 
@@ -111,7 +111,7 @@ the policy for evaluation. It performs the following steps:
 
 Parameters:
   - raw - raw policy structure with public fields (Name, Action, Effect, Conditions)
-  - conditions - configuration for condition functions (Contains, Eq, Neq, Lt). Must not be nil.
+  - conditions - configuration for condition functions (Contains, Eq, Neq, Lt, Gt). Must not be nil.
   - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - cashTree - cache tree for tracking field access counts (can be nil, cache tracking will be skipped)
 
@@ -460,7 +460,7 @@ conditions are met (logical AND).
 The function supports cancellation through context.Context, allowing to interrupt
 condition checking when context is cancelled.
 
-Conditions are checked using direct field access (Contains, Eq, Neq, Lt) without
+Conditions are checked using direct field access (Contains, Eq, Neq, Lt, Gt) without
 reflection, providing optimal performance. Field values are retrieved using the
 load() method, which utilizes L1 cache to optimize performance. The cache is
 scoped by sessionID, which is unique for each evaluation session. This allows
@@ -546,6 +546,16 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 				}
 
 				if m, err := p.conditionsMap.Neq(ctx, left, right); err != nil || !m {
+					return false, err
+				}
+			}
+			if condition.Gt != nil {
+				right, err := p.load(ctx, source, target, condition.Gt, false, sessionID)
+				if err != nil {
+					return false, err
+				}
+
+				if m, err := p.conditionsMap.Gt(ctx, left, right); err != nil || !m {
 					return false, err
 				}
 			}
