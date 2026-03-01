@@ -1,3 +1,138 @@
+## v 0.5.0
+
+### Русский
+
+**Добавлено:**
+
+- Поддержка переменных окружения через `Entity_ENV` в политиках
+- Метод `Policy.loadEnv()` для получения значений переменных окружения
+- Возможность использования путей вида `"env:VARIABLE_NAME"` в условиях политик
+- Поддержка переменных окружения во всех типах условий (Eq, Neq, Contains, Lt, Gt)
+- Функция `Gt` (greater than) для проверки условия "больше" в политиках
+- Реализация `GtConditionFunc` и `gtPrimitives` для сравнения значений
+- Поддержка `time.Time` значений в условиях (Eq, Neq, Lt, Gt) без необходимости реализации `Comparable`
+- Функция `timesCompare` для сравнения `time.Time` значений
+- Поддержка времени через `Entity_TIME` в политиках
+- Метод `Policy.loadTime()` для получения значений времени (например, "time:now")
+- Возможность использования путей вида `"time:now"` и `"time:now:1|day"` в условиях политик
+- Поддержка модификаторов времени (day, hour, minute, second, milisecond)
+- Комплексные тесты для работы с переменными окружения (`tests/env_test.go`)
+- Тесты для функции Gt: `TestGtCondition`, `TestGtNumericTypes`, `TestGtConditionFunc`, `TestEnvVariable_Gt`
+- Комплексные тесты для работы с `time.Time`: `TestTime_Eq`, `TestTime_Neq`, `TestTime_Lt`, `TestTime_Gt`, `TestTime_MultipleConditions`, `TestTime_Contains` (`tests/time_test.go`)
+- Комплексные тесты для работы с `Entity_TIME`: `TestTimeEntity_Now`, `TestTimeEntity_Modifiers`, `TestTimeEntity_InvalidPaths`, `TestTimeEntity_WithStructureFields`, `TestTimeEntity_Contains` (`tests/time_entity_test.go`)
+
+**Изменено:**
+
+- Метод `Policy.load()` теперь поддерживает загрузку переменных окружения через `Entity_ENV` и времени через `Entity_TIME`
+- Метод `Policy.splitPath()` обновлен для поддержки путей с `Entity_ENV` и `Entity_TIME`
+- Метод `Policy.toPath()` обновлен для распознавания путей к переменным окружения и времени
+- Метод `Entity.IsValid()` теперь валидирует `Entity_ENV` и `Entity_TIME` как валидные значения
+- Добавлены методы `Policy.loadTime()` и `Policy.loadTimeModications()` для работы с time paths
+- Метод `Policy.Evaluate()` теперь поддерживает проверку условия `Gt`
+- Структура `Condition` расширена полем `Gt` для проверки условия "больше"
+- Структура `ConditionsMap` расширена полем `Gt` для функции сравнения
+- Метод `ConditionsMap.Select()` теперь поддерживает выбор функции `Gt`
+- `DefaultConditionsMap` теперь включает реализацию `GtConditionFunc`
+- Обновлены godoc комментарии для `Entity`, `Entity_ENV`, `Entity_TIME`, `loadEnv()`, `loadTime()`, `load()`, `splitPath()`, `toPath()`
+- Обновлены godoc комментарии для `Condition`, `ConditionsMap`, `Config`, `GtConditionFunc`, `gtPrimitives`
+- Обновлены godoc комментарии в `funcs.go` для явного указания поддержки `time.Time`:
+  - Пакетный комментарий обновлен с упоминанием поддержки `time.Time`
+  - `DefaultConditionsMap` обновлен с указанием поддержки `time.Time`
+  - `EqConditionFunc` обновлен с описанием логики сравнения для `time.Time`
+  - `LtConditionFunc` обновлен с указанием поддержки `time.Time`
+  - `GtConditionFunc` обновлен с указанием поддержки `time.Time`
+  - Добавлен godoc комментарий для функции `timesCompare`
+- Обновлены godoc комментарии в `entity.go` для отражения поддержки `Entity_TIME`
+- Обновлены godoc комментарии в `policy.go` для отражения работы с time paths
+- Обновлены godoc комментарии в `condition.go` и `raw-policy.go` для упоминания time paths
+
+**Обновлено:**
+
+- Все godoc комментарии в `entity.go` обновлены для отражения поддержки `Entity_ENV` и `Entity_TIME`
+- Все godoc комментарии в `policy.go` обновлены для отражения работы с переменными окружения и time paths
+- Тест `TestEntityIsValid` обновлен для проверки валидности `Entity_ENV` и `Entity_TIME`
+- Добавлены тесты для всех сценариев использования переменных окружения:
+  - Сравнение env переменных с литералами и полями структур
+  - Использование env переменных в условиях Contains, Eq, Neq, Lt, Gt
+  - Комбинации env переменных с другими условиями
+  - Обработка ошибок при отсутствии переменных окружения
+  - Кеширование переменных окружения
+- Обновлены тесты для включения поддержки функции Gt во всех соответствующих тестовых файлах
+- Добавлены тесты для всех сценариев использования `time.Time`:
+  - Сравнение `time.Time` с литералами и полями структур
+  - Использование `time.Time` в условиях Eq, Neq, Lt, Gt
+  - Комбинации `time.Time` с другими условиями
+  - Проверка диапазонов времени (Gt и Lt вместе)
+  - Использование `time.Time` в условиях Contains
+
+---
+
+### English
+
+**Added:**
+
+- Environment variable support through `Entity_ENV` in policies
+- `Policy.loadEnv()` method for retrieving environment variable values
+- Support for paths like `"env:VARIABLE_NAME"` in policy conditions
+- Environment variable support in all condition types (Eq, Neq, Contains, Lt, Gt)
+- `Gt` (greater than) function for checking "greater than" condition in policies
+- Implementation of `GtConditionFunc` and `gtPrimitives` for value comparison
+- Support for `time.Time` values in conditions (Eq, Neq, Lt, Gt) without requiring `Comparable` implementation
+- `timesCompare` function for comparing `time.Time` values
+- Time support through `Entity_TIME` in policies
+- `Policy.loadTime()` method for retrieving time values (e.g., "time:now")
+- Support for paths like `"time:now"` and `"time:now:1|day"` in policy conditions
+- Support for time modifiers (day, hour, minute, second, milisecond)
+- Comprehensive tests for environment variable functionality (`tests/env_test.go`)
+- Tests for Gt function: `TestGtCondition`, `TestGtNumericTypes`, `TestGtConditionFunc`, `TestEnvVariable_Gt`
+- Comprehensive tests for `time.Time` functionality: `TestTime_Eq`, `TestTime_Neq`, `TestTime_Lt`, `TestTime_Gt`, `TestTime_MultipleConditions`, `TestTime_Contains` (`tests/time_test.go`)
+- Comprehensive tests for `Entity_TIME` functionality: `TestTimeEntity_Now`, `TestTimeEntity_Modifiers`, `TestTimeEntity_InvalidPaths`, `TestTimeEntity_WithStructureFields`, `TestTimeEntity_Contains` (`tests/time_entity_test.go`)
+
+**Changed:**
+
+- `Policy.load()` method now supports loading environment variables through `Entity_ENV` and time values through `Entity_TIME`
+- `Policy.splitPath()` method updated to support paths with `Entity_ENV` and `Entity_TIME`
+- `Policy.toPath()` method updated to recognize environment variable and time paths
+- `Entity.IsValid()` method now validates `Entity_ENV` and `Entity_TIME` as valid values
+- Added `Policy.loadTime()` and `Policy.loadTimeModications()` methods for working with time paths
+- `Policy.Evaluate()` method now supports checking `Gt` condition
+- `Condition` structure extended with `Gt` field for "greater than" condition checking
+- `ConditionsMap` structure extended with `Gt` field for comparison function
+- `ConditionsMap.Select()` method now supports selecting `Gt` function
+- `DefaultConditionsMap` now includes `GtConditionFunc` implementation
+- Updated godoc comments for `Entity`, `Entity_ENV`, `Entity_TIME`, `loadEnv()`, `loadTime()`, `load()`, `splitPath()`, `toPath()`
+- Updated godoc comments for `Condition`, `ConditionsMap`, `Config`, `GtConditionFunc`, `gtPrimitives`
+- Updated godoc comments in `funcs.go` to explicitly document `time.Time` support:
+  - Package comment updated with mention of `time.Time` support
+  - `DefaultConditionsMap` updated with `time.Time` support indication
+  - `EqConditionFunc` updated with comparison logic description for `time.Time`
+  - `LtConditionFunc` updated with `time.Time` support indication
+  - `GtConditionFunc` updated with `time.Time` support indication
+  - Added godoc comment for `timesCompare` function
+- Updated godoc comments in `entity.go` to reflect `Entity_TIME` support
+- Updated godoc comments in `policy.go` to reflect time paths functionality
+- Updated godoc comments in `condition.go` and `raw-policy.go` to mention time paths
+
+**Updated:**
+
+- All godoc comments in `entity.go` updated to reflect `Entity_ENV` and `Entity_TIME` support
+- All godoc comments in `policy.go` updated to reflect environment variable and time paths functionality
+- `TestEntityIsValid` test updated to check `Entity_ENV` and `Entity_TIME` validity
+- Added tests for all environment variable usage scenarios:
+  - Comparing env variables with literals and structure fields
+  - Using env variables in Contains, Eq, Neq, Lt, Gt conditions
+  - Combining env variables with other conditions
+  - Error handling for missing environment variables
+  - Caching of environment variables
+- Updated tests to include Gt function support in all relevant test files
+- Added tests for all `time.Time` usage scenarios:
+  - Comparing `time.Time` with literals and structure fields
+  - Using `time.Time` in Eq, Neq, Lt, Gt conditions
+  - Combining `time.Time` with other conditions
+  - Checking time ranges (Gt and Lt together)
+  - Using `time.Time` in Contains conditions
+
+
 ## v 0.4.3
 
 ### Русский

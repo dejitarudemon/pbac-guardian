@@ -1,7 +1,7 @@
 /*
 Package tests contains tests for comparison conditions in policies.
 
-Tests check the work of various conditions (Contains, Eq, Neq, Lt) through
+Tests check the work of various conditions (Contains, Eq, Neq, Lt, Gt) through
 the public API of the library, which allows improving coverage of internal condition functions.
 The tests verify that conditions work correctly with:
   - Different data types (strings, integers, slices)

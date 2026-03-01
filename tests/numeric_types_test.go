@@ -333,3 +333,252 @@ func TestLtNumericTypes(t *testing.T) {
 		})
 	}
 }
+
+/*
+TestGtNumericTypes tests the Gt condition for various numeric types.
+
+The test checks the work of gtPrimitives for all supported numeric types,
+which significantly improves coverage of gtPrimitives function.
+*/
+func TestGtNumericTypes(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name    string
+		policy  base.RawPolicy
+		source  any
+		target  Document
+		action  string
+		want    bool
+		wantErr bool
+	}{
+		{
+			name: "gt - int8",
+			// Test checks Gt condition for int8 type
+			policy: base.RawPolicy{
+				Name:   "gt-int8-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: int8(20)},
+				},
+			},
+			source:  UserWithInt8{Name: "user", Age: 25},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - int16",
+			// Test checks Gt condition for int16 type
+			policy: base.RawPolicy{
+				Name:   "gt-int16-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: int16(20)},
+				},
+			},
+			source:  UserWithInt16{Name: "user", Age: 25},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - int32",
+			// Test checks Gt condition for int32 type
+			policy: base.RawPolicy{
+				Name:   "gt-int32-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: int32(20)},
+				},
+			},
+			source:  UserWithInt32{Name: "user", Age: 25},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - int64",
+			// Test checks Gt condition for int64 type
+			policy: base.RawPolicy{
+				Name:   "gt-int64-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: int64(20)},
+				},
+			},
+			source:  UserWithInt64{Name: "user", Age: 25},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - uint8",
+			// Test checks Gt condition for uint8 type
+			policy: base.RawPolicy{
+				Name:   "gt-uint8-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: uint8(20)},
+				},
+			},
+			source:  UserWithUint8{Name: "user", Age: 25},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - uint16",
+			// Test checks Gt condition for uint16 type
+			policy: base.RawPolicy{
+				Name:   "gt-uint16-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: uint16(20)},
+				},
+			},
+			source:  UserWithUint16{Name: "user", Age: 25},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - uint32",
+			// Test checks Gt condition for uint32 type
+			policy: base.RawPolicy{
+				Name:   "gt-uint32-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: uint32(20)},
+				},
+			},
+			source:  UserWithUint32{Name: "user", Age: 25},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - uint64",
+			// Test checks Gt condition for uint64 type
+			policy: base.RawPolicy{
+				Name:   "gt-uint64-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: uint64(20)},
+				},
+			},
+			source:  UserWithUint64{Name: "user", Age: 25},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - float32",
+			// Test checks Gt condition for float32 type
+			policy: base.RawPolicy{
+				Name:   "gt-float32-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: float32(20.5)},
+				},
+			},
+			source:  UserWithFloat32{Name: "user", Age: 25.5},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - float64",
+			// Test checks Gt condition for float64 type
+			policy: base.RawPolicy{
+				Name:   "gt-float64-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: 20.5},
+				},
+			},
+			source:  UserWithFloat64{Name: "user", Age: 25.5},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "gt - float64 equal",
+			// Test checks that Gt condition returns false on equality for float64
+			policy: base.RawPolicy{
+				Name:   "gt-float64-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: 20.5},
+				},
+			},
+			source:  UserWithFloat64{Name: "user", Age: 20.5},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name: "gt - uint64 less",
+			// Test checks that Gt condition returns false for less value for uint64
+			policy: base.RawPolicy{
+				Name:   "gt-uint64-test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {Gt: uint64(20)},
+				},
+			},
+			source:  UserWithUint64{Name: "user", Age: 15},
+			target:  Document{Owner: "user", Type: "public"},
+			action:  "user:read",
+			want:    false,
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.RawPolicy{tt.policy}, config)
+			if err != nil {
+				t.Fatalf("failed to create engine: %v", err)
+			}
+
+			got, err := engine.Evaluate(ctx, tt.source, tt.target, tt.action)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("expected error, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("unexpected error: %v", err)
+				}
+				if got != tt.want {
+					t.Errorf("Evaluate() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}

@@ -11,8 +11,8 @@ Fields:
   - Name - unique policy name (used for identification)
   - Action - action in format "entity:action:extra1:extra2..." (e.g., "user:read:profile")
   - Effect - policy effect: Effect_ALLOW (allow) or Effect_DENY (deny)
-  - Conditions - map of conditions. Key - path to field in format "source:field" or "target:field",
-    value - condition to check (Contains, Eq, Neq, Lt)
+  - Conditions - map of conditions. Key - path to field in format "source:field", "target:field", "env:VAR_NAME", or "time:now",
+    value - condition to check (Contains, Eq, Neq, Lt, Gt)
 
 Example usage:
 

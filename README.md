@@ -1,6 +1,6 @@
 # pbac-guardian
 
-Current version: 0.4.3
+Current version: 0.5.0
 
 [English](#english) | [Русский](#russian)
 
@@ -17,7 +17,9 @@ Current version: 0.4.3
 
 - **Simple API**: Minimalistic and easy to use
 - **Declarative Policies**: Define policies in JSON or programmatically
-- **Flexible Conditions**: Support for equality, inequality, less-than, and contains operations
+- **Flexible Conditions**: Support for equality, inequality, less-than, greater-than, and contains operations
+- **Time Support**: Built-in support for time values and time modifiers (e.g., "time:now", "time:now:1|day")
+- **Environment Variables**: Support for environment variables in policy conditions (e.g., "env:VAR_NAME")
 - **Context Support**: Built-in support for cancellation and timeouts via `context.Context`
 - **Optional L1 Caching**: Optimized cache mechanism for improved performance with repeated field access
 - **Thread-Safe**: Fully concurrent-safe implementation
@@ -383,18 +385,7 @@ func main() {
 - Fields accessed only once per session
 - Maximum performance for single-access scenarios
 
-**Performance Benchmarks:**
-
-The cache provides significant performance improvements in production scenarios:
-
-| Scenario | Policies | Field Accesses | Time Savings | Memory Savings | Allocation Reduction |
-|----------|----------|----------------|--------------|----------------|---------------------|
-| **20P-3A** | 20 | 3 | **14%** faster | +2.7% | **47%** fewer |
-| **30P-5A** | 30 | 5 | **32%** faster | **25%** less | **59%** fewer |
-| **30P-10A** | 30 | 10 | **41%** faster | **36%** less | **63%** fewer |
-| **Mixed** | 30 | 5+3+7 | **24%** faster | **23%** less | **53%** fewer |
-
-*Benchmarks conducted with 10+ actions and 20-30 policies per evaluation. Cache becomes beneficial at 3+ field accesses within a single action evaluation.*
+*Note: Cache becomes beneficial at 3+ field accesses within a single action evaluation.*
 
 ### Tutorial 7: Custom Condition Functions
 
@@ -430,6 +421,7 @@ func main() {
         Eq:       customEqFunc, // Use custom function
         Neq:      implemented.DefaultConditionsMap.Neq,
         Lt:       implemented.DefaultConditionsMap.Lt,
+        Gt:       implemented.DefaultConditionsMap.Gt,
     }
 
     // Create config with custom ConditionsMap
@@ -475,11 +467,76 @@ func main() {
 - Custom business rules for condition evaluation
 
 **When to use defaults (pass nil):**
-- Standard equality, inequality, less-than, and contains operations
+- Standard equality, inequality, less-than, greater-than, and contains operations
 - Most common use cases
 - When performance is critical (default functions are optimized)
 
-### Tutorial 8: Custom Types with Comparable Interface
+### Tutorial 8: Environment Variables and Time Values
+
+This tutorial shows how to use environment variables and time values in policy conditions.
+
+#### Environment Variables
+
+You can use environment variables in conditions using the `"env:VARIABLE_NAME"` path format:
+
+```go
+import (
+    "os"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+)
+
+// Set environment variable
+os.Setenv("MIN_AGE", "18")
+defer os.Unsetenv("MIN_AGE")
+
+policies := []base.RawPolicy{
+    {
+        Name:   "age-check",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:age": {
+                Gt: "env:MIN_AGE", // source:age > env:MIN_AGE
+            },
+        },
+    },
+}
+```
+
+#### Time Values
+
+You can use time values in conditions using the `"time:now"` path format:
+
+```go
+import (
+    "time"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+)
+
+policies := []base.RawPolicy{
+    {
+        Name:   "recent-document",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:created_at": {
+                Gt: "time:now:-7|day", // source:created_at > time:now - 7 days
+            },
+        },
+    },
+}
+```
+
+Time modifiers:
+- `"time:now"` - current time
+- `"time:now:1|day"` - current time + 1 day
+- `"time:now:2|hour"` - current time + 2 hours
+- `"time:now:30|minute"` - current time + 30 minutes
+- Supported units: `day`, `hour`, `minute`, `second`, `milisecond`
+
+### Tutorial 9: Custom Types with Comparable Interface
 
 For custom types that need special comparison logic, implement the `Comparable` interface.
 
@@ -554,7 +611,17 @@ Public methods:
 - **Eq**: Equality check (`left == right`)
 - **Neq**: Inequality check (`left != right`)
 - **Lt**: Less than check (`left < right`)
+- **Gt**: Greater than check (`left > right`)
 - **Contains**: Checks if `left` is in `right` (slice)
+
+### Path Types
+
+Paths in conditions can reference:
+- **Structure fields**: `"source:field"`, `"target:field"` - fields from source/target structures
+- **Environment variables**: `"env:VARIABLE_NAME"` - values from environment variables
+- **Time values**: `"time:now"` - current time, `"time:now:1|day"` - current time with modifiers
+  - Supported modifiers: `day`, `hour`, `minute`, `second`, `milisecond`
+  - Format: `"time:now:value|unit"` (e.g., `"time:now:2|hour"`)
 
 ### Effects
 
@@ -586,7 +653,9 @@ The library provides typed errors:
 
 - **Простой API**: Минималистичный и простой в использовании
 - **Декларативные политики**: Определение политик в JSON или программно
-- **Гибкие условия**: Поддержка операций равенства, неравенства, меньше и содержит
+- **Гибкие условия**: Поддержка операций равенства, неравенства, меньше, больше и содержит
+- **Поддержка времени**: Встроенная поддержка значений времени и модификаторов времени (например, "time:now", "time:now:1|day")
+- **Переменные окружения**: Поддержка переменных окружения в условиях политик (например, "env:VAR_NAME")
 - **Поддержка контекста**: Встроенная поддержка отмены и таймаутов через `context.Context`
 - **Опциональное L1-кеширование**: Оптимизированный механизм кеша для улучшения производительности при повторном доступе к полям
 - **Потокобезопасность**: Полностью потокобезопасная реализация
@@ -952,18 +1021,7 @@ func main() {
 - Поля обращаются только один раз за сессию
 - Максимальная производительность для сценариев с однократным доступом
 
-**Результаты бенчмарков:**
-
-Кеш обеспечивает значительное улучшение производительности в production-сценариях:
-
-| Сценарий | Политики | Обращения к полю | Экономия времени | Экономия памяти | Уменьшение аллокаций |
-|----------|----------|------------------|------------------|------------------|----------------------|
-| **20P-3A** | 20 | 3 | **14%** быстрее | +2.7% | **47%** меньше |
-| **30P-5A** | 30 | 5 | **32%** быстрее | **25%** меньше | **59%** меньше |
-| **30P-10A** | 30 | 10 | **41%** быстрее | **36%** меньше | **63%** меньше |
-| **Mixed** | 30 | 5+3+7 | **24%** быстрее | **23%** меньше | **53%** меньше |
-
-*Бенчмарки проведены с 10+ действиями и 20-30 политиками на оценку. Кеш становится выгодным при 3+ обращениях к полю в рамках одной оценки действия.*
+*Примечание: Кеш становится выгодным при 3+ обращениях к полю в рамках одной оценки действия.*
 
 ### Туториал 7: Кастомные функции условий
 
@@ -999,6 +1057,7 @@ func main() {
         Eq:       customEqFunc, // Использовать кастомную функцию
         Neq:      implemented.DefaultConditionsMap.Neq,
         Lt:       implemented.DefaultConditionsMap.Lt,
+        Gt:       implemented.DefaultConditionsMap.Gt,
     }
 
     // Создание config с кастомной ConditionsMap
@@ -1044,11 +1103,76 @@ func main() {
 - Кастомные бизнес-правила для оценки условий
 
 **Когда использовать значения по умолчанию (передать nil):**
-- Стандартные операции равенства, неравенства, меньше и содержит
+- Стандартные операции равенства, неравенства, меньше, больше и содержит
 - Большинство распространенных случаев использования
 - Когда производительность критична (функции по умолчанию оптимизированы)
 
-### Туториал 8: Кастомные типы с интерфейсом Comparable
+### Туториал 8: Переменные окружения и значения времени
+
+Этот туториал показывает, как использовать переменные окружения и значения времени в условиях политик.
+
+#### Переменные окружения
+
+Вы можете использовать переменные окружения в условиях, используя формат пути `"env:VARIABLE_NAME"`:
+
+```go
+import (
+    "os"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+)
+
+// Установить переменную окружения
+os.Setenv("MIN_AGE", "18")
+defer os.Unsetenv("MIN_AGE")
+
+policies := []base.RawPolicy{
+    {
+        Name:   "age-check",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:age": {
+                Gt: "env:MIN_AGE", // source:age > env:MIN_AGE
+            },
+        },
+    },
+}
+```
+
+#### Значения времени
+
+Вы можете использовать значения времени в условиях, используя формат пути `"time:now"`:
+
+```go
+import (
+    "time"
+    "github.com/dejitarudemon/pbac-guardian"
+    "github.com/dejitarudemon/pbac-guardian/internal/base"
+)
+
+policies := []base.RawPolicy{
+    {
+        Name:   "recent-document",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:created_at": {
+                Gt: "time:now:-7|day", // source:created_at > time:now - 7 days
+            },
+        },
+    },
+}
+```
+
+Модификаторы времени:
+- `"time:now"` - текущее время
+- `"time:now:1|day"` - текущее время + 1 день
+- `"time:now:2|hour"` - текущее время + 2 часа
+- `"time:now:30|minute"` - текущее время + 30 минут
+- Поддерживаемые единицы: `day`, `hour`, `minute`, `second`, `milisecond`
+
+### Туториал 9: Кастомные типы с интерфейсом Comparable
 
 Для кастомных типов, требующих специальной логики сравнения, реализуйте интерфейс `Comparable`.
 
@@ -1123,7 +1247,17 @@ type RawPolicy struct {
 - **Eq**: Проверка равенства (`left == right`)
 - **Neq**: Проверка неравенства (`left != right`)
 - **Lt**: Проверка меньше (`left < right`)
+- **Gt**: Проверка больше (`left > right`)
 - **Contains**: Проверяет, находится ли `left` в `right` (slice)
+
+### Типы путей
+
+Пути в условиях могут ссылаться на:
+- **Поля структур**: `"source:field"`, `"target:field"` - поля из структур source/target
+- **Переменные окружения**: `"env:VARIABLE_NAME"` - значения из переменных окружения
+- **Значения времени**: `"time:now"` - текущее время, `"time:now:1|day"` - текущее время с модификаторами
+  - Поддерживаемые модификаторы: `day`, `hour`, `minute`, `second`, `milisecond`
+  - Формат: `"time:now:value|unit"` (например, `"time:now:2|hour"`)
 
 ### Эффекты
 
