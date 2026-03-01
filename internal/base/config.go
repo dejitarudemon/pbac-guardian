@@ -3,7 +3,7 @@ package base
 /*
 ConditionsMap provides configuration for condition functions used in policy evaluation.
 
-This structure allows customizing the behavior of condition checks (Contains, Eq, Neq, Lt)
+This structure allows customizing the behavior of condition checks (Contains, Eq, Neq, Lt, Gt)
 by providing custom implementations. If nil is passed in Config.ConditionsMap to
 NewGuardianFromPolices or NewGuardianFromFile, the default implementations from
 implemented.DefaultConditionsMap will be used.
@@ -13,12 +13,14 @@ Fields:
   - Eq - function for equality comparison
   - Neq - function for inequality comparison
   - Lt - function for less-than comparison
+  - Gt - function for greater-than comparison
 */
 type ConditionsMap struct {
 	Contains ConditionFunc
 	Eq       ConditionFunc
 	Neq      ConditionFunc
 	Lt       ConditionFunc
+	Gt       ConditionFunc
 }
 
 /*
@@ -28,7 +30,7 @@ The function is used internally to retrieve the appropriate condition function
 based on the condition type specified in the policy.
 
 Parameters:
-  - key - condition function name ("Contains", "Eq", "Neq", or "Lt")
+  - key - condition function name ("Contains", "Eq", "Neq", "Lt", or "Gt")
 
 Returns:
   - ConditionFunc - condition function if found, nil otherwise
@@ -43,6 +45,8 @@ func (c ConditionsMap) Select(key string) ConditionFunc {
 		return c.Neq
 	case "Lt":
 		return c.Lt
+	case "Gt":
+		return c.Gt
 	}
 
 	return nil
@@ -58,7 +62,7 @@ Fields:
   - CashDisableThreShold - threshold for disabling cache for rarely accessed fields.
     Fields accessed less than this number of times will not be cached.
     Must be at least 1. If less than 1, it will be set to 1 automatically.
-  - ConditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt).
+  - ConditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt, Gt).
     If nil, default implementations from implemented.DefaultConditionsMap will be used.
 */
 type Config struct {
