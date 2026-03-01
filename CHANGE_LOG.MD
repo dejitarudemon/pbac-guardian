@@ -7,8 +7,11 @@
 - Поддержка переменных окружения через `Entity_ENV` в политиках
 - Метод `Policy.loadEnv()` для получения значений переменных окружения
 - Возможность использования путей вида `"env:VARIABLE_NAME"` в условиях политик
-- Поддержка переменных окружения во всех типах условий (Eq, Neq, Contains, Lt)
+- Поддержка переменных окружения во всех типах условий (Eq, Neq, Contains, Lt, Gt)
+- Функция `Gt` (greater than) для проверки условия "больше" в политиках
+- Реализация `GtConditionFunc` и `gtPrimitives` для сравнения значений
 - Комплексные тесты для работы с переменными окружения (`tests/env_test.go`)
+- Тесты для функции Gt: `TestGtCondition`, `TestGtNumericTypes`, `TestGtConditionFunc`, `TestEnvVariable_Gt`
 
 **Изменено:**
 
@@ -16,7 +19,13 @@
 - Метод `Policy.splitPath()` обновлен для поддержки путей с `Entity_ENV`
 - Метод `Policy.toPath()` обновлен для распознавания путей к переменным окружения
 - Метод `Entity.IsValid()` теперь валидирует `Entity_ENV` как валидное значение
+- Метод `Policy.Evaluate()` теперь поддерживает проверку условия `Gt`
+- Структура `Condition` расширена полем `Gt` для проверки условия "больше"
+- Структура `ConditionsMap` расширена полем `Gt` для функции сравнения
+- Метод `ConditionsMap.Select()` теперь поддерживает выбор функции `Gt`
+- `DefaultConditionsMap` теперь включает реализацию `GtConditionFunc`
 - Обновлены godoc комментарии для `Entity`, `Entity_ENV`, `loadEnv()`, `load()`, `splitPath()`, `toPath()`
+- Обновлены godoc комментарии для `Condition`, `ConditionsMap`, `Config`, `GtConditionFunc`, `gtPrimitives`
 
 **Обновлено:**
 
@@ -25,10 +34,11 @@
 - Тест `TestEntityIsValid` обновлен для проверки валидности `Entity_ENV`
 - Добавлены тесты для всех сценариев использования переменных окружения:
   - Сравнение env переменных с литералами и полями структур
-  - Использование env переменных в условиях Contains, Eq, Neq, Lt
+  - Использование env переменных в условиях Contains, Eq, Neq, Lt, Gt
   - Комбинации env переменных с другими условиями
   - Обработка ошибок при отсутствии переменных окружения
   - Кеширование переменных окружения
+- Обновлены тесты для включения поддержки функции Gt во всех соответствующих тестовых файлах
 
 ---
 
@@ -39,8 +49,11 @@
 - Environment variable support through `Entity_ENV` in policies
 - `Policy.loadEnv()` method for retrieving environment variable values
 - Support for paths like `"env:VARIABLE_NAME"` in policy conditions
-- Environment variable support in all condition types (Eq, Neq, Contains, Lt)
+- Environment variable support in all condition types (Eq, Neq, Contains, Lt, Gt)
+- `Gt` (greater than) function for checking "greater than" condition in policies
+- Implementation of `GtConditionFunc` and `gtPrimitives` for value comparison
 - Comprehensive tests for environment variable functionality (`tests/env_test.go`)
+- Tests for Gt function: `TestGtCondition`, `TestGtNumericTypes`, `TestGtConditionFunc`, `TestEnvVariable_Gt`
 
 **Changed:**
 
@@ -48,7 +61,13 @@
 - `Policy.splitPath()` method updated to support paths with `Entity_ENV`
 - `Policy.toPath()` method updated to recognize environment variable paths
 - `Entity.IsValid()` method now validates `Entity_ENV` as a valid value
+- `Policy.Evaluate()` method now supports checking `Gt` condition
+- `Condition` structure extended with `Gt` field for "greater than" condition checking
+- `ConditionsMap` structure extended with `Gt` field for comparison function
+- `ConditionsMap.Select()` method now supports selecting `Gt` function
+- `DefaultConditionsMap` now includes `GtConditionFunc` implementation
 - Updated godoc comments for `Entity`, `Entity_ENV`, `loadEnv()`, `load()`, `splitPath()`, `toPath()`
+- Updated godoc comments for `Condition`, `ConditionsMap`, `Config`, `GtConditionFunc`, `gtPrimitives`
 
 **Updated:**
 
@@ -57,10 +76,11 @@
 - `TestEntityIsValid` test updated to check `Entity_ENV` validity
 - Added tests for all environment variable usage scenarios:
   - Comparing env variables with literals and structure fields
-  - Using env variables in Contains, Eq, Neq, Lt conditions
+  - Using env variables in Contains, Eq, Neq, Lt, Gt conditions
   - Combining env variables with other conditions
   - Error handling for missing environment variables
   - Caching of environment variables
+- Updated tests to include Gt function support in all relevant test files
 
 
 ## v 0.4.3
