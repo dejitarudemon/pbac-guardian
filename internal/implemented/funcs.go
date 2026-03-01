@@ -20,7 +20,7 @@ import (
 const SUPPORTED_LT_PRIMITIVES = "int|uint|float|string"
 
 /*
-DefaultConditionsFuncs provides default implementations of condition functions.
+DefaultConditionsMap provides default implementations of condition functions.
 
 This configuration is used by default when nil is passed as funcConfig parameter
 to NewGuardianFromPolices or NewGuardianFromFile. It contains standard implementations
@@ -32,7 +32,7 @@ The default functions support:
   - Context cancellation for long-running operations
 */
 var (
-	DefaultConditionsFuncs = base.ConditionFuncsConfig{
+	DefaultConditionsMap = base.ConditionsMap{
 		Contains: ContainsConditionFunc,
 		Eq:       EqConditionFunc,
 		Neq:      NeqConditionFunc,

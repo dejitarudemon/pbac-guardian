@@ -2,7 +2,7 @@
 Package tests contains direct tests for condition comparison functions.
 
 Tests check the work of condition functions (ContainsConditionFunc,
-EqConditionFunc, LtConditionFunc) from implemented.DefaultConditionsFuncs,
+EqConditionFunc, LtConditionFunc) from implemented.DefaultConditionsMap,
 which allows improving coverage of these functions to 100%.
 
 The tests verify that condition functions work correctly with various
@@ -29,9 +29,9 @@ func TestContainsConditionFunc(t *testing.T) {
 	ctx := context.Background()
 
 	// Use default condition functions from implemented package
-	containsFunc := implemented.DefaultConditionsFuncs.Contains
+	containsFunc := implemented.DefaultConditionsMap.Contains
 	if containsFunc == nil {
-		t.Fatalf("Contains function not found in DefaultConditionsFuncs")
+		t.Fatalf("Contains function not found in DefaultConditionsMap")
 	}
 
 	tests := []struct {
@@ -124,9 +124,9 @@ func TestEqConditionFunc(t *testing.T) {
 	ctx := context.Background()
 
 	// Use default condition functions from implemented package
-	eqFunc := implemented.DefaultConditionsFuncs.Eq
+	eqFunc := implemented.DefaultConditionsMap.Eq
 	if eqFunc == nil {
-		t.Fatalf("Eq function not found in DefaultConditionsFuncs")
+		t.Fatalf("Eq function not found in DefaultConditionsMap")
 	}
 
 	tests := []struct {
@@ -230,9 +230,9 @@ func TestLtConditionFunc(t *testing.T) {
 	ctx := context.Background()
 
 	// Use default condition functions from implemented package
-	ltFunc := implemented.DefaultConditionsFuncs.Lt
+	ltFunc := implemented.DefaultConditionsMap.Lt
 	if ltFunc == nil {
-		t.Fatalf("Lt function not found in DefaultConditionsFuncs")
+		t.Fatalf("Lt function not found in DefaultConditionsMap")
 	}
 
 	tests := []struct {

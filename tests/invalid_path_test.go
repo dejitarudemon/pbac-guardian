@@ -27,7 +27,7 @@ that Evaluate returns an error when trying to get value of non-existent field.
 func TestEvaluateInvalidFieldPath(t *testing.T) {
 	// Create policy with invalid field path
 	// Field "nonexistent" does not exist in User structure
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "invalid-path-policy",
 			Action: "user:read",
@@ -39,7 +39,8 @@ func TestEvaluateInvalidFieldPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -64,7 +65,7 @@ that Evaluate returns an error when trying to get value of non-existent nested f
 func TestEvaluateInvalidNestedPath(t *testing.T) {
 	// Create policy with invalid nested path
 	// Path "source:user:nonexistent" is invalid, as field "nonexistent" does not exist
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "invalid-nested-path-policy",
 			Action: "user:read",
@@ -76,7 +77,8 @@ func TestEvaluateInvalidNestedPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
@@ -101,7 +103,7 @@ that Evaluate returns an error when trying to get value of non-existent field.
 func TestEvaluateInvalidTargetPath(t *testing.T) {
 	// Create policy with invalid field path in target
 	// Field "nonexistent" does not exist in Document structure
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "invalid-target-path-policy",
 			Action: "user:read",
@@ -113,7 +115,8 @@ func TestEvaluateInvalidTargetPath(t *testing.T) {
 	}
 
 	// Use nil casher for basic functionality tests
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}

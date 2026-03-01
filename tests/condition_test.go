@@ -30,7 +30,7 @@ func TestContainsCondition(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		policy  base.Policy
+		policy  base.RawPolicy
 		source  any
 		target  any
 		action  string
@@ -40,7 +40,7 @@ func TestContainsCondition(t *testing.T) {
 		{
 			name: "contains - found in slice",
 			// Test checks that Contains condition finds value in list
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "contains-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -59,7 +59,7 @@ func TestContainsCondition(t *testing.T) {
 		{
 			name: "contains - not found in slice",
 			// Test checks that Contains condition does not find value if it's not in list
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "contains-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -78,7 +78,7 @@ func TestContainsCondition(t *testing.T) {
 		{
 			name: "contains - empty slice",
 			// Test checks that Contains condition returns false for empty list
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "contains-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -98,7 +98,7 @@ func TestContainsCondition(t *testing.T) {
 			name: "contains - with source role in list",
 			// Test checks Contains condition with source:role field
 			// Check that source.role value is in list
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "contains-source-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -117,7 +117,7 @@ func TestContainsCondition(t *testing.T) {
 		{
 			name: "contains - with integer values",
 			// Test checks Contains condition with numeric values
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "contains-int-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -138,7 +138,8 @@ func TestContainsCondition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.RawPolicy{tt.policy}, config)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
@@ -171,7 +172,7 @@ func TestLtCondition(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		policy  base.Policy
+		policy  base.RawPolicy
 		source  any
 		target  any
 		action  string
@@ -181,7 +182,7 @@ func TestLtCondition(t *testing.T) {
 		{
 			name: "lt - int less than",
 			// Test checks Lt condition for integers (int)
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-int-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -200,7 +201,7 @@ func TestLtCondition(t *testing.T) {
 		{
 			name: "lt - int equal",
 			// Test checks that Lt condition returns false on equality
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-int-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -219,7 +220,7 @@ func TestLtCondition(t *testing.T) {
 		{
 			name: "lt - int greater than",
 			// Test checks that Lt condition returns false for greater value
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-int-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -239,7 +240,7 @@ func TestLtCondition(t *testing.T) {
 			name: "lt - with string comparison",
 			// Test checks Lt condition for strings (lexicographic comparison)
 			// Need to use a field that can be compared as string
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-string-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -258,7 +259,7 @@ func TestLtCondition(t *testing.T) {
 		{
 			name: "lt - string greater",
 			// Test checks that Lt condition returns false for strings that are greater
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-string-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -278,7 +279,7 @@ func TestLtCondition(t *testing.T) {
 			name: "lt - compare with target field",
 			// Test checks Lt condition with field comparison from different structures
 			// Need to add numeric field to Document
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "lt-compare-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -299,7 +300,8 @@ func TestLtCondition(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.RawPolicy{tt.policy}, config)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
@@ -338,7 +340,7 @@ func TestEqConditionExtended(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		policy  base.Policy
+		policy  base.RawPolicy
 		source  any
 		target  any
 		action  string
@@ -348,7 +350,7 @@ func TestEqConditionExtended(t *testing.T) {
 		{
 			name: "eq - integer comparison",
 			// Test checks Eq condition for integers
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "eq-int-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -367,7 +369,7 @@ func TestEqConditionExtended(t *testing.T) {
 		{
 			name: "eq - integer not equal",
 			// Test checks that Eq condition returns false for unequal numbers
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "eq-int-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -386,7 +388,7 @@ func TestEqConditionExtended(t *testing.T) {
 		{
 			name: "eq - compare integer with string path",
 			// Test checks comparison of number with field that should be a number
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "eq-mixed-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -407,7 +409,8 @@ func TestEqConditionExtended(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.RawPolicy{tt.policy}, config)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}
@@ -440,7 +443,7 @@ func TestMultipleConditionsCombined(t *testing.T) {
 
 	tests := []struct {
 		name    string
-		policy  base.Policy
+		policy  base.RawPolicy
 		source  any
 		target  any
 		action  string
@@ -450,7 +453,7 @@ func TestMultipleConditionsCombined(t *testing.T) {
 		{
 			name: "multiple conditions - all match",
 			// Test checks policy with multiple conditions, all of which are met
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "combined-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -473,7 +476,7 @@ func TestMultipleConditionsCombined(t *testing.T) {
 		{
 			name: "multiple conditions - one fails",
 			// Test checks policy with multiple conditions, one of which is not met
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "combined-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -495,7 +498,7 @@ func TestMultipleConditionsCombined(t *testing.T) {
 		{
 			name: "multiple conditions - Contains and Lt",
 			// Test checks combination of Contains and Lt conditions
-			policy: base.Policy{
+			policy: base.RawPolicy{
 				Name:   "combined-contains-lt",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
@@ -519,7 +522,8 @@ func TestMultipleConditionsCombined(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Use nil casher for basic functionality tests
-			engine, err := guardian.NewGuardianFromPolices(nil, []base.Policy{tt.policy}, nil)
+			config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+			engine, err := guardian.NewGuardianFromPolices(nil, []base.RawPolicy{tt.policy}, config)
 			if err != nil {
 				t.Fatalf("failed to create engine: %v", err)
 			}

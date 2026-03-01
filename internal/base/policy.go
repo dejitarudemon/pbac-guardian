@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/dejitarudemon/pbac-guardian/internal/cashing"
 )
 
 // tag key used for struct field tagging
@@ -37,28 +39,27 @@ Policy represents a single access policy with a set of conditions.
 A policy defines rules for checking source and target structures for a specific
 action. Conditions are checked through structure fields tagged with "pbac-guardian".
 
-Fields:
-  - Name - unique policy name (used for identification)
-  - Action - action in format "entity:action:extra1:extra2..." (e.g., "user:read:profile")
-  - Effect - policy effect: Effect_ALLOW (allow) or Effect_DENY (deny)
-  - Conditions - map of conditions. Key - path to field in format "source:field" or "target:field",
+Policy is an internal structure with private fields. To create a Policy instance,
+use NewPolicy function with a RawPolicy. Policy instances are created automatically
+by Guardian engine during initialization from RawPolicy structures.
+
+The Policy structure contains:
+  - action - action in format "entity:action:extra1:extra2..." (e.g., "user:read:profile")
+  - effect - policy effect: Effect_ALLOW (allow) or Effect_DENY (deny)
+  - conditions - map of conditions. Key - path to field in format "source:field" or "target:field",
     value - condition to check (Contains, Eq, Neq, Lt)
+  - conditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt)
+  - cash - L1 cache instance for storing field values (can be nil to disable caching)
+  - cashTree - cache tree for tracking field access counts and disabling cache for rarely accessed fields
+
+Public methods:
+  - Evaluate - applies the policy to source and target structures
+  - IsValid - checks the validity of the policy
+  - Effect - returns the policy effect
 
 Example usage:
 
-	type User struct {
-		Name string `pbac-guardian:"name"`
-		Role string `pbac-guardian:"role"`
-		Age  int    `pbac-guardian:"age"`
-	}
-
-	type Document struct {
-		Owner string   `pbac-guardian:"owner"`
-		Tags  []string `pbac-guardian:"tags"`
-	}
-
-	// Policy: allow admins to read documents
-	policy1 := Policy{
+	raw := RawPolicy{
 		Name:   "admin-read",
 		Action: "user:read:document",
 		Effect: Effect_ALLOW,
@@ -69,43 +70,134 @@ Example usage:
 		},
 	}
 
-	// Policy: allow document owner to read
-	policy2 := Policy{
-		Name:   "owner-read",
-		Action: "user:read:document",
-		Effect: Effect_ALLOW,
-		Conditions: map[string]Condition{
-			"source:name": {
-				Eq: "target:owner", // compare fields of two structures
-			},
-		},
+	policy, err := NewPolicy(raw, &DefaultConditionsMap, nil, nil)
+	if err != nil {
+		// handle error
 	}
 
-	// Policy: deny reading documents with "private" tag for users under 18
-	policy3 := Policy{
-		Name:   "age-restriction",
-		Action: "user:read:document",
-		Effect: Effect_DENY,
-		Conditions: map[string]Condition{
-			"source:age": {
-				Lt: 18,
-			},
-			"target:tags": {
-				Contains: []any{"private"},
-			},
-		},
-	}
+	allowed, err := policy.Evaluate(ctx, source, target, "user:read:document", sessionID)
 */
 type Policy struct {
-	Name          string                `json:"name"`
-	Action        string                `json:"action"`
-	Effect        Effect                `json:"effect"`
-	Conditions    map[string]Condition  `json:"conditions"`
-	ConditionsMap *ConditionFuncsConfig `json:"-"`
+	name          string
+	action        string
+	effect        Effect
+	conditions    map[string]Condition
+	conditionsMap *ConditionsMap
+	cash          cashing.Casher
+	cashTree      *cashing.CashTree
 }
 
 /*
-isPath checks if path is a path to a structure field.
+NewPolicy creates a new Policy instance from a RawPolicy.
+
+The function validates the raw policy, initializes internal fields, and prepares
+the policy for evaluation. It performs the following steps:
+ 1. Validates that conditions map is not nil and all condition functions are set
+ 2. Creates Policy with internal fields initialized
+ 3. Validates policy structure (action format, paths in conditions)
+ 4. Records field paths to cash tree for cache optimization
+
+Parameters:
+  - raw - raw policy structure with public fields (Name, Action, Effect, Conditions)
+  - conditions - configuration for condition functions (Contains, Eq, Neq, Lt). Must not be nil.
+  - cash - L1 cache instance for storing field values (can be nil to disable caching)
+  - cashTree - cache tree for tracking field access counts (can be nil, cache tracking will be skipped)
+
+Returns:
+  - *Policy - created and validated policy instance, ready for evaluation
+  - error - creation error if:
+  - conditions is nil or any condition function is nil
+  - policy validation fails (invalid action format or paths in conditions)
+
+Example usage:
+
+	raw := RawPolicy{
+		Name:   "admin-read",
+		Action: "user:read:document",
+		Effect: Effect_ALLOW,
+		Conditions: map[string]Condition{
+			"source:role": {Eq: "admin"},
+		},
+	}
+
+	policy, err := NewPolicy(raw, &DefaultConditionsMap, casher, cashTree)
+	if err != nil {
+		// handle error
+	}
+*/
+func NewPolicy(raw RawPolicy, conditions *ConditionsMap, cash cashing.Casher, cashTree *cashing.CashTree) (*Policy, error) {
+	if conditions == nil {
+		return nil, NewErrInvalidType("ConditionsMap", nil)
+	}
+
+	if conditions.Contains == nil {
+		return nil, NewErrInvalidType("ConditionsMap.Contains", nil)
+	}
+	if conditions.Eq == nil {
+		return nil, NewErrInvalidType("ConditionsMap.Eq", nil)
+	}
+	if conditions.Lt == nil {
+		return nil, NewErrInvalidType("ConditionsMap.Lt", nil)
+	}
+	if conditions.Neq == nil {
+		return nil, NewErrInvalidType("ConditionsMap.Neq", nil)
+	}
+
+	p := Policy{
+		name:          raw.Action,
+		action:        raw.Action,
+		effect:        raw.Effect,
+		conditions:    raw.Conditions,
+		conditionsMap: conditions,
+		cash:          cash,
+		cashTree:      cashTree,
+	}
+
+	if err := p.IsValid(); err != nil {
+		return nil, err
+	}
+
+	p.addInformationToCashTree()
+
+	return &p, nil
+}
+
+/*
+addInformationToCashTree records all field paths used in policy conditions to the cache tree.
+
+The function scans all conditions in the policy and adds field paths (both left and right sides)
+to the CashTree for tracking access counts. This allows the cache tree to determine which
+fields should be cached based on access frequency.
+
+If cashTree is nil, the function returns immediately without doing anything.
+
+This method is called automatically during policy creation in NewPolicy function.
+*/
+func (p *Policy) addInformationToCashTree() {
+	if p.cashTree == nil {
+		return
+	}
+	for left, condition := range p.conditions {
+		p.cashTree.Add(p.action, left)
+
+		c := reflect.ValueOf(condition)
+
+		for i := range c.NumField() {
+			field := c.Field(i)
+			if !field.IsZero() {
+				right := field.Interface()
+
+				if r, ok := p.toPath(right); ok {
+					p.cashTree.Add(p.action, r)
+				}
+			}
+
+		}
+	}
+}
+
+/*
+toPath checks if path is a path to a structure field.
 
 The path to a field must contain the PATH_SEP separator (":"), indicating that
 this is not a literal value, but a reference to a field in the source or target structure.
@@ -116,12 +208,15 @@ Parameters:
 Returns:
   - bool - true if path contains separator ":" and is a path, false otherwise
 */
-func (p *Policy) isPath(path string) bool {
-	return strings.Contains(path, PATH_SEP)
+func (p *Policy) toPath(path any) (string, bool) {
+	if str, ok := path.(string); ok {
+		return str, strings.Contains(str, PATH_SEP)
+	}
+	return "", false
 }
 
 /*
-parsePath parses a path from Conditions into an entity and a path to a field.
+splitPath parses a path from Conditions into an entity and a path to a field.
 
 The path must have the format "entity:field1:field2...", where entity is "source"
 or "target", and field1, field2... is a hierarchical path to a field in the structure.
@@ -144,8 +239,9 @@ Possible errors:
   - path contains less than 2 parts (minimum entity and one field)
   - first part of path is not a valid entity (not "source" and not "target")
 */
-func (p *Policy) parsePath(path string) (*Entity, []string, error) {
-	if !p.isPath(path) {
+func (p *Policy) splitPath(value any) (*Entity, []string, error) {
+	path, ok := p.toPath(value)
+	if !ok {
 		return nil, nil, NewErrInvalidPath(path, "it is not a path")
 	}
 
@@ -155,17 +251,16 @@ func (p *Policy) parsePath(path string) (*Entity, []string, error) {
 	}
 
 	entity := Entity(separeted[0])
-	fields := separeted[1:]
 
 	if !entity.IsValid() {
 		return nil, nil, NewErrInvalidPath(path, fmt.Sprintf("path allocates to unknown entity: %v", entity))
 	}
 
-	return &entity, fields, nil
+	return &entity, separeted[1:], nil
 }
 
 /*
-getValue finds a field in a structure by path and returns its value.
+loadField finds a field in a structure by path and returns its value.
 
 The function recursively traverses the path using TAG_KEY ("pbac-guardian") tags to find
 fields. The field must be exported (capitalized) and have a tag with the
@@ -187,7 +282,7 @@ Possible errors:
   - field is unexported (not accessible via CanInterface())
   - entity is nil pointer
 */
-func (p *Policy) getValue(entity any, path []string) (any, error) {
+func (p *Policy) loadField(entity any, path []string) (any, error) {
 	v := reflect.ValueOf(entity)
 
 	if v.Kind() == reflect.Pointer {
@@ -210,7 +305,6 @@ func (p *Policy) getValue(entity any, path []string) (any, error) {
 		tag := fieldType.Tag.Get(TAG_KEY)
 
 		if tag != "" {
-
 			flags := strings.Split(tag, TAG_SEP)
 			tagValue := strings.TrimSpace(flags[0])
 
@@ -223,7 +317,7 @@ func (p *Policy) getValue(entity any, path []string) (any, error) {
 			}
 
 			if len(path) > 1 {
-				return p.getValue(field.Interface(), path[1:])
+				return p.loadField(field.Interface(), path[1:])
 			}
 
 			return field.Interface(), nil
@@ -234,7 +328,7 @@ func (p *Policy) getValue(entity any, path []string) (any, error) {
 }
 
 /*
-get gets a value from a path or returns a literal value.
+load gets a value from a path or returns a literal value.
 
 If path is a path (contains ":"), the function parses it and extracts the value
 from the corresponding structure (source or target). If path is not a path,
@@ -246,13 +340,16 @@ If the value is found in cache, it is returned immediately. After retrieving
 a value via reflection, it is stored in cache for subsequent use within the
 same evaluation session.
 
+Cache behavior is controlled by CashTree attached to the policy, which tracks
+field access counts and disables caching for rarely accessed fields to optimize
+memory usage.
+
 Parameters:
   - ctx - context for operation cancellation and timeout control
   - source - first structure to search for fields (used for paths "source:...")
   - target - second structure to search for fields (used for paths "target:...")
   - path - path to field (e.g., "source:name") or literal value (e.g., "admin")
   - mustBePath - flag indicating whether path must be a path (true) or can be a literal (false)
-  - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
@@ -262,38 +359,39 @@ Returns:
 Possible errors:
   - ErrInvalidPath - occurs if:
   - mustBePath=true, but path does not contain ":" (is not a path)
-  - path parsing error (see parsePath)
-  - field search error (see getValue)
-  - ErrInvalidType - entity is not a structure or pointer to structure (see getValue)
+  - path parsing error (see splitPath)
+  - field search error (see loadField)
+  - ErrInvalidType - entity is not a structure or pointer to structure (see loadField)
 */
-func (p *Policy) get(ctx context.Context, source, target any, path string, mustBePath bool, cash Casher, sessionID string) (any, error) {
-	if !p.isPath(path) {
+func (p *Policy) load(ctx context.Context, source, target any, value any, mustBePath bool, sessionID string) (any, error) {
+	path, ok := p.toPath(value)
+	if !ok {
 		if mustBePath {
 			return nil, NewErrInvalidPath(path, "must be a path, but it's literal value")
 		}
-		return path, nil
+		return value, nil
 	}
 
-	// Если кеш не отключен, ищем в нем по id сессии и ключу (пути до искомого поля)
-	if cash != nil {
-		value, err := cash.Get(ctx, sessionID, path)
+	if p.cash != nil && p.cashTree != nil && !p.cashTree.IsDisabled(p.action, path) {
+		value, err := p.cash.Get(ctx, sessionID, path)
 		if err == nil && value != nil {
 			return value, nil
 		}
+
 	}
 
-	entity, parsedPath, err := p.parsePath(path)
+	entity, parsedPath, err := p.splitPath(path)
 	if err != nil {
 		return false, err
 	}
 
-	var value any
+	var v any
 
 	switch *entity {
 	case Entity_SOURCE:
-		value, err = p.getValue(source, parsedPath)
+		v, err = p.loadField(source, parsedPath)
 	case Entity_TARGET:
-		value, err = p.getValue(target, parsedPath)
+		v, err = p.loadField(target, parsedPath)
 	default:
 		err = NewErrInvalidPath(path, fmt.Sprintf("unxpected entity: %v", entity))
 	}
@@ -302,11 +400,11 @@ func (p *Policy) get(ctx context.Context, source, target any, path string, mustB
 		return nil, err
 	}
 
-	if cash != nil {
-		cash.Set(ctx, sessionID, path, value)
+	if p.cash != nil && p.cashTree != nil && !p.cashTree.IsDisabled(p.action, path) {
+		p.cash.Set(ctx, sessionID, path, v)
 	}
 
-	return value, nil
+	return v, nil
 }
 
 /*
@@ -319,17 +417,22 @@ conditions are met (logical AND).
 The function supports cancellation through context.Context, allowing to interrupt
 condition checking when context is cancelled.
 
-Field values are retrieved using the get() method, which utilizes L1 cache to
-optimize performance. The cache is scoped by sessionID, which is unique for each
-evaluation session. This allows reusing field values within the same evaluation
-without repeated reflection-based searches.
+Conditions are checked using direct field access (Contains, Eq, Neq, Lt) without
+reflection, providing optimal performance. Field values are retrieved using the
+load() method, which utilizes L1 cache to optimize performance. The cache is
+scoped by sessionID, which is unique for each evaluation session. This allows
+reusing field values within the same evaluation without repeated reflection-based
+searches.
+
+The cache behavior is controlled by the CashTree attached to the policy, which
+tracks field access counts and can disable caching for fields that are accessed
+less frequently than the configured threshold.
 
 Parameters:
   - ctx - context for operation cancellation and timeout control
   - source - first structure to check (usually the action source)
   - target - second structure to check (usually the action target)
   - action - action in format "entity:action:extra..." to check
-  - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
@@ -339,67 +442,74 @@ Returns:
   - error - execution error if a problem occurred during condition checking
 
 Possible errors:
+  - ErrNilContext - context parameter is nil
   - ErrCancelled - operation was cancelled through context.Context
   - ErrInvalidPath - path parsing error or field search error in structure
   - ErrInvalidType - type error when getting field value (structure is not of that type)
   - ErrUncomparable - cannot compare values in condition (incompatible types)
-  - ErrInexpectedBehavior - internal error: condition function not found in CONDITION_TO_FUNC
+  - ErrInexpectedBehavior - internal error: policy is nil
 */
-func (p *Policy) Evaluate(ctx context.Context, source, target any, action string, cash Casher, sessionID string) (bool, error) {
+func (p *Policy) Evaluate(ctx context.Context, source, target any, action string, sessionID string) (bool, error) {
 	if p == nil {
 		return false, NewErrInexpectedBehavior("Policy.Evaluate()", "policy is nil")
 	}
 	if ctx == nil {
-		return false, fmt.Errorf("context is nil")
+		return false, ErrNilContext
 	}
 
-	if p.Action != action {
+	if p.action != action {
 		return false, nil
 	}
 
-	match := true
-	t := reflect.TypeFor[Condition]()
+	for field, condition := range p.conditions {
+		select {
+		case <-ctx.Done():
+			return false, ErrCancelled
+		default:
+			left, err := p.load(ctx, source, target, field, true, sessionID)
+			if err != nil {
+				return false, err
+			}
 
-	for field, condition := range p.Conditions {
-		left, err := p.get(ctx, source, target, field, true, cash, sessionID)
-		if err != nil {
-			return false, err
-		}
+			if condition.Contains != nil {
+				if m, err := p.conditionsMap.Contains(ctx, left, condition.Contains); err != nil || !m {
+					return false, err
+				}
+			}
+			if condition.Eq != nil {
+				right, err := p.load(ctx, source, target, condition.Eq, false, sessionID)
+				if err != nil {
+					return false, err
+				}
 
-		c := reflect.ValueOf(condition)
+				if m, err := p.conditionsMap.Eq(ctx, left, right); err != nil || !m {
+					return false, err
+				}
+			}
+			if condition.Lt != nil {
+				right, err := p.load(ctx, source, target, condition.Lt, false, sessionID)
+				if err != nil {
+					return false, err
+				}
 
-		for i := range c.NumField() {
-			select {
-			case <-ctx.Done():
-				return false, ErrCancelled
-			default:
-				if !c.Field(i).IsZero() {
-					if f := p.ConditionsMap.Select(t.Field(i).Name); f != nil {
+				if m, err := p.conditionsMap.Lt(ctx, left, right); err != nil || !m {
+					return false, err
+				}
+			}
+			if condition.Neq != nil {
+				right, err := p.load(ctx, source, target, condition.Neq, false, sessionID)
+				if err != nil {
+					return false, err
+				}
 
-						right := c.Field(i).Interface()
-
-						if r, ok := right.(string); ok {
-							right, err = p.get(ctx, source, target, r, false, cash, sessionID)
-							if err != nil {
-								return false, err
-							}
-						}
-
-						m, err := f(ctx, left, right)
-						if err != nil {
-							return false, err
-						}
-
-						match = match && m
-					} else {
-						return false, NewErrInexpectedBehavior("Policy.Evaluate()", fmt.Sprintf("condition func for %v doesn't exist", t.Field(i).Name))
-					}
+				if m, err := p.conditionsMap.Neq(ctx, left, right); err != nil || !m {
+					return false, err
 				}
 			}
 		}
 	}
 
-	return match, nil
+	return true, nil
 }
 
 /*
@@ -408,7 +518,7 @@ IsValid checks the validity of the policy.
 The function performs comprehensive validation:
  1. Action format - must be at least 2 parts separated by ":" (entity:action:extra...)
  2. Absence of empty parts in action (no empty strings between separators)
- 3. Validity of all paths in conditions (via parsePath) - each condition key must be a valid path
+ 3. Validity of all paths in conditions (via splitPath) - each condition key must be a valid path
 
 This method should be called before using the policy in the engine to ensure
 all required fields are properly formatted and paths are valid.
@@ -420,25 +530,39 @@ Possible errors:
   - ErrInvalidPath - occurs if:
   - action contains less than 2 parts (minimum entity and action)
   - action contains empty parts
-  - paths in conditions are invalid (see parsePath for details)
+  - paths in conditions are invalid (see splitPath for details)
 */
 func (p *Policy) IsValid() error {
-	actions := strings.Split(p.Action, PATH_SEP)
+	actions := strings.Split(p.action, PATH_SEP)
 	if len(actions) < MIN_ACTION_PARTS {
-		return NewErrInvalidPath(p.Action, "not enough parts of action. use: entity:action:extra1:extra2 etc")
+		return NewErrInvalidPath(p.action, "not enough parts of action. use: entity:action:extra1:extra2 etc")
 	}
 
 	for i, action := range actions {
 		if action == "" {
-			return NewErrInvalidPath(p.Action, fmt.Sprintf("empty part: %v", i))
+			return NewErrInvalidPath(p.action, fmt.Sprintf("empty part: %v", i))
 		}
 	}
 
-	for field := range p.Conditions {
-		if _, _, err := p.parsePath(field); err != nil {
+	for field := range p.conditions {
+		if _, _, err := p.splitPath(field); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+/*
+Effect returns the policy effect (Effect_ALLOW or Effect_DENY).
+
+The effect determines how the policy result is interpreted:
+  - Effect_ALLOW - policy allows the action if conditions are met
+  - Effect_DENY - policy denies the action if conditions are not met
+
+Returns:
+  - Effect - policy effect value
+*/
+func (p *Policy) Effect() Effect {
+	return p.effect
 }

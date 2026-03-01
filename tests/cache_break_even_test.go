@@ -118,7 +118,7 @@ with policies that access the same field multiple times.
 */
 func BenchmarkEvaluateWithRepeatedFields(b *testing.B) {
 	// Create policies that all access the same field (source:role)
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "policy-1",
 			Action: "user:read",
@@ -162,7 +162,8 @@ func BenchmarkEvaluateWithRepeatedFields(b *testing.B) {
 	}
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}
@@ -183,7 +184,7 @@ without cache when the same field is accessed multiple times.
 */
 func BenchmarkEvaluateWithoutCacheRepeatedFields(b *testing.B) {
 	// Same policies as above
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "policy-1",
 			Action: "user:read",
@@ -227,7 +228,8 @@ func BenchmarkEvaluateWithoutCacheRepeatedFields(b *testing.B) {
 	}
 
 	// No cache
-	engine, err := guardian.NewGuardianFromPolices(nil, policies, nil)
+	config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+	engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
 	if err != nil {
 		b.Fatalf("failed to create engine: %v", err)
 	}

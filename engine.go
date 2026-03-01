@@ -95,6 +95,7 @@ import (
 	"os"
 
 	"github.com/dejitarudemon/pbac-guardian/internal/base"
+	"github.com/dejitarudemon/pbac-guardian/internal/cashing"
 	"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 )
 
@@ -104,25 +105,15 @@ Guardian is the main engine of the library for checking structures against acces
 Guardian stores policies organized by actions and provides the Evaluate method
 to check structures against these policies.
 
-The engine uses L1 cache (Casher interface) to optimize field value retrieval
-by caching results of reflect-based field searches. Each evaluation session
-generates a unique sessionID that identifies the cache scope for a single
-policy application. The cache significantly improves performance when fields
-are accessed multiple times (3+ accesses provide benefits, with up to 41%
-time savings and 63% fewer allocations in production scenarios).
-
 To create a Guardian instance, use:
   - NewGuardianFromPolices - create from a list of policies passed programmatically
   - NewGuardianFromFile - create from a JSON file with policies
 
 Fields:
-  - polices - stores policies organized by actions (action -> []Policy)
-  - cash - L1 cache instance for storing field values (can be nil to disable caching)
+  - polices - stores policy pointers organized by actions (action -> []*Policy)
 */
 type Guardian struct {
-	// хранит политики, разделенные по действиям (action)
-	polices map[string][]base.Policy
-	cash    base.Casher
+	polices map[string][]*base.Policy
 }
 
 /*
@@ -136,10 +127,15 @@ caching will be disabled and field values will be retrieved directly via reflect
 on each evaluation. For optimal performance in production scenarios with multiple
 policies accessing the same fields, it is recommended to use DefaultCasher.
 
+The config parameter allows customizing condition functions and cache behavior.
+If config.ConditionsMap is nil, default condition functions will be used.
+The cache tree tracks field access counts and can disable caching for fields
+that are accessed less than the threshold number of times.
+
 Parameters:
-  - cash - instance of base.Casher for L1 caching (can be nil to disable caching)
-  - polices - list of policies to initialize the engine
-  - funcConfig - configuration for condition functions (can be nil to use default functions)
+  - cash - instance of cashing.Casher for L1 caching (can be nil to disable caching)
+  - polices - list of raw policies (RawPolicy) to initialize the engine
+  - config - configuration containing condition functions map and cache disable threshold
 
 Returns:
   - *Guardian - created engine instance, ready to use
@@ -152,7 +148,10 @@ Possible errors:
 
 Example usage:
 
-	import "github.com/dejitarudemon/pbac-guardian/internal/implemented"
+	import (
+		"github.com/dejitarudemon/pbac-guardian/internal/implemented"
+		"github.com/dejitarudemon/pbac-guardian/internal/base"
+	)
 
 	casher := implemented.NewDefaultCasher()
 	policies := []base.Policy{
@@ -166,38 +165,48 @@ Example usage:
 		},
 	}
 
-	engine, err := guardian.NewGuardianFromPolices(casher, policies, nil)
+	config := base.Config{
+		ConditionsMap:        nil, // use defaults
+		CashDisableThreShold: 3,   // disable cache for fields accessed less than 3 times
+	}
+
+	engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 	if err != nil {
 		// handle error
 	}
 */
-func NewGuardianFromPolices(cash base.Casher, polices []base.Policy, funcConfig *base.ConditionFuncsConfig) (*Guardian, error) {
-	if funcConfig == nil {
-		funcConfig = &implemented.DefaultConditionsFuncs
+func NewGuardianFromPolices(cash cashing.Casher, polices []base.RawPolicy, config base.Config) (*Guardian, error) {
+	if config.ConditionsMap == nil {
+		config.ConditionsMap = &implemented.DefaultConditionsMap
 	}
-	mapped, err := export(polices, *funcConfig)
+	cashTree := cashing.NewCashTree(config.CashDisableThreShold)
+
+	mapped, err := export(polices, cash, config, &cashTree)
 	if err != nil {
 		return nil, NewErrExport(err)
 	}
 
-	return &Guardian{polices: mapped, cash: cash}, nil
+	return &Guardian{polices: mapped}, nil
 }
 
 /*
 NewGuardianFromFile creates a new Guardian instance from a JSON file containing an array of policies.
 
 The function reads the file, parses JSON and creates the engine similar to NewGuardianFromPolices.
-The file must contain a valid JSON array of Policy objects.
+The file must contain a valid JSON array of RawPolicy objects.
 
 The engine uses the provided Casher instance for L1 caching. If nil is passed,
 caching will be disabled and field values will be retrieved directly via reflection
 on each evaluation. For optimal performance in production scenarios with multiple
 policies accessing the same fields, it is recommended to use DefaultCasher.
 
+The config parameter allows customizing condition functions and cache behavior.
+If config.ConditionsMap is nil, default condition functions will be used.
+
 Parameters:
-  - cash - instance of base.Casher for L1 caching (can be nil to disable caching)
+  - cash - instance of cashing.Casher for L1 caching (can be nil to disable caching)
   - path - path to the file with policies in JSON format
-  - funcConfig - configuration for condition functions (can be nil to use default functions)
+  - config - configuration containing condition functions map and cache disable threshold
 
 Returns:
   - *Guardian - created engine instance, ready to use
@@ -212,9 +221,12 @@ Possible errors:
 
 Example usage:
 
-	import "github.com/dejitarudemon/pbac-guardian/internal/implemented"
+	import (
+		"github.com/dejitarudemon/pbac-guardian/internal/implemented"
+		"github.com/dejitarudemon/pbac-guardian/internal/base"
+	)
 
-	// File policies.json:
+	// File policies.json contains an array of RawPolicy structures:
 	// [
 	//   {
 	//     "name": "allow-admin",
@@ -227,12 +239,16 @@ Example usage:
 	// ]
 
 	casher := implemented.NewDefaultCasher()
-	engine, err := guardian.NewGuardianFromFile(casher, "policies.json", nil)
+	config := base.Config{
+		ConditionsMap:        nil, // use defaults
+		CashDisableThreShold: 3,
+	}
+	engine, err := guardian.NewGuardianFromFile(casher, "policies.json", config)
 	if err != nil {
 		// handle error
 	}
 */
-func NewGuardianFromFile(cash base.Casher, path string, funcConfig *base.ConditionFuncsConfig) (*Guardian, error) {
+func NewGuardianFromFile(cash cashing.Casher, path string, config base.Config) (*Guardian, error) {
 	file, err := os.OpenFile(path, os.O_RDONLY, os.ModeAppend)
 	if err != nil {
 		return nil, NewErrExport(err)
@@ -243,13 +259,13 @@ func NewGuardianFromFile(cash base.Casher, path string, funcConfig *base.Conditi
 		return nil, NewErrExport(err)
 	}
 
-	var polices []base.Policy
+	var polices []base.RawPolicy
 
 	if err := json.Unmarshal(content, &polices); err != nil {
 		return nil, NewErrExport(err)
 	}
 
-	return NewGuardianFromPolices(cash, polices, funcConfig)
+	return NewGuardianFromPolices(cash, polices, config)
 }
 
 /*
@@ -286,14 +302,15 @@ Possible errors:
   - ErrInvalidPath - path parsing error or field not found
   - ErrInvalidType - invalid structure or field type
   - ErrUncomparable - cannot compare values in condition
-  - ErrInexpectedBehavior - internal error (condition function not found)
+  - ErrInexpectedBehavior - internal error
 
 Logic:
  1. Generate unique sessionID for this evaluation session
  2. If there are no policies for the specified action, returns (false, nil)
  3. For each policy, conditions are checked:
     - If context is cancelled, returns (false, ErrCancelled)
-    - Field values are retrieved using get() which checks cache first (if cash is not nil)
+    - Field values are retrieved using load() which checks cache first (if cash is not nil)
+    - Conditions are checked using direct field access (Contains, Eq, Neq, Lt) for optimal performance
     - If policy has DENY effect and conditions are not met, returns (false, nil)
     - If policy has ALLOW effect and conditions are met, sets allowed = true flag
  4. Returns result: (allowed, nil) or (false, error) on error
@@ -354,12 +371,12 @@ func (n *Guardian) Evaluate(ctx context.Context, source, target any, action stri
 	sessionID := generateNewSesstionID()
 
 	for _, policy := range polices {
-		ok, err := policy.Evaluate(ctx, source, target, action, n.cash, sessionID)
+		ok, err := policy.Evaluate(ctx, source, target, action, sessionID)
 		if err != nil {
 			return false, NewErrEvaluate(err)
 		}
 
-		if policy.Effect == base.Effect_DENY {
+		if policy.Effect() == base.Effect_DENY {
 			if ok {
 				return false, err
 			}

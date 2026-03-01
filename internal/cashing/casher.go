@@ -1,10 +1,9 @@
 /*
-Package base provides basic types and functions for working with policies,
-conditions, effects, and entities in the access control system.
+Package cashing provides interfaces and implementations for L1 caching in the policy evaluation engine.
 
-This file contains the Casher interface for L1 caching in the policy evaluation engine.
+The package contains the Casher interface for cache implementations and related types.
 */
-package base
+package cashing
 
 import "context"
 

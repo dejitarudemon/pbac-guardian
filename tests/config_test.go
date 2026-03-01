@@ -1,7 +1,7 @@
 /*
-Package tests contains tests for ConditionFuncsConfig.
+Package tests contains tests for ConditionsMap.
 
-Tests check the functionality of ConditionFuncsConfig.Select method
+Tests check the functionality of ConditionsMap.Select method
 for retrieving condition functions by name.
 */
 package tests
@@ -14,13 +14,15 @@ import (
 )
 
 /*
-TestConditionFuncsConfigSelect tests the Select method of ConditionFuncsConfig.
+TestConditionFuncsConfigSelect tests the Select method of ConditionsMap.
 
 The test checks that Select correctly returns condition functions by their names
 and returns nil for unknown function names.
+
+Note: This test uses ConditionsMap directly, not Config structure.
 */
 func TestConditionFuncsConfigSelect(t *testing.T) {
-	config := implemented.DefaultConditionsFuncs
+	config := implemented.DefaultConditionsMap
 
 	tests := []struct {
 		name     string
@@ -86,38 +88,38 @@ func TestConditionFuncsConfigSelect(t *testing.T) {
 }
 
 /*
-TestConditionFuncsConfigAllFunctionsPresent tests that all required functions are present in DefaultConditionsFuncs.
+TestConditionFuncsConfigAllFunctionsPresent tests that all required functions are present in DefaultConditionsMap.
 
-The test checks that DefaultConditionsFuncs contains all four condition functions:
+The test checks that DefaultConditionsMap contains all four condition functions:
 Contains, Eq, Neq, and Lt.
 */
 func TestConditionFuncsConfigAllFunctionsPresent(t *testing.T) {
-	config := implemented.DefaultConditionsFuncs
+	config := implemented.DefaultConditionsMap
 
 	if config.Contains == nil {
-		t.Error("DefaultConditionsFuncs.Contains is nil")
+		t.Error("DefaultConditionsMap.Contains is nil")
 	}
 	if config.Eq == nil {
-		t.Error("DefaultConditionsFuncs.Eq is nil")
+		t.Error("DefaultConditionsMap.Eq is nil")
 	}
 	if config.Neq == nil {
-		t.Error("DefaultConditionsFuncs.Neq is nil")
+		t.Error("DefaultConditionsMap.Neq is nil")
 	}
 	if config.Lt == nil {
-		t.Error("DefaultConditionsFuncs.Lt is nil")
+		t.Error("DefaultConditionsMap.Lt is nil")
 	}
 }
 
 /*
-TestConditionFuncsConfigCustomConfig tests creating a custom ConditionFuncsConfig.
+TestConditionFuncsConfigCustomConfig tests creating a custom ConditionsMap.
 
 The test checks that custom configuration can be created with custom functions
 and that Select method works correctly with custom configuration.
 */
 func TestConditionFuncsConfigCustomConfig(t *testing.T) {
 	// Create custom config with only Eq function
-	customConfig := base.ConditionFuncsConfig{
-		Eq: implemented.DefaultConditionsFuncs.Eq,
+	customConfig := base.ConditionsMap{
+		Eq: implemented.DefaultConditionsMap.Eq,
 		// Other functions are nil
 	}
 
@@ -143,4 +145,3 @@ func TestConditionFuncsConfigCustomConfig(t *testing.T) {
 		t.Error("Select(\"Lt\") returned function, expected nil")
 	}
 }
-
