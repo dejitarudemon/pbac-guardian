@@ -16,7 +16,8 @@ Condition represents a set of rules for comparing values in policies.
 
 A condition can contain one or more fields. If multiple fields are specified,
 they are checked independently of each other. Values can be either literals
-or paths to structure fields (e.g., "source:name" or "target:role").
+or paths to structure fields, environment variables, or time values
+(e.g., "source:name", "target:role", "env:VAR_NAME", "time:now").
 
 Fields:
   - Contains - checks if left value is in right list (right must be a slice)

@@ -12,7 +12,9 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dejitarudemon/pbac-guardian/internal/cashing"
 )
@@ -43,6 +45,9 @@ const (
 	// An action must have at least 2 parts: entity and action name.
 	// Example: "user:read" (2 parts) is valid, "read" (1 part) is invalid.
 	MIN_ACTION_PARTS = 2
+
+	TIME_MODIFIER_SEP = "|"
+	MODIFIERS_PARTS   = 2
 )
 
 /*
@@ -190,7 +195,9 @@ func (p *Policy) addInformationToCashTree() {
 		return
 	}
 	for left, condition := range p.conditions {
-		p.cashTree.Add(p.action, left)
+		if !strings.HasPrefix(left, string(Entity_TIME)) {
+			p.cashTree.Add(p.action, left)
+		}
 
 		c := reflect.ValueOf(condition)
 
@@ -199,7 +206,7 @@ func (p *Policy) addInformationToCashTree() {
 			if !field.IsZero() {
 				right := field.Interface()
 
-				if r, ok := p.toPath(right); ok {
+				if r, ok := p.toPath(right); ok && !strings.HasPrefix(r, string(Entity_TIME)) {
 					p.cashTree.Add(p.action, r)
 				}
 			}
@@ -209,12 +216,13 @@ func (p *Policy) addInformationToCashTree() {
 }
 
 /*
-toPath checks if a value is a path to a structure field or environment variable.
+toPath checks if a value is a path to a structure field, environment variable, or time value.
 
 A path must contain the PATH_SEP separator (":"), indicating that this is not
 a literal value, but a reference to:
   - a field in the source or target structure (e.g., "source:name", "target:owner")
   - an environment variable (e.g., "env:VARIABLE_NAME")
+  - a time value (e.g., "time:now", "time:now:1|day")
 
 Parameters:
   - path - value to check (can be any type, but must be a string to be a valid path)
@@ -233,27 +241,33 @@ func (p *Policy) toPath(path any) (string, bool) {
 /*
 splitPath parses a path from Conditions into an entity and a path to a field.
 
-The path must have the format "entity:field1:field2...", where entity is "source"
-or "target", and field1, field2... is a hierarchical path to a field in the structure.
+The path must have the format "entity:field1:field2...", where entity is "source",
+"target", "env", or "time", and field1, field2... is a hierarchical path to a field
+in the structure, environment variable name, or time specification.
 
 Valid path examples:
   - "source:name" - field name in source structure
   - "target:user:email" - field email in nested user structure in target
   - "env:VARIABLE_NAME" - environment variable VARIABLE_NAME
+  - "time:now" - current time
+  - "time:now:1|day" - current time plus 1 day (with modifier)
 
 Parameters:
   - value - path to parse in format "entity:field1:field2..." (can be any type, but must be a string to be valid)
 
 Returns:
-  - *Entity - pointer to entity (Entity_SOURCE, Entity_TARGET, or Entity_ENV)
-  - []string - path to field as array of strings ["field1", "field2", ...] (for Entity_ENV, contains variable name)
+  - *Entity - pointer to entity (Entity_SOURCE, Entity_TARGET, Entity_ENV, or Entity_TIME)
+  - []string - path to field as array of strings ["field1", "field2", ...]
+  - For Entity_ENV: contains variable name
+  - For Entity_TIME: contains time specification (e.g., ["now"] or ["now", "1|day"])
+  - For Entity_SOURCE/Entity_TARGET: contains hierarchical path to field
   - error - path parsing error
 
 Possible errors:
   - ErrInvalidPath - occurs if:
   - value is not a string or does not contain separator ":" (is not a path)
   - path contains less than 2 parts (minimum entity and one field/variable name)
-  - first part of path is not a valid entity (not "source", "target", or "env")
+  - first part of path is not a valid entity (not "source", "target", "env", or "time")
 */
 func (p *Policy) splitPath(value any) (*Entity, []string, error) {
 	path, ok := p.toPath(value)
@@ -368,17 +382,111 @@ func (p *Policy) loadEnv(path string) (any, error) {
 }
 
 /*
+loadTimeModications applies time modifiers to a target time value.
+
+The function processes modifiers in format "value|unit" where:
+  - value is an integer (currently not used, MODIFIERS_PARTS is used instead)
+  - unit is one of: "day", "hour", "minute", "second", "milisecond"
+
+Modifiers are applied sequentially. Each modifier adds a fixed amount of time
+based on MODIFIERS_PARTS constant (currently 2).
+
+Parameters:
+  - path - array of modifier strings in format "value|unit" (e.g., ["1|day", "2|hour"])
+  - target - base time value to apply modifiers to
+
+Returns:
+  - time.Time - target time with modifiers applied
+  - error - error if modifier format is invalid or unit is not supported
+
+Possible errors:
+  - ErrInvalidPath - modifier format is invalid (not "value|unit" or wrong number of parts)
+  - ErrInvalidType - modifier value is not a number or unit is not supported
+*/
+func (p *Policy) loadTimeModications(path []string, target time.Time) (time.Time, error) {
+	if len(path) == 0 {
+		return target, nil
+	}
+
+	modifiers := strings.Split(path[0], TIME_MODIFIER_SEP)
+	if len(modifiers) != MODIFIERS_PARTS {
+		return target, NewErrInvalidPath(path[0], "expected int|day/hour/second/month/year")
+	}
+
+	modifierValue, err := strconv.Atoi(modifiers[0])
+	if err != nil {
+		return target, NewErrInvalidType(reflect.Int.String(), reflect.TypeOf(modifierValue).String())
+	}
+
+	switch modifiers[1] {
+	case "day":
+		return target.Add(time.Hour * 24 * MODIFIERS_PARTS), nil
+	case "hour":
+		return target.Add(time.Hour * MODIFIERS_PARTS), nil
+	case "minute":
+		return target.Add(time.Minute * MODIFIERS_PARTS), nil
+	case "second":
+		return target.Add(time.Second * MODIFIERS_PARTS), nil
+	case "milisecond":
+		return target.Add(time.Millisecond * MODIFIERS_PARTS), nil
+	}
+
+	return target, NewErrInvalidType("day|hour|minute|second|milisecond", modifiers[1])
+}
+
+/*
+loadTime loads a time value from a path specification.
+
+The function supports the following time specifications:
+  - "now" - current time (time.Now())
+  - "now:modifier1:modifier2..." - current time with modifiers applied
+
+Modifiers are in format "value|unit" and are processed by loadTimeModications.
+Supported units: day, hour, minute, second, milisecond.
+
+Examples:
+  - "time:now" -> current time
+  - "time:now:1|day" -> current time + 2 days (MODIFIERS_PARTS = 2)
+  - "time:now:2|hour" -> current time + 2 hours
+
+Parameters:
+  - path - array of strings specifying time value (e.g., ["now"] or ["now", "1|day"])
+
+Returns:
+  - time.Time - time value based on specification
+  - error - error if time specification is invalid
+
+Possible errors:
+  - ErrInvalidPath - time base is not "now" or modifier format is invalid
+  - ErrInvalidType - modifier value is not a number or unit is not supported
+*/
+func (p *Policy) loadTime(path []string) (time.Time, error) {
+	var t time.Time
+
+	switch path[0] {
+	case "now":
+		t = time.Now()
+	default:
+		return t, NewErrInvalidPath(path[0], "expected now, but got invalid")
+	}
+
+	return p.loadTimeModications(path[1:], t)
+}
+
+/*
 load gets a value from a path or returns a literal value.
 
 If path is a path (contains ":"), the function parses it and extracts the value
-from the corresponding structure (source or target). If path is not a path,
-returns the path value itself as a literal value.
+from the corresponding structure (source or target), environment variable, or time value.
+If path is not a path, returns the path value itself as a literal value.
 
 The function uses L1 cache to optimize field value retrieval. Before searching
 for a field via reflection, it checks the cache using sessionID and path as key.
 If the value is found in cache, it is returned immediately. After retrieving
 a value via reflection, it is stored in cache for subsequent use within the
 same evaluation session.
+
+Note: Time paths (Entity_TIME) are not cached to ensure they always return current time.
 
 Cache behavior is controlled by CashTree attached to the policy, which tracks
 field access counts and disables caching for rarely accessed fields to optimize
@@ -388,12 +496,12 @@ Parameters:
   - ctx - context for operation cancellation and timeout control
   - source - first structure to search for fields (used for paths "source:...")
   - target - second structure to search for fields (used for paths "target:...")
-  - value - path to field (e.g., "source:name", "target:owner", "env:VAR_NAME") or literal value (e.g., "admin")
+  - value - path to field (e.g., "source:name", "target:owner", "env:VAR_NAME", "time:now") or literal value (e.g., "admin")
   - mustBePath - flag indicating whether value must be a path (true) or can be a literal (false)
   - sessionID - unique identifier for the current evaluation session (used as cache scope)
 
 Returns:
-  - any - found field value from structure or literal path value
+  - any - found field value from structure, environment variable, time value, or literal path value
   - error - value retrieval error
 
 Possible errors:
@@ -402,6 +510,7 @@ Possible errors:
   - path parsing error (see splitPath)
   - field search error (see loadField)
   - environment variable does not exist (see loadEnv)
+  - time path is invalid (see loadTime)
   - ErrInvalidType - entity is not a structure or pointer to structure (see loadField)
 */
 func (p *Policy) load(ctx context.Context, source, target any, value any, mustBePath bool, sessionID string) (any, error) {
@@ -435,6 +544,8 @@ func (p *Policy) load(ctx context.Context, source, target any, value any, mustBe
 		v, err = p.loadField(target, parsedPath)
 	case Entity_ENV:
 		v, err = p.loadEnv(parsedPath[0])
+	case Entity_TIME:
+		v, err = p.loadTime(parsedPath)
 	default:
 		err = NewErrInvalidPath(path, fmt.Sprintf("unxpected entity: %v", entity))
 	}
