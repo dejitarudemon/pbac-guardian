@@ -34,7 +34,7 @@ Example usage:
 
 	func main() {
 		// Create policies
-		policies := []base.Policy{
+		policies := []base.RawPolicy{
 			{
 				Name:   "admin-read",
 				Action: "user:read:document",
@@ -154,7 +154,7 @@ Example usage:
 	)
 
 	casher := implemented.NewDefaultCasher()
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "allow-admin",
 			Action: "user:read",
@@ -378,7 +378,7 @@ func (n *Guardian) Evaluate(ctx context.Context, source, target any, action stri
 
 		if policy.Effect() == base.Effect_DENY {
 			if ok {
-				return false, err
+				return false, nil
 			}
 		} else {
 			allowed = allowed || ok
