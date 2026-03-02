@@ -378,7 +378,7 @@ func (n *Guardian) Evaluate(ctx context.Context, source, target any, action stri
 
 		if policy.Effect() == base.Effect_DENY {
 			if ok {
-				return false, err
+				return false, nil
 			}
 		} else {
 			allowed = allowed || ok
