@@ -34,7 +34,7 @@ Example usage:
 
 	func main() {
 		// Create policies
-		policies := []base.Policy{
+		policies := []base.RawPolicy{
 			{
 				Name:   "admin-read",
 				Action: "user:read:document",
@@ -154,7 +154,7 @@ Example usage:
 	)
 
 	casher := implemented.NewDefaultCasher()
-	policies := []base.Policy{
+	policies := []base.RawPolicy{
 		{
 			Name:   "allow-admin",
 			Action: "user:read",
