@@ -2,7 +2,9 @@
 
 Current version: 0.5.0
 
-[English](#english) | [Русский](#russian)
+[English](#english)
+
+[Russian](#russian)
 
 ---
 
@@ -643,7 +645,7 @@ The library provides typed errors:
 ---
 
 <a name="russian"></a>
-# Русский
+# Russian
 
 ## Обзор
 
