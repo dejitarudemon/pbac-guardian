@@ -3,7 +3,7 @@ package base
 /*
 ConditionsMap provides configuration for condition functions used in policy evaluation.
 
-This structure allows customizing the behavior of condition checks (Contains, Eq, Neq, Lt, Gt)
+This structure allows customizing the behavior of condition checks (Contains, Eq, Neq, Lt, Gt, Le, Ge)
 by providing custom implementations. If nil is passed in Config.ConditionsMap to
 NewGuardianFromPolices or NewGuardianFromFile, the default implementations from
 implemented.DefaultConditionsMap will be used.
@@ -14,6 +14,8 @@ Fields:
   - Neq - function for inequality comparison
   - Lt - function for less-than comparison
   - Gt - function for greater-than comparison
+  - Le - function for less-than-or-equal comparison
+  - Ge - function for greater-than-or-equal comparison
 */
 type ConditionsMap struct {
 	Contains ConditionFunc
@@ -21,6 +23,8 @@ type ConditionsMap struct {
 	Neq      ConditionFunc
 	Lt       ConditionFunc
 	Gt       ConditionFunc
+	Le       ConditionFunc
+	Ge       ConditionFunc
 }
 
 /*
@@ -30,7 +34,7 @@ The function is used internally to retrieve the appropriate condition function
 based on the condition type specified in the policy.
 
 Parameters:
-  - key - condition function name ("Contains", "Eq", "Neq", "Lt", or "Gt")
+  - key - condition function name ("Contains", "Eq", "Neq", "Lt", "Gt", "Le", or "Ge")
 
 Returns:
   - ConditionFunc - condition function if found, nil otherwise
@@ -47,6 +51,10 @@ func (c ConditionsMap) Select(key string) ConditionFunc {
 		return c.Lt
 	case "Gt":
 		return c.Gt
+	case "Le":
+		return c.Le
+	case "Ge":
+		return c.Ge
 	}
 
 	return nil
@@ -62,7 +70,7 @@ Fields:
   - CashDisableThreShold - threshold for disabling cache for rarely accessed fields.
     Fields accessed less than this number of times will not be cached.
     Must be at least 1. If less than 1, it will be set to 1 automatically.
-  - ConditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt, Gt).
+  - ConditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt, Gt, Le, Ge).
     If nil, default implementations from implemented.DefaultConditionsMap will be used.
 */
 type Config struct {
