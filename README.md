@@ -19,7 +19,7 @@ Current version: 1.0.0
 
 - **Simple API**: Minimalistic and easy to use
 - **Declarative Policies**: Define policies in JSON or programmatically
-- **Flexible Conditions**: Support for equality, inequality, less-than, greater-than, and contains operations
+- **Flexible Conditions**: Support for equality, inequality, less-than, greater-than, less-than-or-equal, greater-than-or-equal, and contains operations
 - **Time Support**: Built-in support for time values and time modifiers (e.g., "time:now", "time:now:1|day")
 - **Environment Variables**: Support for environment variables in policy conditions (e.g., "env:VAR_NAME")
 - **Context Support**: Built-in support for cancellation and timeouts via `context.Context`
@@ -424,6 +424,8 @@ func main() {
         Neq:      implemented.DefaultConditionsMap.Neq,
         Lt:       implemented.DefaultConditionsMap.Lt,
         Gt:       implemented.DefaultConditionsMap.Gt,
+        Le:       implemented.DefaultConditionsMap.Le,
+        Ge:       implemented.DefaultConditionsMap.Ge,
     }
 
     // Create config with custom ConditionsMap
@@ -469,7 +471,7 @@ func main() {
 - Custom business rules for condition evaluation
 
 **When to use defaults (pass nil):**
-- Standard equality, inequality, less-than, greater-than, and contains operations
+- Standard equality, inequality, less-than, greater-than, less-than-or-equal, greater-than-or-equal, and contains operations
 - Most common use cases
 - When performance is critical (default functions are optimized)
 
@@ -614,6 +616,8 @@ Public methods:
 - **Neq**: Inequality check (`left != right`)
 - **Lt**: Less than check (`left < right`)
 - **Gt**: Greater than check (`left > right`)
+- **Le**: Less than or equal check (`left <= right`)
+- **Ge**: Greater than or equal check (`left >= right`)
 - **Contains**: Checks if `left` is in `right` (slice)
 
 ### Path Types
@@ -1060,6 +1064,8 @@ func main() {
         Neq:      implemented.DefaultConditionsMap.Neq,
         Lt:       implemented.DefaultConditionsMap.Lt,
         Gt:       implemented.DefaultConditionsMap.Gt,
+        Le:       implemented.DefaultConditionsMap.Le,
+        Ge:       implemented.DefaultConditionsMap.Ge,
     }
 
     // Создание config с кастомной ConditionsMap
@@ -1250,6 +1256,8 @@ type RawPolicy struct {
 - **Neq**: Проверка неравенства (`left != right`)
 - **Lt**: Проверка меньше (`left < right`)
 - **Gt**: Проверка больше (`left > right`)
+- **Le**: Проверка меньше или равно (`left <= right`)
+- **Ge**: Проверка больше или равно (`left >= right`)
 - **Contains**: Проверяет, находится ли `left` в `right` (slice)
 
 ### Типы путей

@@ -36,6 +36,9 @@ func TestCustomConditionFuncsConfig(t *testing.T) {
 		Eq:       customEqFunc, // Custom function
 		Neq:      implemented.DefaultConditionsMap.Neq,
 		Lt:       implemented.DefaultConditionsMap.Lt,
+		Gt:       implemented.DefaultConditionsMap.Gt,
+		Le:       implemented.DefaultConditionsMap.Le,
+		Ge:       implemented.DefaultConditionsMap.Ge,
 	}
 
 	// Create config with custom ConditionsMap
@@ -147,6 +150,9 @@ func TestCustomContainsFunc(t *testing.T) {
 		Eq:       implemented.DefaultConditionsMap.Eq,
 		Neq:      implemented.DefaultConditionsMap.Neq,
 		Lt:       implemented.DefaultConditionsMap.Lt,
+		Gt:       implemented.DefaultConditionsMap.Gt,
+		Le:       implemented.DefaultConditionsMap.Le,
+		Ge:       implemented.DefaultConditionsMap.Ge,
 	}
 
 	config := base.Config{
@@ -203,6 +209,9 @@ func TestCustomLtFunc(t *testing.T) {
 		Eq:       implemented.DefaultConditionsMap.Eq,
 		Neq:      implemented.DefaultConditionsMap.Neq,
 		Lt:       customLtFunc,
+		Gt:       implemented.DefaultConditionsMap.Gt,
+		Le:       implemented.DefaultConditionsMap.Le,
+		Ge:       implemented.DefaultConditionsMap.Ge,
 	}
 
 	config := base.Config{
@@ -283,6 +292,9 @@ func TestNewGuardianFromFileWithFuncConfig(t *testing.T) {
 		Eq:       customEqFunc,
 		Neq:      implemented.DefaultConditionsMap.Neq,
 		Lt:       implemented.DefaultConditionsMap.Lt,
+		Gt:       implemented.DefaultConditionsMap.Gt,
+		Le:       implemented.DefaultConditionsMap.Le,
+		Ge:       implemented.DefaultConditionsMap.Ge,
 	}
 
 	// Create config with custom ConditionsMap
