@@ -1,3 +1,48 @@
+## v 1.1.1
+
+### Русский
+
+**Добавлено:**
+
+- Поддержка доступа к полям структур, хранящихся в map полях структур
+- Возможность использования путей вида `"source:groups:admins:name"` для доступа к полям в структурах внутри map
+- Функция `loadFieldFromMap` теперь поддерживает любые типы map с ключами типа string (не только `map[string]any`)
+- Тесты для проверки работы с map полями в структурах: `TestMapFieldInStruct`, `TestMapFieldInStructMultipleKeys`, `TestMapFieldInStructComparison`, `TestMapFieldInStructAllConditions`
+
+**Изменено:**
+
+- Функция `loadFieldFromMap` переписана для использования рефлексии вместо type assertion, что позволяет работать с любыми `map[string]T`
+- Обновлены godoc комментарии для `loadFieldFromMap` с описанием поддержки map полей в структурах
+- Обновлены godoc комментарии для `loadField` с упоминанием поддержки map полей и примеров использования
+
+**Обновлено:**
+
+- Все godoc комментарии обновлены для отражения поддержки map полей в структурах
+- Документация в README.md обновлена с примерами использования map полей в структурах
+
+---
+
+### English
+
+**Added:**
+
+- Support for accessing fields in structures stored in map fields of structures
+- Ability to use paths like `"source:groups:admins:name"` to access fields in structures within maps
+- `loadFieldFromMap` function now supports any map types with string keys (not just `map[string]any`)
+- Tests for map fields in structures: `TestMapFieldInStruct`, `TestMapFieldInStructMultipleKeys`, `TestMapFieldInStructComparison`, `TestMapFieldInStructAllConditions`
+
+**Changed:**
+
+- `loadFieldFromMap` function rewritten to use reflection instead of type assertion, allowing work with any `map[string]T`
+- Updated godoc comments for `loadFieldFromMap` with description of map field support in structures
+- Updated godoc comments for `loadField` with mention of map field support and usage examples
+
+**Updated:**
+
+- All godoc comments updated to reflect support for map fields in structures
+- README.md documentation updated with examples of using map fields in structures
+
+
 ## v 1.1.0
 
 ### Русский

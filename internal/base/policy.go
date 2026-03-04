@@ -295,45 +295,7 @@ func (p *Policy) splitPath(value any) (*Entity, []string, error) {
 	return &entity, separeted[1:], nil
 }
 
-/*
-loadField finds a field in a structure by path and returns its value.
-
-The function recursively traverses the path using TAG_KEY ("pbac-guardian") tags to find
-fields. The field must be exported (capitalized) and have a tag with the
-corresponding name. The function supports nested structures by recursively
-calling itself for each path segment.
-
-Parameters:
-  - entity - entity (structure or pointer to structure) to search for field
-  - path - path to field as array of strings ["field1", "field2", ...]
-
-Returns:
-  - any - found field value
-  - error - field search error
-
-Possible errors:
-  - ErrInvalidType - entity is not a structure or pointer to structure
-  - ErrInvalidPath - occurs if:
-  - field not found (no tag with corresponding name)
-  - field is unexported (not accessible via CanInterface())
-  - entity is nil pointer
-*/
-func (p *Policy) loadField(entity any, path []string) (any, error) {
-	v := reflect.ValueOf(entity)
-
-	if v.Kind() == reflect.Pointer {
-		if v.IsNil() {
-			return nil, NewErrInvalidType(fmt.Sprintf("%v or %v", reflect.Pointer.String(), reflect.Struct.String()), v.Kind().String())
-		}
-		v = v.Elem()
-	}
-
-	if v.Kind() != reflect.Struct {
-		return nil, NewErrInvalidType(fmt.Sprintf("%v or %v", reflect.Pointer.String(), reflect.Struct.String()), v.Kind().String())
-	}
-
-	t := v.Type()
-
+func (p *Policy) loadFieldFromStruct(v reflect.Value, t reflect.Type, path []string) (any, error) {
 	for i := range v.NumField() {
 		field := v.Field(i)
 		fieldType := t.Field(i)
@@ -358,6 +320,116 @@ func (p *Policy) loadField(entity any, path []string) (any, error) {
 
 			return field.Interface(), nil
 		}
+	}
+
+	return nil, NewErrInvalidPath(path[0], "param doesn't exist")
+}
+
+/*
+loadFieldFromMap retrieves a value from a map by key and continues path traversal if needed.
+
+The function supports any map type with string keys (e.g., map[string]any, map[string]Group).
+It uses reflection to access map values by key, allowing traversal through map fields
+in structures. If the path has more segments, it recursively calls loadField to continue
+traversing the found value.
+
+This function enables access to fields in structures stored in map fields, for example:
+  - Structure with map field: User { Groups map[string]Group }
+  - Path: "source:groups:admins:name"
+  - "groups" - map field in User
+  - "admins" - key in map
+  - "name" - field in Group structure
+
+Parameters:
+  - value - reflect.Value of the map to search in
+  - path - array of path segments, where path[0] is the map key to look for
+
+Returns:
+  - any - found value from map, or result of recursive traversal if path continues
+  - error - error if map key doesn't exist or value is unexported
+
+Possible errors:
+  - ErrInvalidType - value is not a map
+  - ErrInvalidPath - occurs if:
+  - map key doesn't exist (path[0] not found in map)
+  - map value is unexported (not accessible via CanInterface())
+*/
+func (p *Policy) loadFieldFromMap(value reflect.Value, path []string) (any, error) {
+	if value.Kind() != reflect.Map {
+		return nil, NewErrInvalidType("map", value.Kind().String())
+	}
+
+	keyValue := reflect.ValueOf(path[0])
+	mapValue := value.MapIndex(keyValue)
+
+	if !mapValue.IsValid() {
+		return nil, NewErrInvalidPath(path[0], "param doesn't exist")
+	}
+
+	if !mapValue.CanInterface() {
+		return nil, NewErrInvalidPath(path[0], "got unexported value")
+	}
+
+	item := mapValue.Interface()
+
+	if len(path) > 1 {
+		return p.loadField(item, path[1:])
+	}
+
+	return item, nil
+}
+
+/*
+loadField finds a field in a structure or map by path and returns its value.
+
+The function recursively traverses the path using TAG_KEY ("pbac-guardian") tags to find
+fields in structures, or by key lookup in maps. The field must be exported (capitalized)
+and have a tag with the corresponding name. The function supports nested structures and
+maps by recursively calling itself for each path segment.
+
+The function supports:
+  - Structures: access fields by tag names (e.g., "source:role")
+  - Maps: access values by keys (e.g., "source:groups:admins")
+  - Nested combinations: structures with map fields containing structures
+    (e.g., "source:groups:admins:name" where groups is map[string]Group)
+
+Examples:
+  - Structure field: "source:role" - accesses role field in source structure
+  - Map value: "source:metadata:key" - accesses key in metadata map
+  - Map field in structure: "source:groups:admins:name" - accesses name field in Group
+    structure stored in groups map under "admins" key
+
+Parameters:
+  - entity - entity (structure, pointer to structure, or map) to search for field
+  - path - path to field as array of strings ["field1", "field2", ...]
+
+Returns:
+  - any - found field value
+  - error - field search error
+
+Possible errors:
+  - ErrInvalidType - entity is not a structure, pointer to structure, or map
+  - ErrInvalidPath - occurs if:
+  - field not found (no tag with corresponding name in structure)
+  - map key doesn't exist
+  - field is unexported (not accessible via CanInterface())
+  - entity is nil pointer
+*/
+func (p *Policy) loadField(entity any, path []string) (any, error) {
+	v := reflect.ValueOf(entity)
+
+	if v.Kind() == reflect.Pointer {
+		if v.IsNil() {
+			return nil, NewErrInvalidType(fmt.Sprintf("%v or %v or %v", reflect.Pointer.String(), reflect.Struct.String(), reflect.Map.String()), v.Kind().String())
+		}
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.Struct:
+		return p.loadFieldFromStruct(v, reflect.TypeOf(entity), path)
+	case reflect.Map:
+		return p.loadFieldFromMap(v, path)
 	}
 
 	return nil, NewErrInvalidPath(path[0], "param doesn't exist")
