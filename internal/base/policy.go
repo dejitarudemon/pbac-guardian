@@ -64,8 +64,8 @@ The Policy structure contains:
   - action - action in format "entity:action:extra1:extra2..." (e.g., "user:read:profile")
   - effect - policy effect: Effect_ALLOW (allow) or Effect_DENY (deny)
   - conditions - map of conditions. Key - path to field in format "source:field" or "target:field",
-    value - condition to check (Contains, Eq, Neq, Lt, Gt)
-  - conditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt, Gt)
+    value - condition to check (Contains, Eq, Neq, Lt, Gt, Le, Ge)
+  - conditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt, Gt, Le, Ge)
   - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - cashTree - cache tree for tracking field access counts and disabling cache for rarely accessed fields
 
@@ -116,7 +116,7 @@ the policy for evaluation. It performs the following steps:
 
 Parameters:
   - raw - raw policy structure with public fields (Name, Action, Effect, Conditions)
-  - conditions - configuration for condition functions (Contains, Eq, Neq, Lt, Gt). Must not be nil.
+  - conditions - configuration for condition functions (Contains, Eq, Neq, Lt, Gt, Le, Ge). Must not be nil.
   - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - cashTree - cache tree for tracking field access counts (can be nil, cache tracking will be skipped)
 
@@ -158,6 +158,12 @@ func NewPolicy(raw RawPolicy, conditions *ConditionsMap, cash cashing.Casher, ca
 	}
 	if conditions.Neq == nil {
 		return nil, NewErrInvalidType("ConditionsMap.Neq", nil)
+	}
+	if conditions.Le == nil {
+		return nil, NewErrInvalidType("ConditionsMap.Le", nil)
+	}
+	if conditions.Ge == nil {
+		return nil, NewErrInvalidType("ConditionsMap.Ge", nil)
 	}
 
 	p := Policy{
@@ -667,6 +673,26 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 				}
 
 				if m, err := p.conditionsMap.Gt(ctx, left, right); err != nil || !m {
+					return false, err
+				}
+			}
+			if condition.Le != nil {
+				right, err := p.load(ctx, source, target, condition.Le, false, sessionID)
+				if err != nil {
+					return false, err
+				}
+
+				if m, err := p.conditionsMap.Le(ctx, left, right); err != nil || !m {
+					return false, err
+				}
+			}
+			if condition.Ge != nil {
+				right, err := p.load(ctx, source, target, condition.Ge, false, sessionID)
+				if err != nil {
+					return false, err
+				}
+
+				if m, err := p.conditionsMap.Ge(ctx, left, right); err != nil || !m {
 					return false, err
 				}
 			}

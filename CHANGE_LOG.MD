@@ -1,3 +1,56 @@
+## v 1.1.0
+
+### Русский
+
+**Добавлено:**
+
+- Функции `Le` (less than or equal) и `Ge` (greater than or equal) для проверки условий "меньше или равно" и "больше или равно" в политиках
+- Реализация `LeConditionFunc` и `GeConditionFunc` для сравнения значений
+- Поддержка `Le` и `Ge` в структуре `Condition` и `ConditionsMap`
+- Добавлены `LeConditionFunc` и `GeConditionFunc` в `DefaultConditionsMap`
+- Поддержка `Le` и `Ge` во всех типах условий (примитивы, time.Time, Comparable)
+- Тесты для функций Le и Ge: `TestLeConditionFunc`, `TestGeConditionFunc` (`tests/condition_functions_test.go`)
+
+**Изменено:**
+
+- `DefaultConditionsMap` теперь включает реализации `LeConditionFunc` и `GeConditionFunc`
+- Обновлены godoc комментарии для `DefaultConditionsMap` с упоминанием поддержки `Le` и `Ge`
+- Обновлены godoc комментарии для `LeConditionFunc` и `GeConditionFunc`
+- Обновлены godoc комментарии в `condition.go` для упоминания `Le` и `Ge`
+- Обновлены godoc комментарии в `config.go` для упоминания `Le` и `Ge`
+
+**Обновлено:**
+
+- Все godoc комментарии обновлены для отражения поддержки `Le` и `Ge`
+- Тесты обновлены для включения проверки функций `Le` и `Ge`
+
+---
+
+### English
+
+**Added:**
+
+- `Le` (less than or equal) and `Ge` (greater than or equal) functions for checking "less than or equal" and "greater than or equal" conditions in policies
+- Implementation of `LeConditionFunc` and `GeConditionFunc` for value comparison
+- Support for `Le` and `Ge` in `Condition` and `ConditionsMap` structures
+- Added `LeConditionFunc` and `GeConditionFunc` to `DefaultConditionsMap`
+- Support for `Le` and `Ge` in all condition types (primitives, time.Time, Comparable)
+- Tests for Le and Ge functions: `TestLeConditionFunc`, `TestGeConditionFunc` (`tests/condition_functions_test.go`)
+
+**Changed:**
+
+- `DefaultConditionsMap` now includes `LeConditionFunc` and `GeConditionFunc` implementations
+- Updated godoc comments for `DefaultConditionsMap` with mention of `Le` and `Ge` support
+- Updated godoc comments for `LeConditionFunc` and `GeConditionFunc`
+- Updated godoc comments in `condition.go` to mention `Le` and `Ge`
+- Updated godoc comments in `config.go` to mention `Le` and `Ge`
+
+**Updated:**
+
+- All godoc comments updated to reflect `Le` and `Ge` support
+- Tests updated to include `Le` and `Ge` function checks
+
+
 ## v 0.5.0
 
 ### Русский

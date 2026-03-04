@@ -30,11 +30,11 @@ DefaultConditionsMap provides default implementations of condition functions.
 
 This configuration is used by default when nil is passed as funcConfig parameter
 to NewGuardianFromPolices or NewGuardianFromFile. It contains standard implementations
-of all condition types: Contains, Eq, Neq, Lt, and Gt.
+of all condition types: Contains, Eq, Neq, Lt, Gt, Le, and Ge.
 
 The default functions support:
   - Primitive types (int, uint, float, string and their variants)
-  - time.Time values (for Eq, Neq, Lt, Gt conditions)
+  - time.Time values (for Eq, Neq, Lt, Gt, Le, Ge conditions)
   - Custom types implementing base.Comparable interface
   - Context cancellation for long-running operations
 */
@@ -45,7 +45,28 @@ var (
 		Neq:      NeqConditionFunc,
 		Lt:       LtConditionFunc,
 		Gt:       GtConditionFunc,
+		Le:       LeConditionFunc,
+		Ge:       GeConditionFunc,
 	}
+)
+
+/*
+Comparison type constants for primitive value comparison.
+
+These constants are used internally by comparePrimitives and compare functions
+to specify the type of comparison operation to perform.
+
+Values:
+  - LE - less than or equal (<=)
+  - LT - less than (<)
+  - GE - greater than or equal (>=)
+  - GT - greater than (>)
+*/
+const (
+	LE = iota
+	LT
+	GE
+	GT
 )
 
 /*
@@ -214,7 +235,7 @@ func LtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	}
 
 	if reflect.TypeOf(left).Kind() != reflect.Struct {
-		return ltPrimitives(left, right)
+		return comparePrimitives(left, right, LT)
 	}
 
 	l, ok := left.(base.Comparable)
@@ -236,68 +257,6 @@ func LtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	}
 
 	return false, nil
-}
-
-/*
-ltPrimitives compares primitive types left and right based on reflection.
-
-The function supports comparison of the following types:
-  - int, int8, int16, int32, int64
-  - uint, uint8, uint16, uint32, uint64
-  - float32, float64
-  - string
-
-Types left and right must match. If a pointer is passed, it is dereferenced.
-
-Parameters:
-  - left - left value to compare (primitive type)
-  - right - right value to compare (primitive type)
-
-Returns:
-  - bool - true if left < right, false otherwise
-  - err - execution error if comparison is impossible
-
-Possible errors:
-  - ErrUncomparable - types left and right do not match or one of them is nil
-  - ErrInvalidType - left or right is not a supported primitive
-    (int, uint, float, string and their variants)
-*/
-func ltPrimitives(left, right any) (bool, error) {
-	v1 := reflect.ValueOf(left)
-	v2 := reflect.ValueOf(right)
-
-	if v1.Kind() == reflect.Pointer {
-		if v1.IsNil() {
-			return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
-		}
-
-		v1 = v1.Elem()
-	}
-
-	if v2.Kind() == reflect.Pointer {
-		if v2.IsNil() {
-			return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
-		}
-
-		v2 = v2.Elem()
-	}
-
-	if v1.Type() != v2.Type() {
-		return false, base.NewErrUncomparable(left, right)
-	}
-
-	switch v1.Kind() {
-	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int8, reflect.Int64:
-		return v1.Int() < v2.Int(), nil
-	case reflect.Float32, reflect.Float64:
-		return v1.Float() < v2.Float(), nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return v1.Uint() < v2.Uint(), nil
-	case reflect.String:
-		return v1.String() < v2.String(), nil
-	}
-
-	return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, v1.Kind().String())
 }
 
 /*
@@ -341,7 +300,7 @@ func GtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	}
 
 	if reflect.TypeOf(left).Kind() != reflect.Struct {
-		return gtPrimitives(left, right)
+		return comparePrimitives(left, right, GT)
 	}
 
 	l, ok := left.(base.Comparable)
@@ -366,65 +325,133 @@ func GtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 }
 
 /*
-gtPrimitives compares primitive types left and right based on reflection.
+LeConditionFunc checks if left is less than or equal to right.
 
-The function supports comparison of the following types:
-  - int, int8, int16, int32, int64
-  - uint, uint8, uint16, uint32, uint64
-  - float32, float64
-  - string
-
-Types left and right must match. If a pointer is passed, it is dereferenced.
+The function uses the following comparison logic:
+ 1. For primitive types (int, uint, float, string), comparison is done through reflection
+ 2. For time.Time values, comparison is done using time.Time methods (Before/After)
+ 3. For structures, the Comparable interface is used if implemented
+ 4. Types must match for correct comparison
 
 Parameters:
-  - left - left value to compare (primitive type)
-  - right - right value to compare (primitive type)
+  - ctx - context for operation cancellation and timeout control (passed to ltPrimitives)
+  - left - left value to compare
+  - right - right value to compare
+
+Returns:
+  - bool - true if left <= right, false otherwise
+  - err - execution error if comparison is impossible
+
+Possible errors:
+  - ErrNotComparableStruct - left is a structure but does not implement Comparable interface and is not time.Time
+  - ErrUncomparable - cannot compare left and right (incompatible types or Compare returned false)
+  - ErrInvalidType - left or right is neither a structure, time.Time, nor a supported primitive
+    (int, uint, float, string and their variants)
+
+Supported types:
+  - Primitive types (int, uint, float, string and their variants)
+  - time.Time values
+  - Custom types implementing base.Comparable interface
+*/
+func LeConditionFunc(ctx context.Context, left, right any) (bool, error) {
+	if ctx == nil {
+		return false, fmt.Errorf("context is nil")
+	}
+	if left == nil {
+		return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
+	}
+	if right == nil {
+		return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
+	}
+
+	if reflect.TypeOf(left).Kind() != reflect.Struct {
+		return comparePrimitives(left, right, LE)
+	}
+
+	l, ok := left.(base.Comparable)
+	if !ok {
+		if asTimeResult, ok := timesCompare(left, right); ok {
+			return asTimeResult <= 0, nil
+		}
+		return false, base.ErrNotComparableStruct
+	}
+
+	result, ok := l.Compare(right)
+
+	if !ok {
+		return false, base.NewErrUncomparable(left, right)
+	}
+
+	if result <= 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+/*
+GeConditionFunc checks if left is greater than or equal to right.
+
+The function uses the following comparison logic:
+ 1. For primitive types (int, uint, float, string), comparison is done through reflection
+ 2. For time.Time values, comparison is done using time.Time methods (Before/After)
+ 3. For structures, the Comparable interface is used if implemented
+ 4. Types must match for correct comparison
+
+Parameters:
+  - ctx - context for operation cancellation and timeout control (passed to gtPrimitives)
+  - left - left value to compare
+  - right - right value to compare
 
 Returns:
   - bool - true if left > right, false otherwise
   - err - execution error if comparison is impossible
 
 Possible errors:
-  - ErrUncomparable - types left and right do not match or one of them is nil
-  - ErrInvalidType - left or right is not a supported primitive
+  - ErrNotComparableStruct - left is a structure but does not implement Comparable interface and is not time.Time
+  - ErrUncomparable - cannot compare left and right (incompatible types or Compare returned false)
+  - ErrInvalidType - left or right is neither a structure, time.Time, nor a supported primitive
     (int, uint, float, string and their variants)
+
+Supported types:
+  - Primitive types (int, uint, float, string and their variants)
+  - time.Time values
+  - Custom types implementing base.Comparable interface
 */
-func gtPrimitives(left, right any) (bool, error) {
-	v1 := reflect.ValueOf(left)
-	v2 := reflect.ValueOf(right)
-
-	if v1.Kind() == reflect.Pointer {
-		if v1.IsNil() {
-			return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
-		}
-
-		v1 = v1.Elem()
+func GeConditionFunc(ctx context.Context, left, right any) (bool, error) {
+	if ctx == nil {
+		return false, fmt.Errorf("context is nil")
+	}
+	if left == nil {
+		return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
+	}
+	if right == nil {
+		return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
 	}
 
-	if v2.Kind() == reflect.Pointer {
-		if v2.IsNil() {
-			return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
-		}
-
-		v2 = v2.Elem()
+	if reflect.TypeOf(left).Kind() != reflect.Struct {
+		return comparePrimitives(left, right, GE)
 	}
 
-	if v1.Type() != v2.Type() {
+	l, ok := left.(base.Comparable)
+	if !ok {
+		if asTimeResult, ok := timesCompare(left, right); ok {
+			return asTimeResult >= 0, nil
+		}
+		return false, base.ErrNotComparableStruct
+	}
+
+	result, ok := l.Compare(right)
+
+	if !ok {
 		return false, base.NewErrUncomparable(left, right)
 	}
 
-	switch v1.Kind() {
-	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int8, reflect.Int64:
-		return v1.Int() > v2.Int(), nil
-	case reflect.Float32, reflect.Float64:
-		return v1.Float() > v2.Float(), nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		return v1.Uint() > v2.Uint(), nil
-	case reflect.String:
-		return v1.String() > v2.String(), nil
+	if result >= 0 {
+		return true, nil
 	}
 
-	return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, v1.Kind().String())
+	return false, nil
 }
 
 /*
@@ -467,4 +494,127 @@ func timesCompare(left, right any) (int, bool) {
 	}
 
 	return 0, true
+}
+
+/*
+comparePrimitives compares two primitive values using reflection.
+
+The function supports comparison of numeric types (int, uint, float) and strings.
+It handles pointer types by dereferencing them before comparison. The comparison
+type is specified by the compareType parameter (LE, LT, GE, GT).
+
+Parameters:
+  - left - first value to compare (must be a primitive type or pointer to primitive)
+  - right - second value to compare (must be a primitive type or pointer to primitive)
+  - compareType - type of comparison to perform (LE, LT, GE, or GT)
+
+Returns:
+  - bool - comparison result based on compareType
+  - error - execution error if types don't match or are not supported primitives
+
+Possible errors:
+  - ErrUncomparable - left and right types don't match
+  - ErrInvalidType - left or right is not a supported primitive type or is nil pointer
+
+Supported types:
+  - int, int8, int16, int32, int64
+  - uint, uint8, uint16, uint32, uint64
+  - float32, float64
+  - string
+  - Pointers to any of the above types
+*/
+func comparePrimitives(left, right any, compareType uint) (bool, error) {
+	v1 := reflect.ValueOf(left)
+	v2 := reflect.ValueOf(right)
+
+	if v1.Kind() == reflect.Pointer {
+		if v1.IsNil() {
+			return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
+		}
+
+		v1 = v1.Elem()
+	}
+
+	if v2.Kind() == reflect.Pointer {
+		if v2.IsNil() {
+			return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
+		}
+
+		v2 = v2.Elem()
+	}
+
+	if v1.Type() != v2.Type() {
+		return false, base.NewErrUncomparable(left, right)
+	}
+
+	switch v1.Kind() {
+	case reflect.Int, reflect.Int16, reflect.Int32, reflect.Int8, reflect.Int64:
+		return compare(v1.Int(), v2.Int(), compareType), nil
+	case reflect.Float32, reflect.Float64:
+		return compare(v1.Float(), v2.Float(), compareType), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return compare(v1.Uint(), v2.Uint(), compareType), nil
+	case reflect.String:
+		return compare(v1.String(), v2.String(), compareType), nil
+	}
+
+	return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, v1.Kind().String())
+}
+
+/*
+ordered is a type constraint for ordered types that support comparison operators.
+
+The constraint includes all numeric types (signed and unsigned integers, floats)
+and strings. The tilde (~) prefix allows the constraint to match both the base
+type and any custom types defined with that base type (e.g., type UserID int).
+
+This constraint is used by the compare function to ensure type safety while
+allowing comparison operations (<, <=, >, >=) on generic type parameters.
+
+Supported types:
+  - int, int8, int16, int32, int64
+  - uint, uint8, uint16, uint32, uint64
+  - float32, float64
+  - string
+  - Any custom types with these base types (e.g., type MyInt int)
+*/
+type ordered interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~float32 | ~float64 | ~string
+}
+
+/*
+compare performs comparison of two ordered values based on the comparison type.
+
+The function is a generic helper used internally by comparePrimitives to perform
+the actual comparison operation. It supports all comparison types: less than or
+equal (LE), less than (LT), greater than or equal (GE), and greater than (GT).
+
+Parameters:
+  - left - first value to compare
+  - right - second value to compare
+  - compareType - type of comparison to perform (LE, LT, GE, or GT)
+
+Returns:
+  - bool - comparison result:
+  - For LE: true if left <= right
+  - For LT: true if left < right
+  - For GE: true if left >= right
+  - For GT: true if left > right
+  - false for any other compareType value
+
+The function uses the ordered constraint to ensure that only types supporting
+comparison operators can be used, providing compile-time type safety.
+*/
+func compare[T ordered](left, right T, compareType uint) bool {
+	switch compareType {
+	case LE:
+		return left <= right
+	case LT:
+		return left < right
+	case GE:
+		return left >= right
+	case GT:
+		return left > right
+	}
+	return false
 }
