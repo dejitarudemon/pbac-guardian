@@ -676,6 +676,26 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 					return false, err
 				}
 			}
+			if condition.Le != nil {
+				right, err := p.load(ctx, source, target, condition.Le, false, sessionID)
+				if err != nil {
+					return false, err
+				}
+
+				if m, err := p.conditionsMap.Le(ctx, left, right); err != nil || !m {
+					return false, err
+				}
+			}
+			if condition.Ge != nil {
+				right, err := p.load(ctx, source, target, condition.Ge, false, sessionID)
+				if err != nil {
+					return false, err
+				}
+
+				if m, err := p.conditionsMap.Ge(ctx, left, right); err != nil || !m {
+					return false, err
+				}
+			}
 		}
 	}
 
