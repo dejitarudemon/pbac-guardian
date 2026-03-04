@@ -4,6 +4,15 @@
 
 **Изменено:**
 
+- Переименовано условие `Contains` в `In` для большей нативности и понимания:
+  - Поле `Contains` в структуре `Condition` переименовано в `In`
+  - Функция `ContainsConditionFunc` переименована в `InConditionFunc`
+  - Поле `Contains` в структуре `ConditionsMap` переименовано в `In`
+  - Метод `Select` в `ConditionsMap` теперь принимает ключ `"In"` вместо `"Contains"`
+  - JSON тег изменен с `"contains"` на `"in"`
+  - Все примеры использования и документация обновлены
+  - Все тесты обновлены для использования нового имени
+  - Это изменение улучшает читаемость кода и делает API более интуитивным (например, `In: []any{"admin"}` читается как "admin in list")
 - Реорганизован принцип хранения политик в `Guardian`:
   - Изменена структура хранения политик с `map[string][]*base.Policy` на `map[string]map[base.Effect][]*base.Policy`
   - Политики теперь группируются не только по действиям (action), но и по эффектам (ALLOW/DENY)
@@ -47,6 +56,15 @@
 
 **Changed:**
 
+- Renamed condition `Contains` to `In` for better native feel and understanding:
+  - Field `Contains` in `Condition` structure renamed to `In`
+  - Function `ContainsConditionFunc` renamed to `InConditionFunc`
+  - Field `Contains` in `ConditionsMap` structure renamed to `In`
+  - Method `Select` in `ConditionsMap` now accepts key `"In"` instead of `"Contains"`
+  - JSON tag changed from `"contains"` to `"in"`
+  - All usage examples and documentation updated
+  - All tests updated to use the new name
+  - This change improves code readability and makes API more intuitive (e.g., `In: []any{"admin"}` reads as "admin in list")
 - Reorganized policy storage principle in `Guardian`:
   - Changed policy storage structure from `map[string][]*base.Policy` to `map[string]map[base.Effect][]*base.Policy`
   - Policies are now grouped not only by actions but also by effects (ALLOW/DENY)

@@ -1,7 +1,7 @@
 /*
 Package tests contains tests for comparison conditions in policies.
 
-Tests check the work of various conditions (Contains, Eq, Neq, Lt, Gt) through
+Tests check the work of various conditions (In, Eq, Neq, Lt, Gt) through
 the public API of the library, which allows improving coverage of internal condition functions.
 The tests verify that conditions work correctly with:
   - Different data types (strings, integers, slices)
@@ -20,12 +20,12 @@ import (
 )
 
 /*
-TestContainsCondition tests the Contains condition through policies.
+TestInCondition tests the In condition through policies.
 
-The test checks the work of containsConditionFunc through using the Contains condition
-in policies. This improves coverage of containsConditionFunc from 0% to 100%.
+The test checks the work of InConditionFunc through using the In condition
+in policies. This improves coverage of InConditionFunc from 0% to 100%.
 */
-func TestContainsCondition(t *testing.T) {
+func TestInCondition(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
@@ -38,15 +38,15 @@ func TestContainsCondition(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "contains - found in slice",
-			// Test checks that Contains condition finds value in list
+			name: "in - found in slice",
+			// Test checks that In condition finds value in list
 			policy: base.RawPolicy{
-				Name:   "contains-test",
+				Name:   "in-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {
-						Contains: []any{"admin", "moderator", "user"},
+						In: []any{"admin", "moderator", "user"},
 					},
 				},
 			},
@@ -57,15 +57,15 @@ func TestContainsCondition(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "contains - not found in slice",
-			// Test checks that Contains condition does not find value if it's not in list
+			name: "in - not found in slice",
+			// Test checks that In condition does not find value if it's not in list
 			policy: base.RawPolicy{
-				Name:   "contains-test",
+				Name:   "in-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {
-						Contains: []any{"admin", "moderator"},
+						In: []any{"admin", "moderator"},
 					},
 				},
 			},
@@ -76,15 +76,15 @@ func TestContainsCondition(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "contains - empty slice",
-			// Test checks that Contains condition returns false for empty list
+			name: "in - empty slice",
+			// Test checks that In condition returns false for empty list
 			policy: base.RawPolicy{
-				Name:   "contains-test",
+				Name:   "in-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {
-						Contains: []any{},
+						In: []any{},
 					},
 				},
 			},
@@ -95,16 +95,16 @@ func TestContainsCondition(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "contains - with source role in list",
-			// Test checks Contains condition with source:role field
+			name: "in - with source role in list",
+			// Test checks In condition with source:role field
 			// Check that source.role value is in list
 			policy: base.RawPolicy{
-				Name:   "contains-source-test",
+				Name:   "in-source-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {
-						Contains: []any{"admin", "moderator", "user"},
+						In: []any{"admin", "moderator", "user"},
 					},
 				},
 			},
@@ -115,15 +115,15 @@ func TestContainsCondition(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "contains - with integer values",
-			// Test checks Contains condition with numeric values
+			name: "in - with integer values",
+			// Test checks In condition with numeric values
 			policy: base.RawPolicy{
-				Name:   "contains-int-test",
+				Name:   "in-int-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:age": {
-						Contains: []any{18, 21, 25},
+						In: []any{18, 21, 25},
 					},
 				},
 			},
@@ -459,8 +459,8 @@ func TestMultipleConditionsCombined(t *testing.T) {
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {
-						Eq:       "admin",
-						Contains: []any{"admin", "moderator"},
+						Eq: "admin",
+						In: []any{"admin", "moderator"},
 					},
 					"source:age": {
 						Lt: 100,
@@ -496,15 +496,15 @@ func TestMultipleConditionsCombined(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "multiple conditions - Contains and Lt",
-			// Test checks combination of Contains and Lt conditions
+			name: "multiple conditions - In and Lt",
+			// Test checks combination of In and Lt conditions
 			policy: base.RawPolicy{
-				Name:   "combined-contains-lt",
+				Name:   "combined-in-lt",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {
-						Contains: []any{"admin", "moderator"},
+						In: []any{"admin", "moderator"},
 					},
 					"source:age": {
 						Lt: 65,

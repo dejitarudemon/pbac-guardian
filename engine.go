@@ -138,7 +138,7 @@ recommended to use DefaultCasher. The cache becomes beneficial when the same fie
 is accessed 3+ times within a single evaluation session.
 
 The config parameter allows customizing condition functions and cache behavior.
-If config.ConditionsMap is nil, default condition functions (Eq, Neq, Contains, Lt, Gt, Le, Ge)
+If config.ConditionsMap is nil, default condition functions (Eq, Neq, In, Lt, Gt, Le, Ge)
 will be used. The cache tree tracks field access counts and can automatically disable
 caching for fields that are accessed less than the threshold number of times, optimizing
 memory usage.
@@ -216,7 +216,7 @@ on each evaluation. For optimal performance in production scenarios with multipl
 policies accessing the same fields, it is recommended to use DefaultCasher.
 
 The config parameter allows customizing condition functions and cache behavior.
-If config.ConditionsMap is nil, default condition functions (Eq, Neq, Contains, Lt, Gt, Le, Ge)
+If config.ConditionsMap is nil, default condition functions (Eq, Neq, In, Lt, Gt, Le, Ge)
 will be used. The cache tree tracks field access counts and can automatically disable
 caching for fields that are accessed less than the threshold number of times.
 
@@ -313,7 +313,7 @@ and preventing cache pollution between different evaluations.
 
 The function supports various condition types including:
   - Eq, Neq - equality and inequality checks
-  - Contains - substring/containment checks
+  - In - membership checks (value in list)
   - Lt, Gt, Le, Ge - comparison operations for numeric and time values
   - Support for environment variables (env:VARIABLE_NAME)
   - Support for time values (time:now, time:now:1|day, etc.)

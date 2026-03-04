@@ -4,7 +4,7 @@ Package tests contains benchmark tests for measuring library performance.
 Benchmarks check performance of main operations:
   - Engine creation from policies (with and without cache)
   - Policy evaluation for various scenarios
-  - Working with various condition types (Eq, Neq, Lt, Contains)
+  - Working with various condition types (Eq, Neq, Lt, In)
   - Handling nested structures
   - Cache performance comparison (with cache vs without cache)
 
@@ -118,13 +118,13 @@ func BenchmarkEvaluateMultipleConditions(b *testing.B) {
 			Conditions: map[string]base.Condition{
 				"source:role": {
 					Eq:       "admin",
-					Contains: []any{"admin", "moderator"},
+					In: []any{"admin", "moderator"},
 				},
 				"source:age": {
 					Lt: 100,
 				},
 				"target:tags": {
-					Contains: []any{"public", "shared"},
+					In: []any{"public", "shared"},
 				},
 			},
 		},
@@ -150,11 +150,11 @@ func BenchmarkEvaluateMultipleConditions(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateContains measures performance of Contains condition.
+BenchmarkEvaluateIn measures performance of In condition.
 
-The benchmark checks time of searching value in list through Contains condition.
+The benchmark checks time of searching value in list through In condition.
 */
-func BenchmarkEvaluateContains(b *testing.B) {
+func BenchmarkEvaluateIn(b *testing.B) {
 	policies := []base.RawPolicy{
 		{
 			Name:   "contains-policy",
@@ -162,7 +162,7 @@ func BenchmarkEvaluateContains(b *testing.B) {
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
 				"source:role": {
-					Contains: []any{"admin", "moderator", "user", "guest", "visitor"},
+					In: []any{"admin", "moderator", "user", "guest", "visitor"},
 				},
 			},
 		},
@@ -310,7 +310,7 @@ func BenchmarkEvaluateMultiplePolicies(b *testing.B) {
 			Action: "user:read:document",
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
-				"source:role": {Contains: []any{"moderator", "editor"}},
+				"source:role": {In: []any{"moderator", "editor"}},
 			},
 		},
 	}
@@ -411,10 +411,10 @@ func BenchmarkEvaluateDenyPolicy(b *testing.B) {
 }
 
 /*
-BenchmarkEvaluateLargeSlice measures performance of Contains condition
+BenchmarkEvaluateLargeSlice measures performance of In condition
 with large list of values.
 
-The benchmark checks time of searching in large list through Contains condition.
+The benchmark checks time of searching in large list through In condition.
 */
 func BenchmarkEvaluateLargeSlice(b *testing.B) {
 	// Create large list of roles
@@ -431,7 +431,7 @@ func BenchmarkEvaluateLargeSlice(b *testing.B) {
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
 				"source:role": {
-					Contains: largeRoleList,
+					In: largeRoleList,
 				},
 			},
 		},
@@ -647,7 +647,7 @@ func BenchmarkEvaluateMultiplePoliciesWithCache(b *testing.B) {
 			Action: "user:read:document",
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
-				"source:role": {Contains: []any{"moderator", "editor"}},
+				"source:role": {In: []any{"moderator", "editor"}},
 			},
 		},
 	}

@@ -32,10 +32,10 @@ func TestCustomConditionFuncsConfig(t *testing.T) {
 
 	// Create custom ConditionsMap with custom Eq function
 	customConditionsMap := &base.ConditionsMap{
-		Contains: implemented.DefaultConditionsMap.Contains,
-		Eq:       customEqFunc, // Custom function
-		Neq:      implemented.DefaultConditionsMap.Neq,
-		Lt:       implemented.DefaultConditionsMap.Lt,
+		In:  implemented.DefaultConditionsMap.In,
+		Eq:  customEqFunc, // Custom function
+		Neq: implemented.DefaultConditionsMap.Neq,
+		Lt:  implemented.DefaultConditionsMap.Lt,
 		Gt:       implemented.DefaultConditionsMap.Gt,
 		Le:       implemented.DefaultConditionsMap.Le,
 		Ge:       implemented.DefaultConditionsMap.Ge,
@@ -134,22 +134,22 @@ func TestNilFuncConfigUsesDefaults(t *testing.T) {
 }
 
 /*
-TestCustomContainsFunc tests custom Contains condition function.
+TestCustomInFunc tests custom In condition function.
 
-The test checks that custom Contains function can be provided and used
+The test checks that custom In function can be provided and used
 instead of the default implementation.
 */
-func TestCustomContainsFunc(t *testing.T) {
-	// Custom Contains function that always returns true
-	customContainsFunc := func(ctx context.Context, left, right any) (bool, error) {
+func TestCustomInFunc(t *testing.T) {
+	// Custom In function that always returns true
+	customInFunc := func(ctx context.Context, left, right any) (bool, error) {
 		return true, nil
 	}
 
 	customConditionsMap := &base.ConditionsMap{
-		Contains: customContainsFunc,
-		Eq:       implemented.DefaultConditionsMap.Eq,
-		Neq:      implemented.DefaultConditionsMap.Neq,
-		Lt:       implemented.DefaultConditionsMap.Lt,
+		In:  customInFunc,
+		Eq:  implemented.DefaultConditionsMap.Eq,
+		Neq: implemented.DefaultConditionsMap.Neq,
+		Lt:  implemented.DefaultConditionsMap.Lt,
 		Gt:       implemented.DefaultConditionsMap.Gt,
 		Le:       implemented.DefaultConditionsMap.Le,
 		Ge:       implemented.DefaultConditionsMap.Ge,
@@ -167,7 +167,7 @@ func TestCustomContainsFunc(t *testing.T) {
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
 				"source:role": {
-					Contains: []any{"admin", "moderator"}, // Should always pass with custom function
+					In: []any{"admin", "moderator"}, // Should always pass with custom function
 				},
 			},
 		},
@@ -182,13 +182,13 @@ func TestCustomContainsFunc(t *testing.T) {
 	source := User{Name: "user", Role: "guest"} // Role is "guest", not in list
 	target := Document{Owner: "user", Type: "public"}
 
-	// With custom function, Contains should always return true
+	// With custom function, In should always return true
 	allowed, err := engine.Evaluate(ctx, source, target, "user:read")
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if !allowed {
-		t.Errorf("expected allowed=true with custom Contains function, got false")
+		t.Errorf("expected allowed=true with custom In function, got false")
 	}
 }
 
@@ -205,10 +205,10 @@ func TestCustomLtFunc(t *testing.T) {
 	}
 
 	customConditionsMap := &base.ConditionsMap{
-		Contains: implemented.DefaultConditionsMap.Contains,
-		Eq:       implemented.DefaultConditionsMap.Eq,
-		Neq:      implemented.DefaultConditionsMap.Neq,
-		Lt:       customLtFunc,
+		In:  implemented.DefaultConditionsMap.In,
+		Eq:  implemented.DefaultConditionsMap.Eq,
+		Neq: implemented.DefaultConditionsMap.Neq,
+		Lt:  customLtFunc,
 		Gt:       implemented.DefaultConditionsMap.Gt,
 		Le:       implemented.DefaultConditionsMap.Le,
 		Ge:       implemented.DefaultConditionsMap.Ge,
@@ -288,10 +288,10 @@ func TestNewGuardianFromFileWithFuncConfig(t *testing.T) {
 
 	// Create custom ConditionsMap
 	customConditionsMap := &base.ConditionsMap{
-		Contains: implemented.DefaultConditionsMap.Contains,
-		Eq:       customEqFunc,
-		Neq:      implemented.DefaultConditionsMap.Neq,
-		Lt:       implemented.DefaultConditionsMap.Lt,
+		In:  implemented.DefaultConditionsMap.In,
+		Eq:  customEqFunc,
+		Neq: implemented.DefaultConditionsMap.Neq,
+		Lt:  implemented.DefaultConditionsMap.Lt,
 		Gt:       implemented.DefaultConditionsMap.Gt,
 		Le:       implemented.DefaultConditionsMap.Le,
 		Ge:       implemented.DefaultConditionsMap.Ge,

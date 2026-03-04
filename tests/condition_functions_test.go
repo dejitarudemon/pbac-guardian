@@ -1,7 +1,7 @@
 /*
 Package tests contains direct tests for condition comparison functions.
 
-Tests check the work of condition functions (ContainsConditionFunc,
+Tests check the work of condition functions (InConditionFunc,
 EqConditionFunc, LtConditionFunc, GtConditionFunc, LeConditionFunc,
 GeConditionFunc) from implemented.DefaultConditionsMap,
 which allows improving coverage of these functions to 100%.
@@ -21,18 +21,18 @@ import (
 )
 
 /*
-TestContainsConditionFunc tests the containsConditionFunc function directly.
+TestInConditionFunc tests the InConditionFunc function directly.
 
-The test checks various usage scenarios of containsConditionFunc,
+The test checks various usage scenarios of InConditionFunc,
 including edge cases and error handling.
 */
-func TestContainsConditionFunc(t *testing.T) {
+func TestInConditionFunc(t *testing.T) {
 	ctx := context.Background()
 
 	// Use default condition functions from implemented package
-	containsFunc := implemented.DefaultConditionsMap.Contains
-	if containsFunc == nil {
-		t.Fatalf("Contains function not found in DefaultConditionsMap")
+	inFunc := implemented.DefaultConditionsMap.In
+	if inFunc == nil {
+		t.Fatalf("In function not found in DefaultConditionsMap")
 	}
 
 	tests := []struct {
@@ -90,9 +90,9 @@ func TestContainsConditionFunc(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+		for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := containsFunc(ctx, tt.left, tt.right)
+			got, err := inFunc(ctx, tt.left, tt.right)
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("expected error, got nil")
@@ -108,7 +108,7 @@ func TestContainsConditionFunc(t *testing.T) {
 					t.Errorf("unexpected error: %v", err)
 				}
 				if got != tt.want {
-					t.Errorf("containsConditionFunc() = %v, want %v", got, tt.want)
+					t.Errorf("InConditionFunc() = %v, want %v", got, tt.want)
 				}
 			}
 		})
