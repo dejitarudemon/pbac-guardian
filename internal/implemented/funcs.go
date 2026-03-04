@@ -30,11 +30,11 @@ DefaultConditionsMap provides default implementations of condition functions.
 
 This configuration is used by default when nil is passed as funcConfig parameter
 to NewGuardianFromPolices or NewGuardianFromFile. It contains standard implementations
-of all condition types: Contains, Eq, Neq, Lt, and Gt.
+of all condition types: Contains, Eq, Neq, Lt, Gt, Le, and Ge.
 
 The default functions support:
   - Primitive types (int, uint, float, string and their variants)
-  - time.Time values (for Eq, Neq, Lt, Gt conditions)
+  - time.Time values (for Eq, Neq, Lt, Gt, Le, Ge conditions)
   - Custom types implementing base.Comparable interface
   - Context cancellation for long-running operations
 */
@@ -45,6 +45,8 @@ var (
 		Neq:      NeqConditionFunc,
 		Lt:       LtConditionFunc,
 		Gt:       GtConditionFunc,
+		Le:       LeConditionFunc,
+		Ge:       GeConditionFunc,
 	}
 )
 
