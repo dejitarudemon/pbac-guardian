@@ -311,6 +311,136 @@ func GtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 }
 
 /*
+LtconditionFunc checks if left is less than or equal to right.
+
+The function uses the following comparison logic:
+ 1. For primitive types (int, uint, float, string), comparison is done through reflection
+ 2. For time.Time values, comparison is done using time.Time methods (Before/After)
+ 3. For structures, the Comparable interface is used if implemented
+ 4. Types must match for correct comparison
+
+Parameters:
+  - ctx - context for operation cancellation and timeout control (passed to ltPrimitives)
+  - left - left value to compare
+  - right - right value to compare
+
+Returns:
+  - bool - true if left <= right, false otherwise
+  - err - execution error if comparison is impossible
+
+Possible errors:
+  - ErrNotComparableStruct - left is a structure but does not implement Comparable interface and is not time.Time
+  - ErrUncomparable - cannot compare left and right (incompatible types or Compare returned false)
+  - ErrInvalidType - left or right is neither a structure, time.Time, nor a supported primitive
+    (int, uint, float, string and their variants)
+
+Supported types:
+  - Primitive types (int, uint, float, string and their variants)
+  - time.Time values
+  - Custom types implementing base.Comparable interface
+*/
+func LeConditionFunc(ctx context.Context, left, right any) (bool, error) {
+	if ctx == nil {
+		return false, fmt.Errorf("context is nil")
+	}
+	if left == nil {
+		return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
+	}
+	if right == nil {
+		return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
+	}
+
+	if reflect.TypeOf(left).Kind() != reflect.Struct {
+		return comparePrimitives(left, right, LE)
+	}
+
+	l, ok := left.(base.Comparable)
+	if !ok {
+		if asTimeResult, ok := timesCompare(left, right); ok {
+			return asTimeResult <= 0, nil
+		}
+		return false, base.ErrNotComparableStruct
+	}
+
+	result, ok := l.Compare(right)
+
+	if !ok {
+		return false, base.NewErrUncomparable(left, right)
+	}
+
+	if result <= 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+/*
+GeConditionFunc checks if left is greater than or equal to right.
+
+The function uses the following comparison logic:
+ 1. For primitive types (int, uint, float, string), comparison is done through reflection
+ 2. For time.Time values, comparison is done using time.Time methods (Before/After)
+ 3. For structures, the Comparable interface is used if implemented
+ 4. Types must match for correct comparison
+
+Parameters:
+  - ctx - context for operation cancellation and timeout control (passed to gtPrimitives)
+  - left - left value to compare
+  - right - right value to compare
+
+Returns:
+  - bool - true if left > right, false otherwise
+  - err - execution error if comparison is impossible
+
+Possible errors:
+  - ErrNotComparableStruct - left is a structure but does not implement Comparable interface and is not time.Time
+  - ErrUncomparable - cannot compare left and right (incompatible types or Compare returned false)
+  - ErrInvalidType - left or right is neither a structure, time.Time, nor a supported primitive
+    (int, uint, float, string and their variants)
+
+Supported types:
+  - Primitive types (int, uint, float, string and their variants)
+  - time.Time values
+  - Custom types implementing base.Comparable interface
+*/
+func GeConditionFunc(ctx context.Context, left, right any) (bool, error) {
+	if ctx == nil {
+		return false, fmt.Errorf("context is nil")
+	}
+	if left == nil {
+		return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
+	}
+	if right == nil {
+		return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, nil)
+	}
+
+	if reflect.TypeOf(left).Kind() != reflect.Struct {
+		return comparePrimitives(left, right, GE)
+	}
+
+	l, ok := left.(base.Comparable)
+	if !ok {
+		if asTimeResult, ok := timesCompare(left, right); ok {
+			return asTimeResult >= 0, nil
+		}
+		return false, base.ErrNotComparableStruct
+	}
+
+	result, ok := l.Compare(right)
+
+	if !ok {
+		return false, base.NewErrUncomparable(left, right)
+	}
+
+	if result >= 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+/*
 timesCompare compares two time.Time values.
 
 The function is used internally by condition functions (Eq, Neq, Lt, Gt) to support
