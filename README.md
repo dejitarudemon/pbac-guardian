@@ -4,7 +4,7 @@
 
 # pbac-guardian
 
-Current version: 1.1.1
+Current version: 1.1.2
 
 [English](#english)
 
@@ -268,7 +268,7 @@ policies := []base.RawPolicy{
                 Lt: 18, // age < 18
             },
             "target:tags": {
-                Contains: []any{"public"}, // "public" in tags
+                In: []any{"public"}, // "public" in tags
             },
         },
     },
@@ -290,7 +290,7 @@ policies := []base.RawPolicy{
                 Lt: 18, // age < 18
             },
             "target:tags": {
-                Contains: []any{"adult-only"},
+                In: []any{"adult-only"},
             },
         },
     },
@@ -423,7 +423,7 @@ func main() {
 
     // Create custom ConditionsMap
     customConditionsMap := &base.ConditionsMap{
-        Contains: implemented.DefaultConditionsMap.Contains,
+        In:  implemented.DefaultConditionsMap.In,
         Eq:       customEqFunc, // Use custom function
         Neq:      implemented.DefaultConditionsMap.Neq,
         Lt:       implemented.DefaultConditionsMap.Lt,
@@ -657,7 +657,7 @@ Public methods:
 - **Gt**: Greater than check (`left > right`)
 - **Le**: Less than or equal check (`left <= right`)
 - **Ge**: Greater than or equal check (`left >= right`)
-- **Contains**: Checks if `left` is in `right` (slice)
+- **In**: Checks if `left` is in `right` (slice)
 
 ### Path Types
 
@@ -946,7 +946,7 @@ policies := []base.RawPolicy{
                 Lt: 18, // возраст < 18
             },
             "target:tags": {
-                Contains: []any{"public"}, // "public" в тегах
+                In: []any{"public"}, // "public" в тегах
             },
         },
     },
@@ -968,7 +968,7 @@ policies := []base.RawPolicy{
                 Lt: 18, // возраст < 18
             },
             "target:tags": {
-                Contains: []any{"adult-only"},
+                In: []any{"adult-only"},
             },
         },
     },
@@ -1101,7 +1101,7 @@ func main() {
 
     // Создание кастомной ConditionsMap
     customConditionsMap := &base.ConditionsMap{
-        Contains: implemented.DefaultConditionsMap.Contains,
+        In:  implemented.DefaultConditionsMap.In,
         Eq:       customEqFunc, // Использовать кастомную функцию
         Neq:      implemented.DefaultConditionsMap.Neq,
         Lt:       implemented.DefaultConditionsMap.Lt,
@@ -1335,7 +1335,7 @@ type RawPolicy struct {
 - **Gt**: Проверка больше (`left > right`)
 - **Le**: Проверка меньше или равно (`left <= right`)
 - **Ge**: Проверка больше или равно (`left >= right`)
-- **Contains**: Проверяет, находится ли `left` в `right` (slice)
+- **In**: Проверяет, находится ли `left` в `right` (slice)
 
 ### Типы путей
 

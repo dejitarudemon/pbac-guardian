@@ -543,11 +543,11 @@ func TestTimeEntity_WithStructureFields(t *testing.T) {
 }
 
 /*
-TestTimeEntity_Contains tests using time paths in Contains conditions.
+TestTimeEntity_In tests using time paths in In conditions.
 
-The test checks that time paths can be used in Contains conditions.
+The test checks that time paths can be used in In conditions.
 */
-func TestTimeEntity_Contains(t *testing.T) {
+func TestTimeEntity_In(t *testing.T) {
 	ctx := context.Background()
 
 	now := time.Now()
@@ -565,14 +565,14 @@ func TestTimeEntity_Contains(t *testing.T) {
 	}{
 		{
 			name: "time:now in list - not found (timing difference)",
-			// Test checks that time:now may not be found in Contains list due to timing
+			// Test checks that time:now may not be found in In list due to timing
 			policy: base.RawPolicy{
-				Name:   "time-contains-test",
+				Name:   "time-in-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"time:now": {
-						Contains: []any{now, future1, future2}, // time:now in [now, future1, future2]
+						In: []any{now, future1, future2}, // time:now in [now, future1, future2]
 					},
 				},
 			},
@@ -584,15 +584,15 @@ func TestTimeEntity_Contains(t *testing.T) {
 		},
 		{
 			name: "time:now:1|day in list - not found (timing difference)",
-			// Test checks that time:now:1|day may not be found in Contains list due to timing
+			// Test checks that time:now:1|day may not be found in In list due to timing
 			// Note: time:now:1|day actually adds 2 days (MODIFIERS_PARTS = 2)
 			policy: base.RawPolicy{
-				Name:   "time-modifier-contains-test",
+				Name:   "time-modifier-in-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"time:now:1|day": {
-						Contains: []any{now, future1, future2}, // time:now:1|day in [now, future1, future2]
+						In: []any{now, future1, future2}, // time:now:1|day in [now, future1, future2]
 					},
 				},
 			},

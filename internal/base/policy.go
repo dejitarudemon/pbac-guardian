@@ -64,8 +64,8 @@ The Policy structure contains:
   - action - action in format "entity:action:extra1:extra2..." (e.g., "user:read:profile")
   - effect - policy effect: Effect_ALLOW (allow) or Effect_DENY (deny)
   - conditions - map of conditions. Key - path to field in format "source:field" or "target:field",
-    value - condition to check (Contains, Eq, Neq, Lt, Gt, Le, Ge)
-  - conditionsMap - configuration for condition functions (Contains, Eq, Neq, Lt, Gt, Le, Ge)
+    value - condition to check (In, Eq, Neq, Lt, Gt, Le, Ge)
+  - conditionsMap - configuration for condition functions (In, Eq, Neq, Lt, Gt, Le, Ge)
   - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - cashTree - cache tree for tracking field access counts and disabling cache for rarely accessed fields
 
@@ -116,7 +116,7 @@ the policy for evaluation. It performs the following steps:
 
 Parameters:
   - raw - raw policy structure with public fields (Name, Action, Effect, Conditions)
-  - conditions - configuration for condition functions (Contains, Eq, Neq, Lt, Gt, Le, Ge). Must not be nil.
+  - conditions - configuration for condition functions (In, Eq, Neq, Lt, Gt, Le, Ge). Must not be nil.
   - cash - L1 cache instance for storing field values (can be nil to disable caching)
   - cashTree - cache tree for tracking field access counts (can be nil, cache tracking will be skipped)
 
@@ -147,8 +147,8 @@ func NewPolicy(raw RawPolicy, conditions *ConditionsMap, cash cashing.Casher, ca
 		return nil, NewErrInvalidType("ConditionsMap", nil)
 	}
 
-	if conditions.Contains == nil {
-		return nil, NewErrInvalidType("ConditionsMap.Contains", nil)
+	if conditions.In == nil {
+		return nil, NewErrInvalidType("ConditionsMap.In", nil)
 	}
 	if conditions.Eq == nil {
 		return nil, NewErrInvalidType("ConditionsMap.Eq", nil)
@@ -649,7 +649,7 @@ conditions are met (logical AND).
 The function supports cancellation through context.Context, allowing to interrupt
 condition checking when context is cancelled.
 
-Conditions are checked using direct field access (Contains, Eq, Neq, Lt, Gt) without
+Conditions are checked using direct field access (In, Eq, Neq, Lt, Gt, Le, Ge) without
 reflection, providing optimal performance. Field values are retrieved using the
 load() method, which utilizes L1 cache to optimize performance. The cache is
 scoped by sessionID, which is unique for each evaluation session. This allows
@@ -703,8 +703,8 @@ func (p *Policy) Evaluate(ctx context.Context, source, target any, action string
 				return false, err
 			}
 
-			if condition.Contains != nil {
-				if m, err := p.conditionsMap.Contains(ctx, left, condition.Contains); err != nil || !m {
+			if condition.In != nil {
+				if m, err := p.conditionsMap.In(ctx, left, condition.In); err != nil || !m {
 					return false, err
 				}
 			}

@@ -433,10 +433,10 @@ TestEvaluateWithContextCancellation tests operation cancellation through context
 
 The test checks that long-running condition checking operations can be interrupted
 through context cancellation, and the function returns the corresponding ErrCancelled error.
-This is especially important for Contains operations with large lists.
+This is especially important for In operations with large lists.
 */
 func TestEvaluateWithContextCancellation(t *testing.T) {
-	// Create policy with Contains condition that may take long for large lists
+	// Create policy with In condition that may take long for large lists
 	policies := []base.RawPolicy{
 		{
 			Name:   "test-policy",
@@ -444,7 +444,7 @@ func TestEvaluateWithContextCancellation(t *testing.T) {
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
 				"source:role": {
-					Contains: []any{"admin", "moderator", "user"},
+					In: []any{"admin", "moderator", "user"},
 				},
 			},
 		},

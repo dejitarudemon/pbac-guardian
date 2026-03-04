@@ -3,12 +3,12 @@ Package implemented provides default implementations of condition functions
 and cache mechanisms for the policy evaluation engine.
 
 The package contains:
-  - Default condition functions (Contains, Eq, Neq, Lt, Gt) for policy evaluation
+  - Default condition functions (In, Eq, Neq, Lt, Gt, Le, Ge) for policy evaluation
   - DefaultCasher implementation for L1 caching
 
 The default condition functions support:
   - Primitive types (int, uint, float, string and their variants)
-  - time.Time values (for Eq, Neq, Lt, Gt conditions)
+  - time.Time values (for Eq, Neq, Lt, Gt, Le, Ge conditions)
   - Custom types implementing base.Comparable interface
 */
 package implemented
@@ -30,7 +30,7 @@ DefaultConditionsMap provides default implementations of condition functions.
 
 This configuration is used by default when nil is passed as funcConfig parameter
 to NewGuardianFromPolices or NewGuardianFromFile. It contains standard implementations
-of all condition types: Contains, Eq, Neq, Lt, Gt, Le, and Ge.
+of all condition types: In, Eq, Neq, Lt, Gt, Le, and Ge.
 
 The default functions support:
   - Primitive types (int, uint, float, string and their variants)
@@ -40,13 +40,13 @@ The default functions support:
 */
 var (
 	DefaultConditionsMap = base.ConditionsMap{
-		Contains: ContainsConditionFunc,
-		Eq:       EqConditionFunc,
-		Neq:      NeqConditionFunc,
-		Lt:       LtConditionFunc,
-		Gt:       GtConditionFunc,
-		Le:       LeConditionFunc,
-		Ge:       GeConditionFunc,
+		In:  InConditionFunc,
+		Eq:  EqConditionFunc,
+		Neq: NeqConditionFunc,
+		Lt:  LtConditionFunc,
+		Gt:  GtConditionFunc,
+		Le:  LeConditionFunc,
+		Ge:  GeConditionFunc,
 	}
 )
 
@@ -70,7 +70,7 @@ const (
 )
 
 /*
-ContainsConditionFunc checks if value left is in list right.
+InConditionFunc checks if value left is in list right.
 
 The function uses reflect.DeepEqual to compare elements, allowing it to
 work with any data types. Supports cancellation through context.Context.
@@ -88,7 +88,7 @@ Possible errors:
   - ErrCancelled - operation was cancelled through context.Context
   - ErrInvalidType - right is not a slice or pointer to slice (may be nil)
 */
-func ContainsConditionFunc(ctx context.Context, left, right any) (bool, error) {
+func InConditionFunc(ctx context.Context, left, right any) (bool, error) {
 	if ctx == nil {
 		return false, fmt.Errorf("context is nil")
 	}

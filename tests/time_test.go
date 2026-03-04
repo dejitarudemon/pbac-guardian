@@ -686,11 +686,11 @@ func TestTime_MultipleConditions(t *testing.T) {
 }
 
 /*
-TestTime_Contains tests Contains condition with time.Time values.
+TestTime_In tests In condition with time.Time values.
 
-The test checks that time.Time values can be used in Contains conditions.
+The test checks that time.Time values can be used in In conditions.
 */
-func TestTime_Contains(t *testing.T) {
+func TestTime_In(t *testing.T) {
 	ctx := context.Background()
 
 	now := time.Now()
@@ -708,14 +708,14 @@ func TestTime_Contains(t *testing.T) {
 	}{
 		{
 			name: "time in list - found",
-			// Test checks that time value is found in Contains list
+			// Test checks that time value is found in In list
 			policy: base.RawPolicy{
-				Name:   "time-contains-test",
+				Name:   "time-in-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:created_at": {
-						Contains: []any{past, now, future}, // source:created_at in [past, now, future]
+						In: []any{past, now, future}, // source:created_at in [past, now, future]
 					},
 				},
 			},
@@ -727,14 +727,14 @@ func TestTime_Contains(t *testing.T) {
 		},
 		{
 			name: "time in list - not found",
-			// Test checks that time value is not found in Contains list
+			// Test checks that time value is not found in In list
 			policy: base.RawPolicy{
-				Name:   "time-contains-test",
+				Name:   "time-in-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:created_at": {
-						Contains: []any{past, future}, // source:created_at not in [past, future]
+						In: []any{past, future}, // source:created_at not in [past, future]
 					},
 				},
 			},

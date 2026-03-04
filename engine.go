@@ -102,35 +102,46 @@ import (
 /*
 Guardian is the main engine of the library for checking structures against access policies.
 
-Guardian stores policies organized by actions and provides the Evaluate method
-to check structures against these policies.
+Guardian stores policies organized by actions and effects, providing efficient
+lookup and evaluation of access control rules. The engine uses L1 caching to
+optimize field access during policy evaluation, significantly improving performance
+when the same fields are accessed multiple times within an evaluation session.
 
 To create a Guardian instance, use:
   - NewGuardianFromPolices - create from a list of policies passed programmatically
   - NewGuardianFromFile - create from a JSON file with policies
 
+The engine supports both ALLOW and DENY effects, with DENY policies taking
+precedence over ALLOW policies. Policies are grouped by action for fast lookup
+during evaluation.
+
 Fields:
-  - polices - stores policy pointers organized by actions (action -> []*Policy)
+  - polices - stores policy pointers organized by actions and effects
+    (action -> effect -> []*Policy)
 */
 type Guardian struct {
-	polices map[string][]*base.Policy
+	polices map[string]map[base.Effect][]*base.Policy
 }
 
 /*
 NewGuardianFromPolices creates a new Guardian instance from a list of policies passed programmatically.
 
-The function performs policy validation and checks for duplicate names. Policies
-are grouped by actions for subsequent fast checking.
+The function performs comprehensive policy validation and checks for duplicate names.
+Policies are grouped by actions and effects for subsequent fast lookup during evaluation.
+Each policy is validated to ensure it contains valid paths, conditions, and effect values.
 
-The engine uses the provided Casher instance for L1 caching. If nil is passed,
-caching will be disabled and field values will be retrieved directly via reflection
-on each evaluation. For optimal performance in production scenarios with multiple
-policies accessing the same fields, it is recommended to use DefaultCasher.
+The engine uses the provided Casher instance for L1 caching to optimize field access
+during policy evaluation. If nil is passed, caching will be disabled and field values
+will be retrieved directly via reflection on each evaluation. For optimal performance
+in production scenarios with multiple policies accessing the same fields, it is
+recommended to use DefaultCasher. The cache becomes beneficial when the same field
+is accessed 3+ times within a single evaluation session.
 
 The config parameter allows customizing condition functions and cache behavior.
-If config.ConditionsMap is nil, default condition functions will be used.
-The cache tree tracks field access counts and can disable caching for fields
-that are accessed less than the threshold number of times.
+If config.ConditionsMap is nil, default condition functions (Eq, Neq, In, Lt, Gt, Le, Ge)
+will be used. The cache tree tracks field access counts and can automatically disable
+caching for fields that are accessed less than the threshold number of times, optimizing
+memory usage.
 
 Parameters:
   - cash - instance of cashing.Casher for L1 caching (can be nil to disable caching)
@@ -142,13 +153,16 @@ Returns:
   - error - creation error if policies contain duplicate names or are invalid
 
 Possible errors:
-  - ErrExport - policy export error. May contain:
+  - ErrExport - policy export error wrapping the original error. May contain:
   - ErrDuplicateName - if policies with the same names are found
-  - validation errors from base (ErrInvalidPath) - if policies are invalid
+  - validation errors from base (ErrInvalidPath, ErrInvalidType) - if policies are invalid
+  - file I/O errors - if reading from file fails (for NewGuardianFromFile)
+  - JSON parsing errors - if JSON is malformed (for NewGuardianFromFile)
 
 Example usage:
 
 	import (
+		"github.com/dejitarudemon/pbac-guardian"
 		"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 		"github.com/dejitarudemon/pbac-guardian/internal/base"
 	)
@@ -193,7 +207,8 @@ func NewGuardianFromPolices(cash cashing.Casher, polices []base.RawPolicy, confi
 NewGuardianFromFile creates a new Guardian instance from a JSON file containing an array of policies.
 
 The function reads the file, parses JSON and creates the engine similar to NewGuardianFromPolices.
-The file must contain a valid JSON array of RawPolicy objects.
+The file must contain a valid JSON array of RawPolicy objects. The file is opened in read-only
+mode and read completely into memory before parsing.
 
 The engine uses the provided Casher instance for L1 caching. If nil is passed,
 caching will be disabled and field values will be retrieved directly via reflection
@@ -201,7 +216,9 @@ on each evaluation. For optimal performance in production scenarios with multipl
 policies accessing the same fields, it is recommended to use DefaultCasher.
 
 The config parameter allows customizing condition functions and cache behavior.
-If config.ConditionsMap is nil, default condition functions will be used.
+If config.ConditionsMap is nil, default condition functions (Eq, Neq, In, Lt, Gt, Le, Ge)
+will be used. The cache tree tracks field access counts and can automatically disable
+caching for fields that are accessed less than the threshold number of times.
 
 Parameters:
   - cash - instance of cashing.Casher for L1 caching (can be nil to disable caching)
@@ -213,15 +230,16 @@ Returns:
   - error - creation error if the file is unavailable or contains invalid data
 
 Possible errors:
-  - ErrExport - policy export error. May contain:
-  - file open/read errors (os.PathError, etc.)
-  - JSON parsing errors (json.SyntaxError, etc.)
+  - ErrExport - policy export error wrapping the original error. May contain:
+  - file open/read errors (os.PathError, etc.) - if the file cannot be opened or read
+  - JSON parsing errors (json.SyntaxError, etc.) - if the JSON is malformed
   - ErrDuplicateName - if policies with the same names are found
-  - validation errors from base (ErrInvalidPath) - if policies are invalid
+  - validation errors from base (ErrInvalidPath, ErrInvalidType) - if policies are invalid
 
 Example usage:
 
 	import (
+		"github.com/dejitarudemon/pbac-guardian"
 		"github.com/dejitarudemon/pbac-guardian/internal/implemented"
 		"github.com/dejitarudemon/pbac-guardian/internal/base"
 	)
@@ -273,53 +291,60 @@ Evaluate checks whether source and target structures match policies for the spec
 
 The function finds all policies related to the specified action and checks their
 conditions. The result is determined by the effect logic: policies with DENY effect
-have priority and deny the action if their conditions are not met. Policies with
+have priority and deny the action if their conditions are met. Policies with
 ALLOW effect allow the action if at least one of them passes the check.
 
+The evaluation process follows this order:
+ 1. First, all DENY policies are evaluated. If any DENY policy's conditions are met,
+    the action is immediately denied (returns false, nil).
+ 2. Then, all ALLOW policies are evaluated. If at least one ALLOW policy's conditions
+    are met, the action is allowed (returns true, nil).
+ 3. If no policies match or no ALLOW policies pass, the action is denied (returns false, nil).
+
 The function supports cancellation through context.Context, allowing to interrupt
-long-running condition checking operations.
+long-running condition checking operations. If the context is cancelled during
+evaluation, the function returns (false, ErrCancelled).
 
 Each evaluation session generates a unique sessionID that identifies the cache scope
 for a single policy application. This sessionID is used to cache field values retrieved
 via reflection, avoiding repeated field searches within the same evaluation session.
-The cache is cleared after the evaluation completes.
+The cache is automatically cleared after the evaluation completes, ensuring thread-safety
+and preventing cache pollution between different evaluations.
+
+The function supports various condition types including:
+  - Eq, Neq - equality and inequality checks
+  - In - membership checks (value in list)
+  - Lt, Gt, Le, Ge - comparison operations for numeric and time values
+  - Support for environment variables (env:VARIABLE_NAME)
+  - Support for time values (time:now, time:now:1|day, etc.)
 
 Parameters:
-  - ctx - context for operation cancellation and timeout control
-  - source - first structure to check (usually the action source)
-  - target - second structure to check (usually the action target)
+  - ctx - context for operation cancellation and timeout control (must not be nil)
+  - source - first structure to check (usually the action source, e.g., User)
+  - target - second structure to check (usually the action target, e.g., Document)
   - action - action in format "entity:action:extra..." for which policies are checked
 
 Returns:
   - bool - check result:
   - true - action is allowed (at least one ALLOW policy passed the check)
-  - false - action is denied (no policies for the action, or DENY policy did not pass the check)
+  - false - action is denied (no policies for the action, DENY policy passed, or no ALLOW policies passed)
   - error - execution error if a problem occurred during condition evaluation
 
 Possible errors:
-  - ErrEvaluate - policy evaluation error. May contain errors from base:
+  - ErrEvaluate - policy evaluation error wrapping the original error. May contain errors from base:
   - ErrCancelled - operation was cancelled through context.Context
-  - ErrInvalidPath - path parsing error or field not found
-  - ErrInvalidType - invalid structure or field type
-  - ErrUncomparable - cannot compare values in condition
-  - ErrInexpectedBehavior - internal error
-
-Logic:
- 1. Generate unique sessionID for this evaluation session
- 2. If there are no policies for the specified action, returns (false, nil)
- 3. For each policy, conditions are checked:
-    - If context is cancelled, returns (false, ErrCancelled)
-    - Field values are retrieved using load() which checks cache first (if cash is not nil)
-    - Conditions are checked using direct field access (Contains, Eq, Neq, Lt) for optimal performance
-    - If policy has DENY effect and conditions are not met, returns (false, nil)
-    - If policy has ALLOW effect and conditions are met, sets allowed = true flag
- 4. Returns result: (allowed, nil) or (false, error) on error
+  - ErrInvalidPath - path parsing error or field not found in structure
+  - ErrInvalidType - invalid structure or field type for the condition
+  - ErrUncomparable - cannot compare values in condition (incompatible types)
+  - ErrInexpectedBehavior - internal error (should not occur in normal operation)
 
 Example usage:
 
 	import (
 		"context"
 		"time"
+		"github.com/dejitarudemon/pbac-guardian"
+		"github.com/dejitarudemon/pbac-guardian/internal/base"
 	)
 
 	type User struct {
@@ -344,7 +369,8 @@ Example usage:
 		if err == base.ErrCancelled {
 			// operation was cancelled
 		} else {
-			// other error
+			// other error - unwrap to get details
+			// unwrappedErr := errors.Unwrap(err)
 		}
 	}
 
@@ -356,7 +382,7 @@ Example usage:
 */
 func (n *Guardian) Evaluate(ctx context.Context, source, target any, action string) (bool, error) {
 	if n == nil {
-		return false, NewErrEvaluate(fmt.Errorf("noctis engine is nil"))
+		return false, NewErrEvaluate(fmt.Errorf("guardian engine is nil"))
 	}
 	if ctx == nil {
 		return false, NewErrEvaluate(fmt.Errorf("context is nil"))
@@ -367,23 +393,28 @@ func (n *Guardian) Evaluate(ctx context.Context, source, target any, action stri
 		return false, nil
 	}
 
-	allowed := false
 	sessionID := generateNewSesstionID()
 
-	for _, policy := range polices {
-		ok, err := policy.Evaluate(ctx, source, target, action, sessionID)
+	for _, policy := range polices[base.Effect_DENY] {
+		denied, err := policy.Evaluate(ctx, source, target, action, sessionID)
+		if err != nil {
+			return false, NewErrEvaluate(err)
+		}
+		if denied {
+			return false, nil
+		}
+	}
+
+	for _, policy := range polices[base.Effect_ALLOW] {
+		allowed, err := policy.Evaluate(ctx, source, target, action, sessionID)
 		if err != nil {
 			return false, NewErrEvaluate(err)
 		}
 
-		if policy.Effect() == base.Effect_DENY {
-			if ok {
-				return false, nil
-			}
-		} else {
-			allowed = allowed || ok
+		if allowed {
+			return true, nil
 		}
 	}
 
-	return allowed, nil
+	return false, nil
 }
