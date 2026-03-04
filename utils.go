@@ -31,8 +31,8 @@ Possible errors:
   - ErrDuplicateName - policy name is already used by another policy in the list
   - errors from base.NewPolicy() - ErrInvalidType if conditions map is invalid, ErrInvalidPath when path in policy conditions is invalid
 */
-func export(rawPolices []base.RawPolicy, cash cashing.Casher, config base.Config, tree *cashing.CashTree) (map[string][]*base.Policy, error) {
-	mappedPolices := make(map[string][]*base.Policy)
+func export(rawPolices []base.RawPolicy, cash cashing.Casher, config base.Config, tree *cashing.CashTree) (map[string]map[base.Effect][]*base.Policy, error) {
+	mappedPolices := make(map[string]map[base.Effect][]*base.Policy)
 	usedNames := make(map[string]struct{}, len(rawPolices))
 
 	for _, rawPolicy := range rawPolices {
@@ -48,10 +48,13 @@ func export(rawPolices []base.RawPolicy, cash cashing.Casher, config base.Config
 		}
 
 		if _, ok := mappedPolices[rawPolicy.Action]; !ok {
-			mappedPolices[rawPolicy.Action] = make([]*base.Policy, 0, 1)
+			mappedPolices[rawPolicy.Action] = map[base.Effect][]*base.Policy{
+				base.Effect_ALLOW: make([]*base.Policy, 0),
+				base.Effect_DENY:  make([]*base.Policy, 0),
+			}
 		}
 
-		mappedPolices[rawPolicy.Action] = append(mappedPolices[rawPolicy.Action], policy)
+		mappedPolices[rawPolicy.Action][rawPolicy.Effect] = append(mappedPolices[rawPolicy.Action][rawPolicy.Effect], policy)
 	}
 
 	return mappedPolices, nil

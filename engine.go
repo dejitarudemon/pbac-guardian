@@ -113,7 +113,7 @@ Fields:
   - polices - stores policy pointers organized by actions (action -> []*Policy)
 */
 type Guardian struct {
-	polices map[string][]*base.Policy
+	polices map[string]map[base.Effect][]*base.Policy
 }
 
 /*
@@ -367,23 +367,28 @@ func (n *Guardian) Evaluate(ctx context.Context, source, target any, action stri
 		return false, nil
 	}
 
-	allowed := false
 	sessionID := generateNewSesstionID()
 
-	for _, policy := range polices {
-		ok, err := policy.Evaluate(ctx, source, target, action, sessionID)
+	for _, policy := range polices[base.Effect_DENY] {
+		denied, err := policy.Evaluate(ctx, source, target, action, sessionID)
+		if err != nil {
+			return false, NewErrEvaluate(err)
+		}
+		if denied {
+			return false, nil
+		}
+	}
+
+	for _, policy := range polices[base.Effect_ALLOW] {
+		allowed, err := policy.Evaluate(ctx, source, target, action, sessionID)
 		if err != nil {
 			return false, NewErrEvaluate(err)
 		}
 
-		if policy.Effect() == base.Effect_DENY {
-			if ok {
-				return false, nil
-			}
-		} else {
-			allowed = allowed || ok
+		if allowed {
+			return true, nil
 		}
 	}
 
-	return allowed, nil
+	return false, nil
 }
