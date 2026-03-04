@@ -1,3 +1,90 @@
+## v 1.1.2
+
+### Русский
+
+**Изменено:**
+
+- Реорганизован принцип хранения политик в `Guardian`:
+  - Изменена структура хранения политик с `map[string][]*base.Policy` на `map[string]map[base.Effect][]*base.Policy`
+  - Политики теперь группируются не только по действиям (action), но и по эффектам (ALLOW/DENY)
+  - Это позволяет эффективно разделять политики по эффектам и обеспечивает правильный порядок их проверки
+  - Функция `export` в `utils.go` обновлена для создания вложенной структуры map с группировкой по эффектам
+  - Улучшена производительность поиска политик за счет более структурированной организации данных
+
+**Исправлено:**
+
+- Исправлен критический баг в `engine.Evaluate` с ранним выходом при срабатывании ALLOW эффекта:
+  - Ранее функция могла вернуть `true` (разрешить доступ) сразу после того, как срабатывала первая ALLOW политика, не проверив DENY политики
+  - Теперь функция сначала проверяет все DENY политики, и только если ни одна из них не сработала, проверяет ALLOW политики
+  - Это обеспечивает правильный приоритет DENY политик над ALLOW политиками согласно логике контроля доступа
+  - Порядок проверки: сначала все DENY политики (если хотя бы одна сработала - доступ запрещен), затем все ALLOW политики (если хотя бы одна сработала - доступ разрешен)
+
+**Обновлено:**
+
+- Обновлены и улучшены godoc комментарии в `engine.go`:
+  - Расширено описание структуры `Guardian` с подробностями об организации политик по действиям и эффектам
+  - Улучшена документация `NewGuardianFromPolices` с более подробным описанием параметров, ошибок и примеров использования
+  - Улучшена документация `NewGuardianFromFile` с детальным описанием обработки файлов и возможных ошибок
+  - Значительно расширена документация `Evaluate` с подробным описанием логики оценки, порядка проверки политик и поддерживаемых типов условий
+  - Добавлены примеры использования для всех публичных функций
+  - Исправлена опечатка в сообщении об ошибке ("noctis engine" -> "guardian engine")
+- Обновлены и улучшены godoc комментарии в `utils.go`:
+  - Расширено описание функции `export` с детальным описанием процесса валидации и организации политик
+  - Улучшена документация структуры возвращаемого значения с описанием вложенной структуры map
+  - Расширено описание функции `generateNewSesstionID` с подробностями о формате UUID и использовании в кешировании
+  - Добавлены примеры и пояснения для лучшего понимания работы функций
+
+**Документация:**
+
+- Все godoc комментарии приведены к единому стилю и стандартам Go документации
+- Улучшена читаемость и полнота документации для всех публичных API
+- Добавлены детальные описания возможных ошибок и их источников
+- Улучшены примеры использования для более понятного API
+
+---
+
+### English
+
+**Changed:**
+
+- Reorganized policy storage principle in `Guardian`:
+  - Changed policy storage structure from `map[string][]*base.Policy` to `map[string]map[base.Effect][]*base.Policy`
+  - Policies are now grouped not only by actions but also by effects (ALLOW/DENY)
+  - This allows efficient separation of policies by effects and ensures correct checking order
+  - `export` function in `utils.go` updated to create nested map structure with grouping by effects
+  - Improved policy lookup performance due to more structured data organization
+
+**Fixed:**
+
+- Fixed critical bug in `engine.Evaluate` with early exit when ALLOW effect triggered:
+  - Previously, the function could return `true` (allow access) immediately after the first ALLOW policy matched, without checking DENY policies
+  - Now the function first checks all DENY policies, and only if none of them matched, it checks ALLOW policies
+  - This ensures correct priority of DENY policies over ALLOW policies according to access control logic
+  - Checking order: first all DENY policies (if any matched - access denied), then all ALLOW policies (if any matched - access allowed)
+
+**Updated:**
+
+- Updated and improved godoc comments in `engine.go`:
+  - Expanded `Guardian` structure description with details about policy organization by actions and effects
+  - Enhanced `NewGuardianFromPolices` documentation with detailed parameter descriptions, error handling, and usage examples
+  - Enhanced `NewGuardianFromFile` documentation with detailed file handling and error descriptions
+  - Significantly expanded `Evaluate` documentation with detailed evaluation logic, policy checking order, and supported condition types
+  - Added usage examples for all public functions
+  - Fixed typo in error message ("noctis engine" -> "guardian engine")
+- Updated and improved godoc comments in `utils.go`:
+  - Expanded `export` function description with detailed validation and policy organization process
+  - Enhanced return value structure documentation with nested map structure description
+  - Expanded `generateNewSesstionID` documentation with UUID format details and caching usage
+  - Added examples and explanations for better function understanding
+
+**Documentation:**
+
+- All godoc comments standardized to Go documentation style and conventions
+- Improved readability and completeness of documentation for all public APIs
+- Added detailed descriptions of possible errors and their sources
+- Enhanced usage examples for clearer API understanding
+
+
 ## v 1.1.0
 
 ### Русский
