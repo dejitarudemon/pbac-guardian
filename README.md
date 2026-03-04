@@ -1,5 +1,6 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/username/project.svg)](https://pkg.go.dev/github.com/dejitarudemon/pbac-guardian)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dejitarudemon/pbac-guardian)](https://goreportcard.com/report/github.com/dejitarudemon/pbac-guardian)
+[![GitHub License](https://img.shields.io/github/license/username/project)](https://github.com/dejitarudemon/pbac-guardian/blob/main/LICENSE)
 
 # pbac-guardian
 
