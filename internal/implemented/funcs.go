@@ -48,6 +48,18 @@ var (
 	}
 )
 
+/*
+Comparison type constants for primitive value comparison.
+
+These constants are used internally by comparePrimitives and compare functions
+to specify the type of comparison operation to perform.
+
+Values:
+  - LE - less than or equal (<=)
+  - LT - less than (<)
+  - GE - greater than or equal (>=)
+  - GT - greater than (>)
+*/
 const (
 	LE = iota
 	LT
@@ -311,7 +323,7 @@ func GtConditionFunc(ctx context.Context, left, right any) (bool, error) {
 }
 
 /*
-LtconditionFunc checks if left is less than or equal to right.
+LeConditionFunc checks if left is less than or equal to right.
 
 The function uses the following comparison logic:
  1. For primitive types (int, uint, float, string), comparison is done through reflection
@@ -482,6 +494,33 @@ func timesCompare(left, right any) (int, bool) {
 	return 0, true
 }
 
+/*
+comparePrimitives compares two primitive values using reflection.
+
+The function supports comparison of numeric types (int, uint, float) and strings.
+It handles pointer types by dereferencing them before comparison. The comparison
+type is specified by the compareType parameter (LE, LT, GE, GT).
+
+Parameters:
+  - left - first value to compare (must be a primitive type or pointer to primitive)
+  - right - second value to compare (must be a primitive type or pointer to primitive)
+  - compareType - type of comparison to perform (LE, LT, GE, or GT)
+
+Returns:
+  - bool - comparison result based on compareType
+  - error - execution error if types don't match or are not supported primitives
+
+Possible errors:
+  - ErrUncomparable - left and right types don't match
+  - ErrInvalidType - left or right is not a supported primitive type or is nil pointer
+
+Supported types:
+  - int, int8, int16, int32, int64
+  - uint, uint8, uint16, uint32, uint64
+  - float32, float64
+  - string
+  - Pointers to any of the above types
+*/
 func comparePrimitives(left, right any, compareType uint) (bool, error) {
 	v1 := reflect.ValueOf(left)
 	v2 := reflect.ValueOf(right)
@@ -520,10 +559,50 @@ func comparePrimitives(left, right any, compareType uint) (bool, error) {
 	return false, base.NewErrInvalidType(SUPPORTED_LT_GT_PRIMITIVES, v1.Kind().String())
 }
 
+/*
+ordered is a type constraint for ordered types that support comparison operators.
+
+The constraint includes all numeric types (signed and unsigned integers, floats)
+and strings. The tilde (~) prefix allows the constraint to match both the base
+type and any custom types defined with that base type (e.g., type UserID int).
+
+This constraint is used by the compare function to ensure type safety while
+allowing comparison operations (<, <=, >, >=) on generic type parameters.
+
+Supported types:
+  - int, int8, int16, int32, int64
+  - uint, uint8, uint16, uint32, uint64
+  - float32, float64
+  - string
+  - Any custom types with these base types (e.g., type MyInt int)
+*/
 type ordered interface {
 	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~float32 | ~float64 | ~string
 }
 
+/*
+compare performs comparison of two ordered values based on the comparison type.
+
+The function is a generic helper used internally by comparePrimitives to perform
+the actual comparison operation. It supports all comparison types: less than or
+equal (LE), less than (LT), greater than or equal (GE), and greater than (GT).
+
+Parameters:
+  - left - first value to compare
+  - right - second value to compare
+  - compareType - type of comparison to perform (LE, LT, GE, or GT)
+
+Returns:
+  - bool - comparison result:
+  - For LE: true if left <= right
+  - For LT: true if left < right
+  - For GE: true if left >= right
+  - For GT: true if left > right
+  - false for any other compareType value
+
+The function uses the ordered constraint to ensure that only types supporting
+comparison operators can be used, providing compile-time type safety.
+*/
 func compare[T ordered](left, right T, compareType uint) bool {
 	switch compareType {
 	case LE:
