@@ -4,7 +4,7 @@
 
 # pbac-guardian
 
-Current version: 1.1.0
+Current version: 1.1.1
 
 [English](#english)
 
@@ -544,7 +544,42 @@ Time modifiers:
 - `"time:now:30|minute"` - current time + 30 minutes
 - Supported units: `day`, `hour`, `minute`, `second`, `milisecond`
 
-### Tutorial 9: Custom Types with Comparable Interface
+### Tutorial 9: Map Fields in Structures
+
+This tutorial shows how to use map fields in structures to access fields in nested structures.
+
+```go
+type Group struct {
+    Name string `pbac-guardian:"name"`
+}
+
+type User struct {
+    Login  string           `pbac-guardian:"login"`
+    Groups map[string]Group `pbac-guardian:"groups"`
+}
+
+policies := []base.RawPolicy{
+    {
+        Name:   "admin-group-access",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:groups:admins:name": {
+                Eq: "Administrators", // Access name field in Group structure stored in map under "admins" key
+            },
+        },
+    },
+}
+```
+
+The path `"source:groups:admins:name"` works as follows:
+- `groups` - field of type `map[string]Group` in `User` structure
+- `admins` - key in map where `Group` structure is stored
+- `name` - field in `Group` structure
+
+The library supports any map types with string keys (not just `map[string]any`).
+
+### Tutorial 10: Custom Types with Comparable Interface
 
 For custom types that need special comparison logic, implement the `Comparable` interface.
 
@@ -628,6 +663,9 @@ Public methods:
 
 Paths in conditions can reference:
 - **Structure fields**: `"source:field"`, `"target:field"` - fields from source/target structures
+- **Map values**: `"source:mapKey"`, `"target:metadata:key"` - values from maps (map[string]any or map[string]T)
+- **Map fields in structures**: `"source:groups:admins:name"` - access fields in structures stored in map fields
+  - Example: `User { Groups map[string]Group }` with path `"source:groups:admins:name"` accesses `name` field in `Group` structure stored under `"admins"` key
 - **Environment variables**: `"env:VARIABLE_NAME"` - values from environment variables
 - **Time values**: `"time:now"` - current time, `"time:now:1|day"` - current time with modifiers
   - Supported modifiers: `day`, `hour`, `minute`, `second`, `milisecond`
@@ -1184,7 +1222,42 @@ policies := []base.RawPolicy{
 - `"time:now:30|minute"` - текущее время + 30 минут
 - Поддерживаемые единицы: `day`, `hour`, `minute`, `second`, `milisecond`
 
-### Туториал 9: Кастомные типы с интерфейсом Comparable
+### Туториал 9: Map поля в структурах
+
+Этот туториал показывает, как использовать map поля в структурах для доступа к полям вложенных структур.
+
+```go
+type Group struct {
+    Name string `pbac-guardian:"name"`
+}
+
+type User struct {
+    Login  string           `pbac-guardian:"login"`
+    Groups map[string]Group `pbac-guardian:"groups"`
+}
+
+policies := []base.RawPolicy{
+    {
+        Name:   "admin-group-access",
+        Action: "user:read:document",
+        Effect: base.Effect_ALLOW,
+        Conditions: map[string]base.Condition{
+            "source:groups:admins:name": {
+                Eq: "Administrators", // Доступ к полю name в структуре Group, хранящейся в map под ключом "admins"
+            },
+        },
+    },
+}
+```
+
+Путь `"source:groups:admins:name"` работает следующим образом:
+- `groups` - поле типа `map[string]Group` в структуре `User`
+- `admins` - ключ в map, по которому находится структура `Group`
+- `name` - поле в структуре `Group`
+
+Библиотека поддерживает любые типы map с ключами типа string (не только `map[string]any`).
+
+### Туториал 10: Кастомные типы с интерфейсом Comparable
 
 Для кастомных типов, требующих специальной логики сравнения, реализуйте интерфейс `Comparable`.
 

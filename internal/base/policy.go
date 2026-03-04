@@ -336,9 +336,9 @@ traversing the found value.
 This function enables access to fields in structures stored in map fields, for example:
   - Structure with map field: User { Groups map[string]Group }
   - Path: "source:groups:admins:name"
-    - "groups" - map field in User
-    - "admins" - key in map
-    - "name" - field in Group structure
+  - "groups" - map field in User
+  - "admins" - key in map
+  - "name" - field in Group structure
 
 Parameters:
   - value - reflect.Value of the map to search in
@@ -351,8 +351,8 @@ Returns:
 Possible errors:
   - ErrInvalidType - value is not a map
   - ErrInvalidPath - occurs if:
-    - map key doesn't exist (path[0] not found in map)
-    - map value is unexported (not accessible via CanInterface())
+  - map key doesn't exist (path[0] not found in map)
+  - map value is unexported (not accessible via CanInterface())
 */
 func (p *Policy) loadFieldFromMap(value reflect.Value, path []string) (any, error) {
 	if value.Kind() != reflect.Map {
@@ -410,10 +410,10 @@ Returns:
 Possible errors:
   - ErrInvalidType - entity is not a structure, pointer to structure, or map
   - ErrInvalidPath - occurs if:
-    - field not found (no tag with corresponding name in structure)
-    - map key doesn't exist
-    - field is unexported (not accessible via CanInterface())
-    - entity is nil pointer
+  - field not found (no tag with corresponding name in structure)
+  - map key doesn't exist
+  - field is unexported (not accessible via CanInterface())
+  - entity is nil pointer
 */
 func (p *Policy) loadField(entity any, path []string) (any, error) {
 	v := reflect.ValueOf(entity)
