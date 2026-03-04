@@ -1,3 +1,6 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/username/project.svg)](https://pkg.go.dev/github.com/dejitarudemon/pbac-guardian)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dejitarudemon/pbac-guardian)](https://goreportcard.com/report/github.com/dejitarudemon/pbac-guardian)
+
 # pbac-guardian
 
 Current version: 1.1.0
