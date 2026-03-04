@@ -25,6 +25,8 @@ Fields:
   - Neq - checks inequality of values (left != right)
   - Lt - checks if left value is less than right (left < right)
   - Gt - checks if left value is greater than right (left > right)
+  - Le - checks if left value is less than or equal to right (left <= right)
+  - Ge - checks if left value is greater than or equal to right (left >= right)
 
 Example usage:
 
@@ -79,13 +81,15 @@ type Condition struct {
 	Neq      any   `json:"neq,omitempty"`
 	Lt       any   `json:"lt,omitempty"`
 	Gt       any   `json:"gt,omitempty"`
+	Le       any   `json:"le,omitempty"`
+	Ge       any   `json:"ge,omitempty"`
 }
 
 /*
 ConditionFunc represents a function for checking a condition between two values.
 
 Functions of this type are used to check conditions in policies. Argument order
-matters for Contains, Lt, and Gt operations (left and right are not interchangeable).
+matters for Contains, Lt, Gt, Le, and Ge operations (left and right are not interchangeable).
 
 Functions must support cancellation through context.Context and return ErrCancelled
 when context is cancelled.
