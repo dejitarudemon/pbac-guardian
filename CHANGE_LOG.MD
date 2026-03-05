@@ -1,3 +1,133 @@
+## v 1.1.7
+
+### Русский
+
+**Добавлено:**
+
+- Функция `NewDefaultConfig()` в пакете `implemented` для создания конфигурации по умолчанию:
+  - Возвращает `base.Config` с `DefaultConditionsMap` и `DEFAULT_CASH_DISABLE_THRESHOLD` (3)
+  - Упрощает создание конфигурации для движка Guardian
+  - Добавлены godoc комментарии с описанием и примерами использования
+- Операция `Any` для проверки коллекций:
+  - Проверяет, удовлетворяет ли хотя бы один элемент коллекции (slice/array) всем вложенным условиям
+  - Логика OR для элементов: хотя бы один элемент должен удовлетворять
+  - Логика AND для условий: все условия в Any должны быть выполнены для одного элемента
+  - Поддержка префикса `"item:"` для ссылки на текущий элемент при итерации
+  - Добавлено поле `Any map[string]Condition` в структуру `Condition`
+  - Реализована логика обработки `Any` в `Policy.evaluate`
+  - Добавлены комплексные тесты для операции `Any` (`tests/any_condition_test.go`)
+
+- Операция `All` для проверки коллекций:
+  - Проверяет, удовлетворяют ли все элементы коллекции (slice/array) всем вложенным условиям
+  - Логика AND для элементов: все элементы должны удовлетворять
+  - Логика AND для условий: все условия в All должны быть выполнены для каждого элемента
+  - Поддержка префикса `"item:"` для ссылки на текущий элемент при итерации
+  - Добавлено поле `All map[string]Condition` в структуру `Condition`
+  - Реализована логика обработки `All` в `Policy.evaluate`
+  - Добавлены комплексные тесты для операции `All` (`tests/all_condition_test.go`)
+
+**Изменено:**
+
+- Обновлены godoc комментарии в `condition.go`:
+  - Добавлено описание полей `Any` и `All` в структуре `Condition`
+  - Добавлены примеры использования операций `Any` и `All`
+- Обновлены godoc комментарии в `policy.go`:
+  - Добавлено упоминание `Any` и `All` в описании условий
+  - Добавлено описание логики работы `Any` и `All` в методе `Evaluate`
+  - Добавлено описание использования префикса `"item:"` для ссылки на текущий элемент
+- Улучшена валидация политик в методе `Policy.IsValid`:
+  - Добавлена проверка всех путей в значениях условий (Eq, Neq, Lt, Gt, Le, Ge, In)
+  - Добавлена рекурсивная проверка всех путей во вложенных условиях Any и All
+  - Добавлена проверка, что каждый путь в левых значениях (ключах условий) является валидным путём
+  - Добавлена проверка, что entity `item:` может использоваться только внутри условий Any и All
+  - Строки, содержащие ":", должны быть валидными путями, иначе возвращается ошибка
+  - Строки без ":" считаются литеральными значениями и не требуют валидации
+
+**Исправлено:**
+
+- Исправлена валидация путей в правых значениях условий - теперь все пути проверяются на валидность
+- Исправлена валидация путей во вложенных условиях Any/All - теперь все пути рекурсивно проверяются
+
+**Обновлено:**
+
+- Обновлена документация в `README.md`:
+  - Добавлено описание операций `Any` и `All` в разделе "Condition Types"
+  - Добавлено описание префикса `"item:"` в разделе "Path Types"
+  - Обновлено описание функций в разделе "Features"
+  - Добавлены примеры использования для русского и английского разделов
+  - Обновлены примеры кода для использования `implemented.NewDefaultConfig()` вместо прямого создания `base.Config`
+- Добавлены комплексные тесты для валидации политик:
+  - Проверка путей в значениях условий (Eq, Neq, Lt, Gt, Le, Ge, In)
+  - Проверка вложенных условий Any и All
+  - Проверка использования entity `item:` только внутри Any/All
+  - Проверка невалидных путей в различных местах политики
+
+---
+
+### English
+
+**Added:**
+
+- `NewDefaultConfig()` function in `implemented` package for creating default configuration:
+  - Returns `base.Config` with `DefaultConditionsMap` and `DEFAULT_CASH_DISABLE_THRESHOLD` (3)
+  - Simplifies configuration creation for Guardian engine
+  - Added godoc comments with description and usage examples
+- `Any` operation for collection checking:
+  - Checks if at least one element in a collection (slice/array) satisfies all nested conditions
+  - OR logic for elements: at least one element must satisfy
+  - AND logic for conditions: all conditions in Any must be satisfied for one element
+  - Support for `"item:"` prefix to reference the current element during iteration
+  - Added `Any map[string]Condition` field to `Condition` struct
+  - Implemented `Any` handling logic in `Policy.evaluate`
+  - Added comprehensive tests for `Any` operation (`tests/any_condition_test.go`)
+
+- `All` operation for collection checking:
+  - Checks if all elements in a collection (slice/array) satisfy all nested conditions
+  - AND logic for elements: all elements must satisfy
+  - AND logic for conditions: all conditions in All must be satisfied for each element
+  - Support for `"item:"` prefix to reference the current element during iteration
+  - Added `All map[string]Condition` field to `Condition` struct
+  - Implemented `All` handling logic in `Policy.evaluate`
+  - Added comprehensive tests for `All` operation (`tests/all_condition_test.go`)
+
+**Changed:**
+
+- Updated godoc comments in `condition.go`:
+  - Added description of `Any` and `All` fields in `Condition` struct
+  - Added usage examples for `Any` and `All` operations
+- Updated godoc comments in `policy.go`:
+  - Added mention of `Any` and `All` in conditions description
+  - Added description of `Any` and `All` logic in `Evaluate` method
+  - Added description of `"item:"` prefix usage for referencing current element
+- Improved policy validation in `Policy.IsValid` method:
+  - Added validation of all paths in condition values (Eq, Neq, Lt, Gt, Le, Ge, In)
+  - Added recursive validation of all paths in nested Any and All conditions
+  - Added validation that every path in left values (condition keys) is a valid path
+  - Added validation that `item:` entity can only be used within Any and All conditions
+  - Strings containing ":" must be valid paths, otherwise an error is returned
+  - Strings without ":" are considered literal values and don't require validation
+
+**Fixed:**
+
+- Fixed validation of paths in condition right values - now all paths are validated
+- Fixed validation of paths in nested Any/All conditions - now all paths are recursively validated
+
+**Updated:**
+
+- Updated documentation in `README.md`:
+  - Added description of `Any` and `All` operations in "Condition Types" section
+  - Added description of `"item:"` prefix in "Path Types" section
+  - Updated feature description in "Features" section
+  - Added usage examples for both English and Russian sections
+  - Updated code examples to use `implemented.NewDefaultConfig()` instead of direct `base.Config` creation
+- Added comprehensive tests for policy validation:
+  - Validation of paths in condition values (Eq, Neq, Lt, Gt, Le, Ge, In)
+  - Validation of nested Any and All conditions
+  - Validation of `item:` entity usage only within Any/All
+  - Validation of invalid paths in various places in policy
+
+---
+
 ## v 1.1.2
 
 ### Русский
