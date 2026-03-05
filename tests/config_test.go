@@ -31,10 +31,10 @@ func TestConditionFuncsConfigSelect(t *testing.T) {
 		wantFunc string
 	}{
 		{
-			name:     "select Contains",
-			key:      "Contains",
+			name:     "select In",
+			key:      "In",
 			wantNil:  false,
-			wantFunc: "Contains",
+			wantFunc: "In",
 		},
 		{
 			name:     "select Eq",
@@ -91,13 +91,13 @@ func TestConditionFuncsConfigSelect(t *testing.T) {
 TestConditionFuncsConfigAllFunctionsPresent tests that all required functions are present in DefaultConditionsMap.
 
 The test checks that DefaultConditionsMap contains all four condition functions:
-Contains, Eq, Neq, and Lt.
+In, Eq, Neq, and Lt.
 */
 func TestConditionFuncsConfigAllFunctionsPresent(t *testing.T) {
 	config := implemented.DefaultConditionsMap
 
-	if config.Contains == nil {
-		t.Error("DefaultConditionsMap.Contains is nil")
+	if config.In == nil {
+		t.Error("DefaultConditionsMap.In is nil")
 	}
 	if config.Eq == nil {
 		t.Error("DefaultConditionsMap.Eq is nil")
@@ -130,9 +130,9 @@ func TestConditionFuncsConfigCustomConfig(t *testing.T) {
 	}
 
 	// Test that Select returns nil for absent functions
-	containsFunc := customConfig.Select("Contains")
-	if containsFunc != nil {
-		t.Error("Select(\"Contains\") returned function, expected nil")
+	inFunc := customConfig.Select("In")
+	if inFunc != nil {
+		t.Error("Select(\"In\") returned function, expected nil")
 	}
 
 	neqFunc := customConfig.Select("Neq")

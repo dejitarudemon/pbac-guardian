@@ -4,7 +4,7 @@
 
 # pbac-guardian
 
-Current version: 1.1.1
+Current version: 1.1.7
 
 [English](#english)
 
@@ -23,7 +23,7 @@ Current version: 1.1.1
 
 - **Simple API**: Minimalistic and easy to use
 - **Declarative Policies**: Define policies in JSON or programmatically
-- **Flexible Conditions**: Support for equality, inequality, less-than, greater-than, less-than-or-equal, greater-than-or-equal, and contains operations
+- **Flexible Conditions**: Support for equality, inequality, less-than, greater-than, less-than-or-equal, greater-than-or-equal, contains operations, and collection operations (Any, All)
 - **Time Support**: Built-in support for time values and time modifiers (e.g., "time:now", "time:now:1|day")
 - **Environment Variables**: Support for environment variables in policy conditions (e.g., "env:VAR_NAME")
 - **Context Support**: Built-in support for cancellation and timeouts via `context.Context`
@@ -103,10 +103,7 @@ import (
 casher := implemented.NewDefaultCasher()
 
     // Create engine with default config
-    config := base.Config{
-        ConditionsMap:        nil, // use default condition functions
-        CashDisableThreShold: 3,   // disable cache for fields accessed < 3 times
-    }
+    config := implemented.NewDefaultConfig() // or use base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
     engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 if err != nil {
     panic(err)
@@ -174,7 +171,7 @@ func main() {
     }
 
     // Create engine with default config (nil casher disables caching)
-    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    config := implemented.NewDefaultConfig() // or use base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
     engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
     if err != nil {
         panic(err)
@@ -234,7 +231,7 @@ import (
 
 func main() {
     // Load policies from file with default config (nil casher disables caching)
-    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    config := implemented.NewDefaultConfig() // or use base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
     engine, err := guardian.NewGuardianFromFile(nil, "policies.json", config)
     if err != nil {
         panic(err)
@@ -268,7 +265,7 @@ policies := []base.RawPolicy{
                 Lt: 18, // age < 18
             },
             "target:tags": {
-                Contains: []any{"public"}, // "public" in tags
+                In: []any{"public"}, // "public" in tags
             },
         },
     },
@@ -290,7 +287,7 @@ policies := []base.RawPolicy{
                 Lt: 18, // age < 18
             },
             "target:tags": {
-                Contains: []any{"adult-only"},
+                In: []any{"adult-only"},
             },
         },
     },
@@ -360,7 +357,7 @@ func main() {
 
     // Enable caching for better performance with repeated field access
     casher := implemented.NewDefaultCasher()
-    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    config := implemented.NewDefaultConfig() // or use base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
     engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
     if err != nil {
         panic(err)
@@ -423,7 +420,7 @@ func main() {
 
     // Create custom ConditionsMap
     customConditionsMap := &base.ConditionsMap{
-        Contains: implemented.DefaultConditionsMap.Contains,
+        In:  implemented.DefaultConditionsMap.In,
         Eq:       customEqFunc, // Use custom function
         Neq:      implemented.DefaultConditionsMap.Neq,
         Lt:       implemented.DefaultConditionsMap.Lt,
@@ -542,7 +539,7 @@ Time modifiers:
 - `"time:now:1|day"` - current time + 1 day
 - `"time:now:2|hour"` - current time + 2 hours
 - `"time:now:30|minute"` - current time + 30 minutes
-- Supported units: `day`, `hour`, `minute`, `second`, `milisecond`
+- Supported units: `day`, `hour`, `minute`, `second`, `millisecond`
 
 ### Tutorial 9: Map Fields in Structures
 
@@ -657,7 +654,15 @@ Public methods:
 - **Gt**: Greater than check (`left > right`)
 - **Le**: Less than or equal check (`left <= right`)
 - **Ge**: Greater than or equal check (`left >= right`)
-- **Contains**: Checks if `left` is in `right` (slice)
+- **In**: Checks if `left` is in `right` (slice)
+- **Any**: Checks if at least one element in a collection (slice/array) satisfies all nested conditions
+  - OR logic for elements: at least one element must satisfy
+  - AND logic for conditions: all conditions in Any must be satisfied for one element
+  - Use `"item:"` prefix to reference the current element within Any conditions
+- **All**: Checks if all elements in a collection (slice/array) satisfy all nested conditions
+  - AND logic for elements: all elements must satisfy
+  - AND logic for conditions: all conditions in All must be satisfied for each element
+  - Use `"item:"` prefix to reference the current element within All conditions
 
 ### Path Types
 
@@ -666,9 +671,10 @@ Paths in conditions can reference:
 - **Map values**: `"source:mapKey"`, `"target:metadata:key"` - values from maps (map[string]any or map[string]T)
 - **Map fields in structures**: `"source:groups:admins:name"` - access fields in structures stored in map fields
   - Example: `User { Groups map[string]Group }` with path `"source:groups:admins:name"` accesses `name` field in `Group` structure stored under `"admins"` key
+- **Item reference**: `"item:field"` - reference to the current element when iterating over collections in Any/All conditions
 - **Environment variables**: `"env:VARIABLE_NAME"` - values from environment variables
 - **Time values**: `"time:now"` - current time, `"time:now:1|day"` - current time with modifiers
-  - Supported modifiers: `day`, `hour`, `minute`, `second`, `milisecond`
+  - Supported modifiers: `day`, `hour`, `minute`, `second`, `millisecond`
   - Format: `"time:now:value|unit"` (e.g., `"time:now:2|hour"`)
 
 ### Effects
@@ -781,10 +787,7 @@ import (
 casher := implemented.NewDefaultCasher()
 
     // Создание движка с конфигурацией по умолчанию
-    config := base.Config{
-        ConditionsMap:        nil, // использовать функции условий по умолчанию
-        CashDisableThreShold: 3,   // отключить кеш для полей, к которым обращаются < 3 раз
-    }
+    config := implemented.NewDefaultConfig() // или используйте base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
     engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
 if err != nil {
     panic(err)
@@ -852,7 +855,7 @@ func main() {
     }
 
     // Создание движка с конфигурацией по умолчанию (nil casher отключает кеширование)
-    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    config := implemented.NewDefaultConfig() // или используйте base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
     engine, err := guardian.NewGuardianFromPolices(nil, policies, config)
     if err != nil {
         panic(err)
@@ -912,7 +915,7 @@ import (
 
 func main() {
     // Загрузка политик из файла с конфигурацией по умолчанию (nil casher отключает кеширование)
-    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    config := implemented.NewDefaultConfig() // или используйте base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
     engine, err := guardian.NewGuardianFromFile(nil, "policies.json", config)
     if err != nil {
         panic(err)
@@ -946,7 +949,7 @@ policies := []base.RawPolicy{
                 Lt: 18, // возраст < 18
             },
             "target:tags": {
-                Contains: []any{"public"}, // "public" в тегах
+                In: []any{"public"}, // "public" в тегах
             },
         },
     },
@@ -968,7 +971,7 @@ policies := []base.RawPolicy{
                 Lt: 18, // возраст < 18
             },
             "target:tags": {
-                Contains: []any{"adult-only"},
+                In: []any{"adult-only"},
             },
         },
     },
@@ -1038,7 +1041,7 @@ func main() {
 
     // Включить кеширование для лучшей производительности при повторном доступе к полям
     casher := implemented.NewDefaultCasher()
-    config := base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
+    config := implemented.NewDefaultConfig() // или используйте base.Config{ConditionsMap: nil, CashDisableThreShold: 3}
     engine, err := guardian.NewGuardianFromPolices(casher, policies, config)
     if err != nil {
         panic(err)
@@ -1101,7 +1104,7 @@ func main() {
 
     // Создание кастомной ConditionsMap
     customConditionsMap := &base.ConditionsMap{
-        Contains: implemented.DefaultConditionsMap.Contains,
+        In:  implemented.DefaultConditionsMap.In,
         Eq:       customEqFunc, // Использовать кастомную функцию
         Neq:      implemented.DefaultConditionsMap.Neq,
         Lt:       implemented.DefaultConditionsMap.Lt,
@@ -1220,7 +1223,7 @@ policies := []base.RawPolicy{
 - `"time:now:1|day"` - текущее время + 1 день
 - `"time:now:2|hour"` - текущее время + 2 часа
 - `"time:now:30|minute"` - текущее время + 30 минут
-- Поддерживаемые единицы: `day`, `hour`, `minute`, `second`, `milisecond`
+- Поддерживаемые единицы: `day`, `hour`, `minute`, `second`, `millisecond`
 
 ### Туториал 9: Map поля в структурах
 
@@ -1335,15 +1338,27 @@ type RawPolicy struct {
 - **Gt**: Проверка больше (`left > right`)
 - **Le**: Проверка меньше или равно (`left <= right`)
 - **Ge**: Проверка больше или равно (`left >= right`)
-- **Contains**: Проверяет, находится ли `left` в `right` (slice)
+- **In**: Проверяет, находится ли `left` в `right` (slice)
+- **Any**: Проверяет, удовлетворяет ли хотя бы один элемент коллекции (slice/array) всем вложенным условиям
+  - Логика OR для элементов: хотя бы один элемент должен удовлетворять
+  - Логика AND для условий: все условия в Any должны быть выполнены для одного элемента
+  - Используйте префикс `"item:"` для ссылки на текущий элемент в условиях Any
+- **All**: Проверяет, удовлетворяют ли все элементы коллекции (slice/array) всем вложенным условиям
+  - Логика AND для элементов: все элементы должны удовлетворять
+  - Логика AND для условий: все условия в All должны быть выполнены для каждого элемента
+  - Используйте префикс `"item:"` для ссылки на текущий элемент в условиях All
 
 ### Типы путей
 
 Пути в условиях могут ссылаться на:
 - **Поля структур**: `"source:field"`, `"target:field"` - поля из структур source/target
+- **Значения из map**: `"source:mapKey"`, `"target:metadata:key"` - значения из map (map[string]any или map[string]T)
+- **Поля структур в map**: `"source:groups:admins:name"` - доступ к полям структур, хранящихся в map полях
+  - Пример: `User { Groups map[string]Group }` с путем `"source:groups:admins:name"` обращается к полю `name` структуры `Group`, хранящейся под ключом `"admins"`
+- **Ссылка на элемент**: `"item:field"` - ссылка на текущий элемент при итерации по коллекциям в условиях Any/All
 - **Переменные окружения**: `"env:VARIABLE_NAME"` - значения из переменных окружения
 - **Значения времени**: `"time:now"` - текущее время, `"time:now:1|day"` - текущее время с модификаторами
-  - Поддерживаемые модификаторы: `day`, `hour`, `minute`, `second`, `milisecond`
+  - Поддерживаемые модификаторы: `day`, `hour`, `minute`, `second`, `millisecond`
   - Формат: `"time:now:value|unit"` (например, `"time:now:2|hour"`)
 
 ### Эффекты

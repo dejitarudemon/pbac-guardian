@@ -3,7 +3,7 @@ Package tests contains tests for environment variable support in policies.
 
 Tests check the work of Entity_ENV through policy evaluation, verifying that
 environment variables can be used in policy conditions. The tests verify:
-  - Using environment variables in conditions (Eq, Neq, Contains, Lt)
+  - Using environment variables in conditions (Eq, Neq, In, Lt)
   - Comparing environment variables with structure fields
   - Comparing environment variables with literal values
   - Error handling when environment variables don't exist
@@ -275,11 +275,11 @@ func TestEnvVariable_Neq(t *testing.T) {
 }
 
 /*
-TestEnvVariable_Contains tests Contains condition with environment variables.
+TestEnvVariable_In tests In condition with environment variables.
 
-The test checks that environment variables can be used in Contains conditions.
+The test checks that environment variables can be used in In conditions.
 */
-func TestEnvVariable_Contains(t *testing.T) {
+func TestEnvVariable_In(t *testing.T) {
 	ctx := context.Background()
 
 	// Set up test environment variable
@@ -299,14 +299,14 @@ func TestEnvVariable_Contains(t *testing.T) {
 	}{
 		{
 			name: "env in list - found",
-			// Test checks that env variable value is found in Contains list
+			// Test checks that env variable value is found in In list
 			policy: base.RawPolicy{
-				Name:   "env-contains-test",
+				Name:   "env-in-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"env:" + testEnvVar: {
-						Contains: []any{"admin", "moderator", "user"}, // env:TEST_ENV_VAR_CONTAINS in list
+						In: []any{"admin", "moderator", "user"}, // env:TEST_ENV_VAR_IN in list
 					},
 				},
 			},
@@ -318,14 +318,14 @@ func TestEnvVariable_Contains(t *testing.T) {
 		},
 		{
 			name: "env in list - not found",
-			// Test checks that env variable value is not found in Contains list
+			// Test checks that env variable value is not found in In list
 			policy: base.RawPolicy{
-				Name:   "env-contains-test",
+				Name:   "env-in-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"env:" + testEnvVar: {
-						Contains: []any{"moderator", "user"}, // env:TEST_ENV_VAR_CONTAINS not in list
+						In: []any{"moderator", "user"}, // env:TEST_ENV_VAR_IN not in list
 					},
 				},
 			},
@@ -345,7 +345,7 @@ func TestEnvVariable_Contains(t *testing.T) {
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:role": {
-						Contains: []any{testEnvValue, "moderator", "user"}, // source:role in ["admin", "moderator", "user"]
+						In: []any{testEnvValue, "moderator", "user"}, // source:role in ["admin", "moderator", "user"]
 					},
 				},
 			},
@@ -922,4 +922,3 @@ func TestEnvVariable_WithCache(t *testing.T) {
 		t.Errorf("second evaluation: Evaluate() = %v, want true", got2)
 	}
 }
-

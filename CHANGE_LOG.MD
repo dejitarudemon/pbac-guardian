@@ -1,3 +1,235 @@
+## v 1.1.7
+
+### Русский
+
+**Добавлено:**
+
+- Функция `NewDefaultConfig()` в пакете `implemented` для создания конфигурации по умолчанию:
+  - Возвращает `base.Config` с `DefaultConditionsMap` и `DEFAULT_CASH_DISABLE_THRESHOLD` (3)
+  - Упрощает создание конфигурации для движка Guardian
+  - Добавлены godoc комментарии с описанием и примерами использования
+- Операция `Any` для проверки коллекций:
+  - Проверяет, удовлетворяет ли хотя бы один элемент коллекции (slice/array) всем вложенным условиям
+  - Логика OR для элементов: хотя бы один элемент должен удовлетворять
+  - Логика AND для условий: все условия в Any должны быть выполнены для одного элемента
+  - Поддержка префикса `"item:"` для ссылки на текущий элемент при итерации
+  - Добавлено поле `Any map[string]Condition` в структуру `Condition`
+  - Реализована логика обработки `Any` в `Policy.evaluate`
+  - Добавлены комплексные тесты для операции `Any` (`tests/any_condition_test.go`)
+
+- Операция `All` для проверки коллекций:
+  - Проверяет, удовлетворяют ли все элементы коллекции (slice/array) всем вложенным условиям
+  - Логика AND для элементов: все элементы должны удовлетворять
+  - Логика AND для условий: все условия в All должны быть выполнены для каждого элемента
+  - Поддержка префикса `"item:"` для ссылки на текущий элемент при итерации
+  - Добавлено поле `All map[string]Condition` в структуру `Condition`
+  - Реализована логика обработки `All` в `Policy.evaluate`
+  - Добавлены комплексные тесты для операции `All` (`tests/all_condition_test.go`)
+
+**Изменено:**
+
+- Обновлены godoc комментарии в `condition.go`:
+  - Добавлено описание полей `Any` и `All` в структуре `Condition`
+  - Добавлены примеры использования операций `Any` и `All`
+- Обновлены godoc комментарии в `policy.go`:
+  - Добавлено упоминание `Any` и `All` в описании условий
+  - Добавлено описание логики работы `Any` и `All` в методе `Evaluate`
+  - Добавлено описание использования префикса `"item:"` для ссылки на текущий элемент
+- Улучшена валидация политик в методе `Policy.IsValid`:
+  - Добавлена проверка всех путей в значениях условий (Eq, Neq, Lt, Gt, Le, Ge, In)
+  - Добавлена рекурсивная проверка всех путей во вложенных условиях Any и All
+  - Добавлена проверка, что каждый путь в левых значениях (ключах условий) является валидным путём
+  - Добавлена проверка, что entity `item:` может использоваться только внутри условий Any и All
+  - Строки, содержащие ":", должны быть валидными путями, иначе возвращается ошибка
+  - Строки без ":" считаются литеральными значениями и не требуют валидации
+
+**Исправлено:**
+
+- Исправлена валидация путей в правых значениях условий - теперь все пути проверяются на валидность
+- Исправлена валидация путей во вложенных условиях Any/All - теперь все пути рекурсивно проверяются
+
+**Обновлено:**
+
+- Обновлена документация в `README.md`:
+  - Добавлено описание операций `Any` и `All` в разделе "Condition Types"
+  - Добавлено описание префикса `"item:"` в разделе "Path Types"
+  - Обновлено описание функций в разделе "Features"
+  - Добавлены примеры использования для русского и английского разделов
+  - Обновлены примеры кода для использования `implemented.NewDefaultConfig()` вместо прямого создания `base.Config`
+- Добавлены комплексные тесты для валидации политик:
+  - Проверка путей в значениях условий (Eq, Neq, Lt, Gt, Le, Ge, In)
+  - Проверка вложенных условий Any и All
+  - Проверка использования entity `item:` только внутри Any/All
+  - Проверка невалидных путей в различных местах политики
+
+---
+
+### English
+
+**Added:**
+
+- `NewDefaultConfig()` function in `implemented` package for creating default configuration:
+  - Returns `base.Config` with `DefaultConditionsMap` and `DEFAULT_CASH_DISABLE_THRESHOLD` (3)
+  - Simplifies configuration creation for Guardian engine
+  - Added godoc comments with description and usage examples
+- `Any` operation for collection checking:
+  - Checks if at least one element in a collection (slice/array) satisfies all nested conditions
+  - OR logic for elements: at least one element must satisfy
+  - AND logic for conditions: all conditions in Any must be satisfied for one element
+  - Support for `"item:"` prefix to reference the current element during iteration
+  - Added `Any map[string]Condition` field to `Condition` struct
+  - Implemented `Any` handling logic in `Policy.evaluate`
+  - Added comprehensive tests for `Any` operation (`tests/any_condition_test.go`)
+
+- `All` operation for collection checking:
+  - Checks if all elements in a collection (slice/array) satisfy all nested conditions
+  - AND logic for elements: all elements must satisfy
+  - AND logic for conditions: all conditions in All must be satisfied for each element
+  - Support for `"item:"` prefix to reference the current element during iteration
+  - Added `All map[string]Condition` field to `Condition` struct
+  - Implemented `All` handling logic in `Policy.evaluate`
+  - Added comprehensive tests for `All` operation (`tests/all_condition_test.go`)
+
+**Changed:**
+
+- Updated godoc comments in `condition.go`:
+  - Added description of `Any` and `All` fields in `Condition` struct
+  - Added usage examples for `Any` and `All` operations
+- Updated godoc comments in `policy.go`:
+  - Added mention of `Any` and `All` in conditions description
+  - Added description of `Any` and `All` logic in `Evaluate` method
+  - Added description of `"item:"` prefix usage for referencing current element
+- Improved policy validation in `Policy.IsValid` method:
+  - Added validation of all paths in condition values (Eq, Neq, Lt, Gt, Le, Ge, In)
+  - Added recursive validation of all paths in nested Any and All conditions
+  - Added validation that every path in left values (condition keys) is a valid path
+  - Added validation that `item:` entity can only be used within Any and All conditions
+  - Strings containing ":" must be valid paths, otherwise an error is returned
+  - Strings without ":" are considered literal values and don't require validation
+
+**Fixed:**
+
+- Fixed validation of paths in condition right values - now all paths are validated
+- Fixed validation of paths in nested Any/All conditions - now all paths are recursively validated
+
+**Updated:**
+
+- Updated documentation in `README.md`:
+  - Added description of `Any` and `All` operations in "Condition Types" section
+  - Added description of `"item:"` prefix in "Path Types" section
+  - Updated feature description in "Features" section
+  - Added usage examples for both English and Russian sections
+  - Updated code examples to use `implemented.NewDefaultConfig()` instead of direct `base.Config` creation
+- Added comprehensive tests for policy validation:
+  - Validation of paths in condition values (Eq, Neq, Lt, Gt, Le, Ge, In)
+  - Validation of nested Any and All conditions
+  - Validation of `item:` entity usage only within Any/All
+  - Validation of invalid paths in various places in policy
+
+---
+
+## v 1.1.2
+
+### Русский
+
+**Изменено:**
+
+- Переименовано условие `Contains` в `In` для большей нативности и понимания:
+  - Поле `Contains` в структуре `Condition` переименовано в `In`
+  - Функция `ContainsConditionFunc` переименована в `InConditionFunc`
+  - Поле `Contains` в структуре `ConditionsMap` переименовано в `In`
+  - Метод `Select` в `ConditionsMap` теперь принимает ключ `"In"` вместо `"Contains"`
+  - JSON тег изменен с `"contains"` на `"in"`
+  - Все примеры использования и документация обновлены
+  - Все тесты обновлены для использования нового имени
+  - Это изменение улучшает читаемость кода и делает API более интуитивным (например, `In: []any{"admin"}` читается как "admin in list")
+- Реорганизован принцип хранения политик в `Guardian`:
+  - Изменена структура хранения политик с `map[string][]*base.Policy` на `map[string]map[base.Effect][]*base.Policy`
+  - Политики теперь группируются не только по действиям (action), но и по эффектам (ALLOW/DENY)
+  - Это позволяет эффективно разделять политики по эффектам и обеспечивает правильный порядок их проверки
+  - Функция `export` в `utils.go` обновлена для создания вложенной структуры map с группировкой по эффектам
+  - Улучшена производительность поиска политик за счет более структурированной организации данных
+
+**Исправлено:**
+
+- Исправлен критический баг в `engine.Evaluate` с ранним выходом при срабатывании ALLOW эффекта:
+  - Ранее функция могла вернуть `true` (разрешить доступ) сразу после того, как срабатывала первая ALLOW политика, не проверив DENY политики
+  - Теперь функция сначала проверяет все DENY политики, и только если ни одна из них не сработала, проверяет ALLOW политики
+  - Это обеспечивает правильный приоритет DENY политик над ALLOW политиками согласно логике контроля доступа
+  - Порядок проверки: сначала все DENY политики (если хотя бы одна сработала - доступ запрещен), затем все ALLOW политики (если хотя бы одна сработала - доступ разрешен)
+
+**Обновлено:**
+
+- Обновлены и улучшены godoc комментарии в `engine.go`:
+  - Расширено описание структуры `Guardian` с подробностями об организации политик по действиям и эффектам
+  - Улучшена документация `NewGuardianFromPolices` с более подробным описанием параметров, ошибок и примеров использования
+  - Улучшена документация `NewGuardianFromFile` с детальным описанием обработки файлов и возможных ошибок
+  - Значительно расширена документация `Evaluate` с подробным описанием логики оценки, порядка проверки политик и поддерживаемых типов условий
+  - Добавлены примеры использования для всех публичных функций
+  - Исправлена опечатка в сообщении об ошибке ("noctis engine" -> "guardian engine")
+- Обновлены и улучшены godoc комментарии в `utils.go`:
+  - Расширено описание функции `export` с детальным описанием процесса валидации и организации политик
+  - Улучшена документация структуры возвращаемого значения с описанием вложенной структуры map
+  - Расширено описание функции `generateNewSesstionID` с подробностями о формате UUID и использовании в кешировании
+  - Добавлены примеры и пояснения для лучшего понимания работы функций
+
+**Документация:**
+
+- Все godoc комментарии приведены к единому стилю и стандартам Go документации
+- Улучшена читаемость и полнота документации для всех публичных API
+- Добавлены детальные описания возможных ошибок и их источников
+- Улучшены примеры использования для более понятного API
+
+### English
+
+**Changed:**
+
+- Renamed condition `Contains` to `In` for better native feel and understanding:
+  - Field `Contains` in `Condition` structure renamed to `In`
+  - Function `ContainsConditionFunc` renamed to `InConditionFunc`
+  - Field `Contains` in `ConditionsMap` structure renamed to `In`
+  - Method `Select` in `ConditionsMap` now accepts key `"In"` instead of `"Contains"`
+  - JSON tag changed from `"contains"` to `"in"`
+  - All usage examples and documentation updated
+  - All tests updated to use the new name
+  - This change improves code readability and makes API more intuitive (e.g., `In: []any{"admin"}` reads as "admin in list")
+- Reorganized policy storage principle in `Guardian`:
+  - Changed policy storage structure from `map[string][]*base.Policy` to `map[string]map[base.Effect][]*base.Policy`
+  - Policies are now grouped not only by actions but also by effects (ALLOW/DENY)
+  - This allows efficient separation of policies by effects and ensures correct checking order
+  - `export` function in `utils.go` updated to create nested map structure with grouping by effects
+  - Improved policy lookup performance due to more structured data organization
+
+**Fixed:**
+
+- Fixed critical bug in `engine.Evaluate` with early exit when ALLOW effect triggered:
+  - Previously, the function could return `true` (allow access) immediately after the first ALLOW policy matched, without checking DENY policies
+  - Now the function first checks all DENY policies, and only if none of them matched, it checks ALLOW policies
+  - This ensures correct priority of DENY policies over ALLOW policies according to access control logic
+  - Checking order: first all DENY policies (if any matched - access denied), then all ALLOW policies (if any matched - access allowed)
+
+**Updated:**
+
+- Updated and improved godoc comments in `engine.go`:
+  - Expanded `Guardian` structure description with details about policy organization by actions and effects
+  - Enhanced `NewGuardianFromPolices` documentation with detailed parameter descriptions, error handling, and usage examples
+  - Enhanced `NewGuardianFromFile` documentation with detailed file handling and error descriptions
+  - Significantly expanded `Evaluate` documentation with detailed evaluation logic, policy checking order, and supported condition types
+  - Added usage examples for all public functions
+  - Fixed typo in error message ("noctis engine" -> "guardian engine")
+- Updated and improved godoc comments in `utils.go`:
+  - Expanded `export` function description with detailed validation and policy organization process
+  - Enhanced return value structure documentation with nested map structure description
+  - Expanded `generateNewSesstionID` documentation with UUID format details and caching usage
+  - Added examples and explanations for better function understanding
+
+**Documentation:**
+
+- All godoc comments standardized to Go documentation style and conventions
+- Improved readability and completeness of documentation for all public APIs
+- Added detailed descriptions of possible errors and their sources
+- Enhanced usage examples for clearer API understanding
+
 ## v 1.1.1
 
 ### Русский
@@ -20,10 +252,6 @@
 - Все godoc комментарии обновлены для отражения поддержки map полей в структурах
 - Документация в README.md обновлена с примерами использования map полей в структурах
 
----
-
-### English
-
 **Added:**
 
 - Support for accessing fields in structures stored in map fields of structures
@@ -41,7 +269,6 @@
 
 - All godoc comments updated to reflect support for map fields in structures
 - README.md documentation updated with examples of using map fields in structures
-
 
 ## v 1.1.0
 

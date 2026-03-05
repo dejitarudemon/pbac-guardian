@@ -12,7 +12,7 @@ Fields:
   - Action - action in format "entity:action:extra1:extra2..." (e.g., "user:read:profile")
   - Effect - policy effect: Effect_ALLOW (allow) or Effect_DENY (deny)
   - Conditions - map of conditions. Key - path to field in format "source:field", "target:field", "env:VAR_NAME", or "time:now",
-    value - condition to check (Contains, Eq, Neq, Lt, Gt)
+    value - condition to check (In, Eq, Neq, Lt, Gt, Le, Ge)
 
 Example usage:
 
