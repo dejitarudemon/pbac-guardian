@@ -542,7 +542,7 @@ Time modifiers:
 - `"time:now:1|day"` - current time + 1 day
 - `"time:now:2|hour"` - current time + 2 hours
 - `"time:now:30|minute"` - current time + 30 minutes
-- Supported units: `day`, `hour`, `minute`, `second`, `milisecond`
+- Supported units: `day`, `hour`, `minute`, `second`, `millisecond`
 
 ### Tutorial 9: Map Fields in Structures
 
@@ -668,7 +668,7 @@ Paths in conditions can reference:
   - Example: `User { Groups map[string]Group }` with path `"source:groups:admins:name"` accesses `name` field in `Group` structure stored under `"admins"` key
 - **Environment variables**: `"env:VARIABLE_NAME"` - values from environment variables
 - **Time values**: `"time:now"` - current time, `"time:now:1|day"` - current time with modifiers
-  - Supported modifiers: `day`, `hour`, `minute`, `second`, `milisecond`
+  - Supported modifiers: `day`, `hour`, `minute`, `second`, `millisecond`
   - Format: `"time:now:value|unit"` (e.g., `"time:now:2|hour"`)
 
 ### Effects
@@ -1220,7 +1220,7 @@ policies := []base.RawPolicy{
 - `"time:now:1|day"` - текущее время + 1 день
 - `"time:now:2|hour"` - текущее время + 2 часа
 - `"time:now:30|minute"` - текущее время + 30 минут
-- Поддерживаемые единицы: `day`, `hour`, `minute`, `second`, `milisecond`
+- Поддерживаемые единицы: `day`, `hour`, `minute`, `second`, `millisecond`
 
 ### Туториал 9: Map поля в структурах
 
@@ -1343,7 +1343,7 @@ type RawPolicy struct {
 - **Поля структур**: `"source:field"`, `"target:field"` - поля из структур source/target
 - **Переменные окружения**: `"env:VARIABLE_NAME"` - значения из переменных окружения
 - **Значения времени**: `"time:now"` - текущее время, `"time:now:1|day"` - текущее время с модификаторами
-  - Поддерживаемые модификаторы: `day`, `hour`, `minute`, `second`, `milisecond`
+  - Поддерживаемые модификаторы: `day`, `hour`, `minute`, `second`, `millisecond`
   - Формат: `"time:now:value|unit"` (например, `"time:now:2|hour"`)
 
 ### Эффекты
