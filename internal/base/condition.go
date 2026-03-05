@@ -27,6 +27,8 @@ Fields:
   - Gt - checks if left value is greater than right (left > right)
   - Le - checks if left value is less than or equal to right (left <= right)
   - Ge - checks if left value is greater than or equal to right (left >= right)
+  - Any - checks if at least one element in a collection (slice/array) satisfies all nested conditions
+  - All - checks if all elements in a collection (slice/array) satisfy all nested conditions
 
 Example usage:
 
@@ -74,15 +76,33 @@ Example usage:
 		Lt:  100,          // source:age < 100
 		Gt:  18,           // source:age > 18
 	}
+
+	// Any condition - at least one element in collection satisfies all nested conditions
+	condition8 := Condition{
+		Any: map[string]Condition{
+			"item:name": {Eq: "admin"},    // At least one group has name="admin"
+			"item:role": {Eq: "admin"},   // AND role="admin"
+		},
+	}
+
+	// All condition - all elements in collection satisfy all nested conditions
+	condition9 := Condition{
+		All: map[string]Condition{
+			"item:name": {Eq: "admin"},    // All groups have name="admin"
+			"item:role": {Eq: "admin"},    // AND role="admin"
+		},
+	}
 */
 type Condition struct {
-	In  []any `json:"in,omitempty"`
-	Eq  any   `json:"eq,omitempty"`
-	Neq any   `json:"neq,omitempty"`
-	Lt  any   `json:"lt,omitempty"`
-	Gt  any   `json:"gt,omitempty"`
-	Le  any   `json:"le,omitempty"`
-	Ge  any   `json:"ge,omitempty"`
+	In  []any                `json:"in,omitempty"`
+	Eq  any                  `json:"eq,omitempty"`
+	Neq any                  `json:"neq,omitempty"`
+	Lt  any                  `json:"lt,omitempty"`
+	Gt  any                  `json:"gt,omitempty"`
+	Le  any                  `json:"le,omitempty"`
+	Ge  any                  `json:"ge,omitempty"`
+	Any map[string]Condition `json:"any,omitempty"`
+	All map[string]Condition `json:"all,omitempty"`
 }
 
 /*
