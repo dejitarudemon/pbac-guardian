@@ -160,7 +160,7 @@ func TestErrNotComparableStruct(t *testing.T) {
 	}
 
 	// Check error message
-	expectedMsg := "left argument is a struct, but it doesn't implement Comapre() method"
+	expectedMsg := "left argument is a struct, but it doesn't implement Compare() method"
 	if base.ErrNotComparableStruct.Error() != expectedMsg {
 		t.Errorf("expected error message %q, got %q", expectedMsg, base.ErrNotComparableStruct.Error())
 	}

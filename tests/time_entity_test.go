@@ -7,7 +7,7 @@ time paths can be used in policy conditions. The tests verify:
   - Using time modifiers (e.g., "time:now:1|day", "time:now:2|hour")
   - Comparing time paths with structure fields and literal values
   - Error handling for invalid time paths
-  - All supported time modifiers (day, hour, minute, second, milisecond)
+  - All supported time modifiers (day, hour, minute, second, millisecond)
 */
 package tests
 
@@ -241,15 +241,15 @@ func TestTimeEntity_Modifiers(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "time:now:1000|milisecond - future time",
-			// Test checks that time:now:1000|milisecond adds 1000 milliseconds to current time
+			name: "time:now:1000|millisecond - future time",
+			// Test checks that time:now:1000|millisecond adds 1000 milliseconds to current time
 			policy: base.RawPolicy{
-				Name:   "time-modifier-milisecond-test",
+				Name:   "time-modifier-millisecond-test",
 				Action: "user:read",
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
-					"time:now:1000|milisecond": {
-						Gt: now, // time:now:1000|milisecond > now (true, adds 1000ms)
+					"time:now:1000|millisecond": {
+						Gt: now, // time:now:1000|millisecond > now (true, adds 1000ms)
 					},
 				},
 			},
