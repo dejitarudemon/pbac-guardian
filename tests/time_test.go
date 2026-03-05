@@ -627,7 +627,7 @@ func TestTime_MultipleConditions(t *testing.T) {
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:created_at": {
-						Gt: past,  // source:created_at > past
+						Gt: past,   // source:created_at > past
 						Lt: future, // source:created_at < future
 					},
 				},
@@ -770,4 +770,3 @@ func TestTime_In(t *testing.T) {
 		})
 	}
 }
-

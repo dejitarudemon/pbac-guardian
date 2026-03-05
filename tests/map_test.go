@@ -76,8 +76,8 @@ func TestMapSourceBasic(t *testing.T) {
 			source: map[string]any{
 				"name": "alice",
 			},
-			target: Document{Owner: "user", Type: "public"},
-			want:   false,
+			target:  Document{Owner: "user", Type: "public"},
+			want:    false,
 			wantErr: true, // Missing key should return error
 		},
 	}
@@ -224,8 +224,8 @@ func TestMapNested(t *testing.T) {
 			source: map[string]any{
 				"name": "alice",
 			},
-			target: Document{Owner: "user", Type: "public"},
-			want:   false,
+			target:  Document{Owner: "user", Type: "public"},
+			want:    false,
 			wantErr: true, // Missing key should return error
 		},
 	}
@@ -621,7 +621,7 @@ func TestMapConditionsContains(t *testing.T) {
 			Effect: base.Effect_ALLOW,
 			Conditions: map[string]base.Condition{
 				"source:role": {
-					Contains: []any{"admin", "moderator"},
+					In: []any{"admin", "moderator"},
 				},
 			},
 		},
@@ -1021,9 +1021,9 @@ Example:
   - User { Login string, Groups map[string]Group }
   - Group { Name string }
   - Path: "source:groups:admins:name"
-    - groups - field in User (map[string]Group)
-    - admins - key in map
-    - name - field in Group
+  - groups - field in User (map[string]Group)
+  - admins - key in map
+  - name - field in Group
 */
 func TestMapFieldInStruct(t *testing.T) {
 	policies := []base.RawPolicy{
@@ -1088,8 +1088,8 @@ func TestMapFieldInStruct(t *testing.T) {
 					},
 				},
 			},
-			target: Document{Owner: "user", Type: "public"},
-			want:   false,
+			target:  Document{Owner: "user", Type: "public"},
+			want:    false,
 			wantErr: true, // Missing key should return error
 		},
 		{
@@ -1098,8 +1098,8 @@ func TestMapFieldInStruct(t *testing.T) {
 				Login:  "alice",
 				Groups: map[string]Group{},
 			},
-			target: Document{Owner: "user", Type: "public"},
-			want:   false,
+			target:  Document{Owner: "user", Type: "public"},
+			want:    false,
 			wantErr: true, // Missing key should return error
 		},
 	}
@@ -1250,12 +1250,12 @@ func TestMapFieldInStructAllConditions(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name     string
-		policy   base.RawPolicy
-		source   UserWithGroups
-		target   Document
-		want     bool
-		wantErr  bool
+		name    string
+		policy  base.RawPolicy
+		source  UserWithGroups
+		target  Document
+		want    bool
+		wantErr bool
 	}{
 		{
 			name: "Eq condition",
@@ -1303,7 +1303,7 @@ func TestMapFieldInStructAllConditions(t *testing.T) {
 				Effect: base.Effect_ALLOW,
 				Conditions: map[string]base.Condition{
 					"source:groups:admins:name": {
-						Contains: []any{"Administrators", "Moderators"},
+						In: []any{"Administrators", "Moderators"},
 					},
 				},
 			},

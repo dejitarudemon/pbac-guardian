@@ -53,17 +53,22 @@ const (
 	// or "time:now:1|day" to indicate current time plus a modifier (e.g., 1 day, 2 hours).
 	// Supports modifiers: day, hour, minute, second, milisecond.
 	Entity_TIME Entity = "time"
+
+	// Entity_ITEM represents item values in policy conditions.
+	// Used in paths like "item:id" to indicate that the value should be retrieved from the item structure.
+	Entity_ITEM Entity = "item"
 )
 
 var (
-	// AVALIABLE_ENTITIES is a list of all valid entity values.
+	// AVAILABLE_ENTITIES is a list of all valid entity values.
 	// Used internally for validation of entity values in paths.
 	// Contains Entity_SOURCE, Entity_TARGET, Entity_ENV, and Entity_TIME.
-	AVALIABLE_ENTITIES = []Entity{
+	AVAILABLE_ENTITIES = []Entity{
 		Entity_SOURCE,
 		Entity_TARGET,
 		Entity_ENV,
 		Entity_TIME,
+		Entity_ITEM,
 	}
 )
 
@@ -71,11 +76,11 @@ var (
 IsValid checks if the Entity value is valid.
 
 Valid entity values are Entity_SOURCE, Entity_TARGET, Entity_ENV, and Entity_TIME.
-The function checks if the entity is present in AVALIABLE_ENTITIES list.
+The function checks if the entity is present in AVAILABLE_ENTITIES list.
 
 Returns:
   - bool - true if value is valid (one of Entity_SOURCE, Entity_TARGET, Entity_ENV, Entity_TIME), false otherwise
 */
 func (e Entity) IsValid() bool {
-	return slices.Contains(AVALIABLE_ENTITIES, e)
+	return slices.Contains(AVAILABLE_ENTITIES, e)
 }

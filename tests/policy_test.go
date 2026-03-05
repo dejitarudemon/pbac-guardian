@@ -260,6 +260,176 @@ func TestPolicyIsValid(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "valid policy with path in condition value",
+			// Test checks that paths in condition values (Eq, Neq, etc.) are validated
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:role": {Eq: "target:owner"}, // Valid path in condition value
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid path in condition value",
+			// Test checks that invalid paths (containing ":") in condition values are rejected
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:role": {Eq: "invalid:path"}, // Invalid path (contains ":" but invalid entity)
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid policy with Any condition using item:",
+			// Test checks that item: can be used within Any conditions
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:groups": {
+						Any: map[string]base.Condition{
+							"item:name": {Eq: "admin"}, // item: is allowed in Any
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid policy with All condition using item:",
+			// Test checks that item: can be used within All conditions
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:groups": {
+						All: map[string]base.Condition{
+							"item:name": {Eq: "admin"}, // item: is allowed in All
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid - item: used outside Any/All",
+			// Test checks that item: cannot be used outside Any/All conditions
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"item:name": {Eq: "admin"}, // item: is not allowed at top level
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid - item: in condition value outside Any/All",
+			// Test checks that item: cannot be used in condition values outside Any/All
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:role": {Eq: "item:name"}, // item: is not allowed in condition value at top level
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid policy with nested Any and paths",
+			// Test checks that all paths in nested Any are validated
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:groups": {
+						Any: map[string]base.Condition{
+							"item:name": {Eq: "target:owner"}, // Valid path in nested condition
+						},
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid path in nested Any condition value",
+			// Test checks that invalid paths (containing ":") in nested Any condition values are rejected
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:groups": {
+						Any: map[string]base.Condition{
+							"item:name": {Eq: "invalid:path"}, // Invalid path (contains ":" but invalid entity)
+						},
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid policy with In condition containing paths",
+			// Test checks that paths in In condition slice are validated
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:role": {
+						In: []any{"admin", "target:owner"}, // Valid path in In slice
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid path in In condition",
+			// Test checks that invalid paths (containing ":") in In condition slice are rejected
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:role": {
+						In: []any{"admin", "invalid:path"}, // Invalid path (contains ":" but invalid entity)
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid policy with multiple condition types and paths",
+			// Test checks that all condition types with paths are validated
+			raw: base.RawPolicy{
+				Name:   "test",
+				Action: "user:read",
+				Effect: base.Effect_ALLOW,
+				Conditions: map[string]base.Condition{
+					"source:age": {
+						Eq:  "target:minAge",
+						Neq: "target:maxAge",
+						Lt:  "target:limit",
+						Gt:  "target:threshold",
+						Le:  "target:max",
+						Ge:  "target:min",
+					},
+				},
+			},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
