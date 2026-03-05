@@ -103,7 +103,7 @@ The error is used when parsing paths in format "entity:field1:field2..."
 or when searching for fields in structures. Contains the path and problem details.
 */
 type ErrInvalidPath struct {
-	path    string
+	path    any
 	details string
 }
 
@@ -117,7 +117,7 @@ Parameters:
 Returns:
   - error - created ErrInvalidPath error
 */
-func NewErrInvalidPath(path, details string) error {
+func NewErrInvalidPath(path any, details string) error {
 	return ErrInvalidPath{path: path, details: details}
 }
 
