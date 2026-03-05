@@ -922,4 +922,3 @@ func TestEnvVariable_WithCache(t *testing.T) {
 		t.Errorf("second evaluation: Evaluate() = %v, want true", got2)
 	}
 }
-

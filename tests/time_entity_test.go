@@ -628,4 +628,3 @@ func TestTimeEntity_In(t *testing.T) {
 		})
 	}
 }
-

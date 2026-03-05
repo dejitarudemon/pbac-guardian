@@ -183,5 +183,3 @@ func BenchmarkCashTree_ProductionScenario(b *testing.B) {
 		_, _ = engine.Evaluate(ctx, source, target, action)
 	}
 }
-
-
