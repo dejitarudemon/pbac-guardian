@@ -10,9 +10,9 @@ package base
 import "slices"
 
 var (
-	// AVALIABLE_EFFECTS is a list of all valid policy effect values.
+	// AVAILABLE_EFFECTS is a list of all valid policy effect values.
 	// Used internally for validation of effect values in policies.
-	AVALIABLE_EFFECTS = []Effect{
+	AVAILABLE_EFFECTS = []Effect{
 		Effect_ALLOW, // allow
 		Effect_DENY,  // deny
 	}
@@ -48,5 +48,5 @@ Returns:
   - bool - true if value is valid, false otherwise
 */
 func (e Effect) IsValid() bool {
-	return slices.Contains(AVALIABLE_EFFECTS, e)
+	return slices.Contains(AVAILABLE_EFFECTS, e)
 }
