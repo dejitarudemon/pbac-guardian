@@ -53,6 +53,10 @@ const (
 	// or "time:now:1|day" to indicate current time plus a modifier (e.g., 1 day, 2 hours).
 	// Supports modifiers: day, hour, minute, second, milisecond.
 	Entity_TIME Entity = "time"
+
+	// Entity_ITEM represents item values in policy conditions.
+	// Used in paths like "item:id" to indicate that the value should be retrieved from the item structure.
+	Entity_ITEM Entity = "item"
 )
 
 var (
@@ -64,6 +68,7 @@ var (
 		Entity_TARGET,
 		Entity_ENV,
 		Entity_TIME,
+		Entity_ITEM,
 	}
 )
 
