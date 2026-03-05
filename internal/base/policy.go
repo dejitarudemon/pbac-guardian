@@ -505,11 +505,11 @@ func (p *Policy) loadTimeModications(path []string, target time.Time) (time.Time
 		return target.Add(time.Minute * MODIFIERS_PARTS), nil
 	case "second":
 		return target.Add(time.Second * MODIFIERS_PARTS), nil
-	case "milisecond":
+	case "millisecond":
 		return target.Add(time.Millisecond * MODIFIERS_PARTS), nil
 	}
 
-	return target, NewErrInvalidType("day|hour|minute|second|milisecond", modifiers[1])
+	return target, NewErrInvalidType("day|hour|minute|second|millisecond", modifiers[1])
 }
 
 /*
@@ -520,7 +520,7 @@ The function supports the following time specifications:
   - "now:modifier1:modifier2..." - current time with modifiers applied
 
 Modifiers are in format "value|unit" and are processed by loadTimeModications.
-Supported units: day, hour, minute, second, milisecond.
+Supported units: day, hour, minute, second, millisecond.
 
 Examples:
   - "time:now" -> current time
